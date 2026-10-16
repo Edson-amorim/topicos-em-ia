@@ -5,7 +5,8 @@
 ## Perfil do Aluno
 - **Nome:** Edson Amorim
 - **Disciplina:** Tópicos em Inteligência Artificial (Tópicos em IA)
-- **GitHub / Nome de Usuário:** Edson Amorim
+- **GitHub / Nome de Usuário:** Edson Amorim (`Edson-amorim`)
+- **Repositório no GitHub:** https://github.com/Edson-amorim/topicos-em-ia
 - **E-mail do GitHub / Git:** edsoninformatica28br@gmail.com
 - **Acessibilidade:** O aluno é cego (utiliza leitor de telas).
 
