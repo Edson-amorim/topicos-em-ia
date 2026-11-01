@@ -1,2 +1,2 @@
 faster-whisper
-av<19
+networkx

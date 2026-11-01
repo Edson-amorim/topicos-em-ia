@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#FAFAFA">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Comanda Falada · Passo à Frente"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1A237E"
+            android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Acessibilidade por voz em bares."
+            android:paddingBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvSubtitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Demonstração Tecnológica Android (Whisper + GraphRAG + Regras Exatas)"
+            android:textSize="14sp"
+            android:textColor="#424242"
+            android:paddingBottom="16dp" />
+
+        <Button
+            android:id="@+id/btnCaso1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="1. Buscar Bar com Conforto Acústico"
+            android:textSize="15sp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnCaso2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="2. Fazer Pedido, Calcular Conta e Pix"
+            android:textSize="15sp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnCaso3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="3. Testar Ruído de Bar (Onde a IA Erra)"
+            android:textSize="15sp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Painel de Saída e Acessibilidade:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:paddingBottom="6dp" />
+
+        <TextView
+            android:id="@+id/tvResultado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#EEEEEE"
+            android:padding="12dp"
+            android:text="Pressione um dos botões acima para executar o pipeline no aparelho."
+            android:textSize="14sp"
+            android:textColor="#1B5E20"
+            android:accessibilityLiveRegion="polite" />
+
+    </LinearLayout>
+</ScrollView>

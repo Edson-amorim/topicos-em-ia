@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Comanda Falada</string>
+    <string name="titulo">Comanda Falada · Passo à Frente</string>
+    <string name="btn_ouvir">Falar Pedido ou Buscar Bar</string>
+    <string name="btn_simular_caso1">Caso 1: Buscar Bar Acústico</string>
+    <string name="btn_simular_caso2">Caso 2: Pedido Completo e Pix</string>
+    <string name="btn_simular_caso3">Caso 3: Teste com Ruído de Bar</string>
+    <string name="lbl_status">Pronto para ouvir</string>
+</resources>

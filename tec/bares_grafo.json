@@ -1,0 +1,66 @@
+{
+  "bares": [
+    {
+      "id": "bar_cais_antigo",
+      "nome": "Bar Cais do Sertão & Chopp",
+      "bairro": "Recife Antigo",
+      "coordenadas": {
+        "latitude": -8.0617,
+        "longitude": -34.8711
+      },
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 58,
+        "tipo_som": "musica instrumental ambiente baixa",
+        "acessibilidade": "calcada acessivel, espaco amplo entre mesas, garcom atencioso com pessoas cegas"
+      },
+      "cardapio": [
+        {"item": "caldinho de feijao", "preco": 12.00, "categoria": "entrada"},
+        {"item": "suco de laranja natural", "preco": 10.00, "categoria": "bebida"},
+        {"item": "chope gelado", "preco": 11.50, "categoria": "bebida"},
+        {"item": "macaxeira frita com queijo coalho", "preco": 34.00, "categoria": "petisco"},
+        {"item": "agua mineral sem gas", "preco": 6.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_boemia_ruidoso",
+      "nome": "Boteco do Galo Frito",
+      "bairro": "Recife Antigo",
+      "coordenadas": {
+        "latitude": -8.0635,
+        "longitude": -34.8732
+      },
+      "conforto_acustico": {
+        "nivel_ruido": "alto",
+        "decibeis_medio": 84,
+        "tipo_som": "musica ao vivo com percussao alta e caixas de som no corredor",
+        "acessibilidade": "mesas apertadas, barulho dificulta comunicacao e leitor de telas"
+      },
+      "cardapio": [
+        {"item": "chope gelado", "preco": 10.00, "categoria": "bebida"},
+        {"item": "espetinho de carne", "preco": 15.00, "categoria": "petisco"},
+        {"item": "cerveja lata", "preco": 8.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_jardim_boa_viagem",
+      "nome": "Varanda Jardim da Praia",
+      "bairro": "Boa Viagem",
+      "coordenadas": {
+        "latitude": -8.1256,
+        "longitude": -34.9015
+      },
+      "conforto_acustico": {
+        "nivel_ruido": "medio",
+        "decibeis_medio": 65,
+        "tipo_som": "som de brisa e mpb suave ao fundo",
+        "acessibilidade": "rampa de acesso, piso tatil ate a entrada"
+      },
+      "cardapio": [
+        {"item": "caldinho de camarao", "preco": 16.00, "categoria": "entrada"},
+        {"item": "suco de laranja natural", "preco": 11.00, "categoria": "bebida"},
+        {"item": "isca de peixe com molho tartaro", "preco": 42.00, "categoria": "petisco"}
+      ]
+    }
+  ]
+}

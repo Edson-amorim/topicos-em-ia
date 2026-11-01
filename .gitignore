@@ -1,0 +1,4 @@
+__pycache__/
+*.py[cod]
+tec/android_app/build/
+tec/android_app/debug.keystore
