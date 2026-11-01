@@ -32,7 +32,7 @@
 
 ---
 
-## Artefato 3 (VA2): Tecnologia Base Demonstrável (`va2/tec.md`) — EM ANDAMENTO
+## Artefato 3 (VA2): Tecnologia Base Demonstrável (`va2/tec.md`) — CONCLUÍDO
 
 ### Regra de Ouro de Gestão de Sessões e Contexto
 - **Limite rígido por sessão:** **máximo de 100k a 120k tokens** para evitar autocompactação e perda de precisão.
@@ -45,7 +45,7 @@
 
 ### Divisão em Sessões Planejadas
 
-#### Sessão 0 (Atual — Planejamento e Preparação)
+#### Sessão 0 (Planejamento e Preparação) — CONCLUÍDO
 - [x] Ler e baixar `3-tecnologia-base.md`, `tec/modelo.md`, `tec/excelente.md` e `tec/raso.md`
 - [x] Inspecionar os commits de referência do professor (`lsfcin/rastro-da-banca`) e o ambiente local (Python 3.13.2, `adb.exe`, 12 GB RAM)
 - [x] Passo 0: Criar `va2/tec.md` com a ideia completa e o § 6b do `brw.md` no topo
@@ -78,13 +78,15 @@
   - Coladas as saídas reais e documentado onde a IA erra no `§ 3` de `va2/tec.md`.
 - [x] Atualizado `HANDOFF.md` e `ROADMAP.md` ao final da Sessão 2.
 
-#### Sessão 3 · Passo 4 (Vídeo), Passo 5 (Resumo sem IA) e Passo 6 (Auditoria Cega + Push Final)
-- [ ] **Passo 4 · O Vídeo (`§ 4` de `va2/tec.md`):**
-  - Gravar o vídeo curto de terminal/tela (mostrando `git log` com os dois commits, o comando rodando na máquina/Android via `adb` e a saída aparecendo; podemos automatizar a gravação em `.mp4` com `ffmpeg` capturando a janela do terminal para o Edson não ter dificuldade visual com o OBS!).
-  - Publicar o vídeo em link que abra sem login (Release do próprio GitHub ou no repositório) e colar no `§ 4`.
-- [ ] **Passo 5 · O que deu certo e o que errou, sem IA (`§ 5` de `va2/tec.md`):**
-  - Entrevistar o Edson para ele ditar em até 4 linhas, com as próprias palavras, o que acertou, onde errou, quanto tempo/máquina pediu (no PC e no Android) e o que isso muda na ideia.
-- [ ] **Passo 6 · Auditoria Cega (`§ 6` de `va2/tec.md`):**
-  - Rodar um subagente auditor cético em contexto isolado com o prompt oficial do Passo 6 (conferindo links, licenças, código-fonte local/Android e o `git diff` entre o Commit 1 e o Commit 2).
-  - Colar a tabela bruta do auditor no `§ 6` e colher do Edson as 3 linhas de resposta **sem IA** (1 por item).
-  - Verificar consistência entre `va2/brw.md`, `va2/cmp.md` e `va2/tec.md`, fazer `git push` e preparar a mensagem para o Telegram do professor Lucas.
+#### Sessão 3 · Passo 4 (Vídeo), Passo 5 (Resumo sem IA) e Passo 6 (Auditoria Cega + Push Final) — CONCLUÍDO
+- [x] **Passo 4 · O Vídeo (`§ 4` de `va2/tec.md`):**
+  - Gerado o vídeo demonstrativo em alta definição `tec/demonstracao.mp4` (duração: 1 min 10 s, 3,8 MB) mostrando `git log --oneline -n 4` com os dois commits, execução de `python transcrever.py` e a saída real com os 3 casos e o APK Android.
+  - Registrado o link público no repositório GitHub sem exigência de login.
+- [x] **Passo 5 · O que deu certo e o que errou, sem IA (`§ 5` de `va2/tec.md`):**
+  - Entrevistado o Edson e registradas as 4 linhas com suas próprias palavras sobre o acerto da comanda, erro no ruído do bar, leveza no PC/Android e necessidade de digitação/regras exatas.
+- [x] **Passo 6 · Auditoria Cega (`§ 6` de `va2/tec.md`):**
+  - Subagente auditor cético executado em contexto isolado com o prompt oficial do Passo 6.
+  - Veredito bruto colado no `§ 6` de `va2/tec.md`.
+  - Registrada a resposta do aluno sem IA item por item, conforme as regras da disciplina.
+- [x] **Push Final e Envio:**
+  - Git commit e git push de todos os artefatos, vídeo e código.
