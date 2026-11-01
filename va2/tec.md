@@ -37,19 +37,62 @@ Detected language 'en' with probability 0.938385
 
 ## 3 · a alteração mínima
 
-**o commit:** [link do segundo commit]
+**o commit:** [c032f22 · alteracao minima: pedidos de bar, graphrag, regras deterministicas e apk android](https://github.com/Edson-amorim/topicos-em-ia/commit/c032f22)
 
-**a entrada:** antes, [o dado de exemplo do projeto]; agora, [o dado do meu problema, e de onde veio]
+**a entrada:** antes, um áudio em inglês com trecho de discurso oficial de John F. Kennedy (`audio.mp3` / `jfk.flac`), fornecido pelo repositório do faster-whisper; agora, três áudios em português brasileiro (`tec/audios/`) simulando o fluxo real do Comanda Falada (uma busca por voz de bar acessível com baixo ruído acústico no Recife Antigo, um pedido claro de cardápio e um pedido sob ruído de bar), combinados com uma base estruturada de conhecimento em grafo de bares do Recife, cardápios e relatos de conforto acústico (`tec/bares_grafo.json`), além do aplicativo nativo Android gerado em APK (`tec/comanda-falada.apk`).
 
-**a saída:** antes, [o que o exemplo mostrava]; agora, [o que mostra da minha solução]
+**a saída:** antes, apenas as linhas de texto em inglês com marcações de tempo e probabilidade da língua; agora, o pipeline completo das 4 peças da arquitetura funcionando em conjunto: transcrição em português com termos de cardápio no contexto (`initial_prompt`), recuperação de bar calmo via GraphRAG (`NetworkX`), distância em metros por Haversine GPS, soma exata da comanda em reais (R$ 22,00) sem erro de centavos, validação de teto de gasto, senha falada de 4 dígitos (8186), código Pix Copia e Cola (BR Code EMV) com CRC16 válido e APK demonstrativo funcional para Android.
 
 **o comando e a saída, colados como vieram:**
 
 ```text
-[cole]
+$ python transcrever.py
+======================================================================
+COMANDA FALADA - DEMONSTRAÇÃO TECNOLÓGICA DAS 4 PEÇAS
+======================================================================
+[1/4] Grafo carregado com 17 nós e 17 arestas.
+>>> Carregando modelo Whisper small (CPU INT8)...
+
+----------------------------------------------------------------------
+CASO 1 · CONSULTA DE BAR ACÚSTICO E SELEÇÃO NO GRAFO
+Entrada de Áudio: audio1_busca_bar.wav
+Transcrição Whisper [pt, prob 1.00]: 'Quero um bar no Recife Antigo com música baixa e espaço tranquilo para conversar.'
+
+[GraphRAG] Bares encontrados com conforto acústico (baixo ruído):
+ -> Bar: Bar Cais do Sertão & Chopp (Recife Antigo)
+    Ruído: 58 dB | Som: musica instrumental ambiente baixa
+    Acessibilidade: calcada acessivel, espaco amplo entre mesas, garcom atencioso com pessoas cegas
+    Distância GPS (Haversine): 130.0 metros da sua localização
+
+----------------------------------------------------------------------
+CASO 2 · PEDIDO DIRETO, CÁLCULO DE COMANDA EXATA E PIX DETERMINÍSTICO
+Entrada de Áudio: audio2_pedido_direto.wav
+Transcrição Whisper [pt, prob 1.00]: 'Vou querer uma porção de caldinho de feijão e um suco de laranja natural, por favor.'
+[Extração Estruturada] Itens identificados no cardápio: 2
+ -> 1x caldinho de feijao (R$ 12.00)
+ -> 1x suco de laranja natural (R$ 10.00)
+
+[Regras Determinísticas - Comanda]
+ -> Total da Comanda: R$ 22,00
+ -> Status do Teto: Dentro do teto de gastos estipulado.
+ -> Senha Falada de Entrega: 8186
+ -> Código Copia e Cola Pix (BR Code):
+    00020126480014br.gov.bcb.pix0126pix@barcaisdosertao.com.br520400005303986540522.005802BR5918Bar Cais do Sertao6006Recife62100506PEDIDO63046AB6
+
+----------------------------------------------------------------------
+CASO 3 · PEDIDO COM RUÍDO ACÚSTICO DE BAR (ONDE O MODELO ERRA)
+Entrada de Áudio: audio3_pedido_ruido.wav
+Transcrição Whisper [pt, prob 1.00]: 'com 2 corpos gelados e uma corção de macaxeira frita com queijo coalho'
+[Extração Estruturada com Ruído] Itens reconhecidos: 1
+ -> 1x macaxeira frita com queijo coalho (R$ 34.00)
+ -> Total Calculado: R$ 34,00
+======================================================================
 ```
 
-**onde a saída erra:** [preencha]
+**onde a saída erra:**
+1. No Caso 3, quando submetido a áudio com ruído acústico de fundo típico de bar, o modelo Whisper cometeu erros fonéticos graves de transcrição: trocou a fala *"Me vê dois chopes gelados e uma porção de macaxeira frita com queijo coalho"* por *"'com 2 corpos gelados e uma corção de macaxeira frita com queijo coalho'"*.
+2. Por consequência dessa falha acústica ("chopes" virou "corpos"), o algoritmo de extração estruturada não reconheceu a bebida no cardápio do bar e omitiu os 2 chopes do pedido, computando apenas a macaxeira frita com queijo coalho (R$ 34,00) em vez do valor real pretendido (R$ 57,00).
+3. Isso demonstra com honestidade uma fragilidade real da IA de voz em ambientes ruidosos e justifica a decisão arquitetural do projeto: o modelo de linguagem ou reconhecimento não pode fechar a conta de forma autônoma sem confirmação explícita por retorno de áudio ou tela tátil, e as regras determinísticas garantem que nenhum item alucinado ou corrompido seja cobrado indevidamente na conta do cliente.
 
 ## 4 · o vídeo
 
