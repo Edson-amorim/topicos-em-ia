@@ -96,7 +96,7 @@ Transcrição Whisper [pt, prob 1.00]: 'com 2 corpos gelados e uma corção de m
 
 ## 4 · o vídeo
 
-**link:** [tec/demonstracao.mp4](https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/demonstracao.mp4) (arquivo público sem login no repositório) · **duração:** 1 min 10 s · **o que aparece:** histórico git com os dois commits (`84bb835` e `c032f22`), execução do comando `python transcrever.py` no terminal e a saída completa aparecendo na íntegra (busca de bar acústico via GraphRAG, cálculo exato da comanda com Pix determinístico, documentação do erro acústico no Caso 3 e APK Android gerado).
+**link:** [tec/demonstracao.mp4](https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/demonstracao.mp4) (arquivo público sem login no repositório) · **duração:** 2 min 26 s · **o que aparece:** vídeo narrado com voz em português exibindo na ordem: o histórico git com os dois commits (`84bb835` e `c032f22`), a execução do `python transcrever.py` no terminal e a execução real do aplicativo nativo gravada diretamente na tela do celular Android do aluno (Samsung Galaxy A15), acionando os 3 casos de teste (GraphRAG para busca de bar calmo a 130m, cálculo determinístico da comanda de R$ 22,00 com senha e Pix, e demonstração honesta da falha acústica sob ruído de bar no Caso 3).
 
 ## 5 · o que deu certo e o que errou, sem IA
 

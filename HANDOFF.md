@@ -18,8 +18,9 @@
   - Commit `84bb835` rodando transcrição em CPU INT8 com modelo small.
 - **Passo 3 (Alteração Mínima e APK Android - Commit 2):**
   - Commit `c032f22` com dados do problema (áudios em PT-BR, grafo de bares do Recife e cardápios, cálculo exato da comanda, Pix determinístico com CRC16 válido, APK Android demonstrativo e documentação honesta do erro acústico sob ruído de bar).
-- **Passo 4 (Vídeo Demonstrativo):**
-  - Compilado vídeo em alta definição `tec/demonstracao.mp4` (1 min 10 s, 3,82 MB) demonstrando o `git log` com os dois commits, o comando no terminal e a saída completa na íntegra.
+- **Passo 4 (Vídeo Demonstrativo com Voz e Android Real):**
+  - Compilado vídeo narrado em alta definição `tec/demonstracao.mp4` (2 min 26 s, 5,2 MB) com voz falada em português sincronizada.
+  - Demonstra na ordem: o `git log` com os dois commits (`84bb835` e `c032f22`), o comando no terminal e a execução real gravada diretamente na tela do celular Android do aluno (Samsung Galaxy A15) com os 3 casos de teste.
 - **Passo 5 (O que Deu Certo e Errou, Sem IA):**
   - Ditado pelo Edson: acerto da comanda e do bar, leveza no PC e Android (APK de 16 KB), erro no ruído do bar e reflexão sobre a necessidade de digitação/confirmação e regras determinísticas.
 - **Passo 6 (Auditoria Cega e Resposta sem IA):**
