@@ -19,6 +19,8 @@
         {"item": "suco de laranja natural", "preco": 10.00, "categoria": "bebida"},
         {"item": "chope gelado", "preco": 11.50, "categoria": "bebida"},
         {"item": "macaxeira frita com queijo coalho", "preco": 34.00, "categoria": "petisco"},
+        {"item": "coca gelada", "preco": 8.00, "categoria": "bebida"},
+        {"item": "carne de sol com fritas", "preco": 48.00, "categoria": "petisco"},
         {"item": "agua mineral sem gas", "preco": 6.00, "categoria": "bebida"}
       ]
     },

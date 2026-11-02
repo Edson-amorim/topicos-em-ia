@@ -79,9 +79,9 @@
 - [x] Atualizado `HANDOFF.md` e `ROADMAP.md` ao final da Sessão 2.
 
 #### Sessão 3 · Passo 4 (Vídeo), Passo 5 (Resumo sem IA) e Passo 6 (Auditoria Cega + Push Final) — CONCLUÍDO
-- [x] **Passo 4 · O Vídeo com Voz e Execução no Celular Android (`§ 4` de `va2/tec.md`):**
-  - Gerado o vídeo demonstrativo narrado em alta definição `tec/demonstracao.mp4` (duração: 2 min 26 s, 5,2 MB), com faixa de áudio e voz falada em português sincronizada.
-  - O vídeo exibe: histórico do `git log --oneline -n 4` com os dois commits (`84bb835` e `c032f22`), comando `python transcrever.py` rodando o pipeline, e a tela real do smartphone Samsung Galaxy A15 do aluno executando o aplicativo nativo com os botões acionados (Caso 1: Bar Cais do Sertão no GraphRAG, Caso 2: Comanda R$ 22,00 com Pix, e Caso 3: Documentação honesta da falha acústica sob ruído de bar).
+- [x] **Passo 4 · O Vídeo com a Própria Voz do Aluno e Execução no Celular Android (`§ 4` de `va2/tec.md`):**
+  - Gerado o vídeo demonstrativo narrado em alta definição `tec/demonstracao.mp4` (duração: 2 min 11 s, 3,87 MB), integrando a narração em português e o **áudio real gravado pelo próprio aluno Edson Amorim** no Caso 2 fazendo o pedido de bar (*"uma coca gelada e uma porção de carne de sol com fritas"* com o TalkBack ao fundo).
+  - O vídeo exibe: histórico do `git log --oneline -n 4` com os dois commits (`84bb835` e `c032f22`), comando `python transcrever.py` rodando o pipeline, e a tela real do smartphone Samsung Galaxy A15 do aluno executando o aplicativo nativo com os botões acionados (Caso 1: Bar Cais do Sertão no GraphRAG, Caso 2: Comanda R$ 56,00 com Pix da voz do Edson, e Caso 3: Documentação honesta da falha acústica sob ruído de bar).
   - Registrado o link público no repositório GitHub sem exigência de login.
 - [x] **Passo 5 · O que deu certo e o que errou, sem IA (`§ 5` de `va2/tec.md`):**
   - Entrevistado o Edson e registradas as 4 linhas com suas próprias palavras sobre o acerto da comanda, erro no ruído do bar, leveza no PC/Android e necessidade de digitação/regras exatas.

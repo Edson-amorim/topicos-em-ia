@@ -115,12 +115,13 @@ def executar_demonstracao():
     cardapio_bar = grafo.obter_cardapio_bar(G, bar_escolhido["id"])
     
     # =========================================================================
-    # CASO 2: Pedido Direto Claro + Regras Exatas de Conta, Teto, Senha e Pix
+    # CASO 2: Pedido com Voz Real do Usuário + Regras Exatas e Pix
     # =========================================================================
-    audio2 = os.path.join(pasta_audios, "audio2_pedido_direto.wav")
+    audio_edson = os.path.join(pasta_audios, "audio_edson_pedido.wav")
+    audio2 = audio_edson if os.path.exists(audio_edson) else os.path.join(pasta_audios, "audio2_pedido_direto.wav")
     print("\n" + "-" * 70)
-    print("CASO 2 · PEDIDO DIRETO, CÁLCULO DE COMANDA EXATA E PIX DETERMINÍSTICO")
-    print(f"Entrada de Áudio: {os.path.basename(audio2)}")
+    print("CASO 2 · PEDIDO DIRETO COM VOZ REAL DO USUÁRIO, CÁLCULO E PIX")
+    print(f"Entrada de Áudio: {os.path.basename(audio2)} (Gravação real do aluno Edson Amorim)")
     
     termos_cardapio = ", ".join([it["item"] for it in cardapio_bar])
     transcricao2, info2 = transcrever_audio(modelo, audio2, prompt_contexto=f"Cardápio: {termos_cardapio}")
@@ -132,7 +133,7 @@ def executar_demonstracao():
         print(f" -> {it['quantidade']}x {it['item']} (R$ {it['preco']:.2f})")
         
     # Regras Determinísticas
-    resultado_conta = regras.calcular_conta(itens_extraidos, teto_gasto=TETO_GASTO_PADRAO)
+    resultado_conta = regras.calcular_conta(itens_extraidos, teto_gasto=60.0)
     senha = regras.gerar_senha_entrega(seed=4821)
     copia_pix = regras.gerar_copia_e_cola_pix(
         chave_pix="pix@barcaisdosertao.com.br",

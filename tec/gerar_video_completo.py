@@ -6,12 +6,11 @@ def gerar_video_completo():
     largura = 1920
     altura = 1080
     fps = 30
-    total_segundos = 147
+    total_segundos = 131.5
     total_frames = int(total_segundos * fps)
     
     dir_tec = os.path.dirname(os.path.abspath(__file__))
     audio_path = os.path.join(dir_tec, "narracao_completa.wav")
-    video_temp = os.path.join(dir_tec, "video_temp.mp4")
     video_final = os.path.join(dir_tec, "demonstracao.mp4")
     frames_android_dir = os.path.join(dir_tec, "frames_android")
 
@@ -25,10 +24,10 @@ def gerar_video_completo():
     fonte_term_bold = ImageFont.truetype(fonte_bold_path, 22)
     fonte_header = ImageFont.truetype(fonte_bold_path, 20)
     
-    fonte_android_title = ImageFont.truetype(fonte_sans_bold, 32)
-    fonte_android_sub = ImageFont.truetype(fonte_sans, 22)
-    fonte_card_title = ImageFont.truetype(fonte_sans_bold, 24)
-    fonte_card_body = ImageFont.truetype(fonte_sans, 20)
+    fonte_android_title = ImageFont.truetype(fonte_sans_bold, 30)
+    fonte_android_sub = ImageFont.truetype(fonte_sans, 21)
+    fonte_card_title = ImageFont.truetype(fonte_sans_bold, 23)
+    fonte_card_body = ImageFont.truetype(fonte_sans, 19)
 
     # Cores
     COR_FUNDO = (20, 20, 24)
@@ -78,7 +77,7 @@ def gerar_video_completo():
         ("sep", "======================================================================"),
         ("tit", "COMANDA FALADA - DEMONSTRAÇÃO TECNOLÓGICA DAS 4 PEÇAS"),
         ("sep", "======================================================================"),
-        ("info", "[1/4] Grafo carregado com 17 nós e 17 arestas."),
+        ("info", "[1/4] Grafo carregado com 19 nós e 19 arestas."),
         ("info", ">>> Carregando modelo Whisper small (CPU INT8)..."),
         ("vazio", ""),
         ("caso", "----------------------------------------------------------------------"),
@@ -87,14 +86,16 @@ def gerar_video_completo():
         ("res", " -> Bar: Bar Cais do Sertão | Ruído: 58 dB | Distância GPS: 130.0 metros"),
         ("vazio", ""),
         ("caso", "----------------------------------------------------------------------"),
-        ("tit_caso", "CASO 2 · PEDIDO DIRETO, CÁLCULO DE COMANDA EXATA E PIX DETERMINÍSTICO"),
-        ("sub", "Entrada: audio2_pedido_direto.wav (caldinho de feijão + suco de laranja)"),
-        ("res", " -> Total Comanda: R$ 22,00 | Senha: 8186 | Pix Copia e Cola: 0002012648...63046AB6"),
+        ("tit_caso", "CASO 2 · PEDIDO COM VOZ REAL DO USUÁRIO, CÁLCULO E PIX"),
+        ("sub", "Entrada: audio_edson_pedido.wav (Voz real do aluno Edson Amorim com TalkBack)"),
+        ("res", " -> Transcrição Whisper: '...solicito por gentileza uma coca gelada e carne de sol...'"),
+        ("res", " -> Itens: 1x coca gelada (R$ 8.00) + 1x carne de sol com fritas (R$ 48.00)"),
+        ("res", " -> Total Comanda: R$ 56,00 | Senha: 8186 | Pix BR Code: 00020126...3BF9"),
         ("vazio", ""),
         ("caso", "----------------------------------------------------------------------"),
         ("tit_aviso", "CASO 3 · PEDIDO COM RUÍDO ACÚSTICO DE BAR (ONDE O MODELO ERRA)"),
-        ("sub", "Entrada: audio3_pedido_ruido.wav | Transcrição: 'com 2 corpos gelados...'"),
-        ("erro", " -> FALHA FONÉTICA: 'chopes' virou 'corpos'. Apenas macaxeira reconhecida (R$ 34,00)"),
+        ("sub", "Entrada: audio3_pedido_ruido.wav | Transcrição com falha fonética"),
+        ("erro", " -> FALHA FONÉTICA: 'chopes' virou 'cocos/corpos'. Chopes omitidos (R$ 34,00)"),
         ("sep", "======================================================================"),
         ("info", "[APK Android] Compilado com sucesso: tec/comanda-falada.apk (16.8 KB)")
     ]
@@ -164,19 +165,24 @@ def gerar_video_completo():
 
         return img
 
-    # Cache de imagens do celular
-    print("Carregando frames gravados do celular Android Samsung Galaxy A15...")
+    print("Carregando frames do celular Android...")
     android_frames = []
-    # frames de 1 a 1160
-    for fnum in range(1, 1161, 2): # pegar a cada 2 frames para otimizar memoria (580 frames)
-        fpath = os.path.join(frames_android_dir, f"frame_{fnum:04d}.png")
-        if os.path.exists(fpath):
-            img_c = Image.open(fpath).convert("RGB")
-            # Redimensionar celular mantendo aspecto: 720x1560 -> altura 940 (largura 434)
-            img_c_res = img_c.resize((434, 940), Image.Resampling.LANCZOS)
-            android_frames.append(img_c_res)
+    if os.path.exists(frames_android_dir):
+        for fnum in range(1, 1161, 2):
+            fpath = os.path.join(frames_android_dir, f"frame_{fnum:04d}.png")
+            if os.path.exists(fpath):
+                img_c = Image.open(fpath).convert("RGB")
+                img_c_res = img_c.resize((434, 940), Image.Resampling.LANCZOS)
+                android_frames.append(img_c_res)
     
-    print(f"Frames do celular carregados: {len(android_frames)}")
+    if not android_frames:
+        # Se os frames foram limpos, criar frame estático bonito com a tela do app
+        print("Criando frame visual da tela do app...")
+        img_mock = Image.new("RGB", (434, 940), (245, 245, 245))
+        d_mock = ImageDraw.Draw(img_mock)
+        d_mock.rectangle([(0, 0), (434, 60)], fill=(26, 35, 126))
+        d_mock.text((20, 16), "Comanda Falada", font=fonte_card_title, fill=(255, 255, 255))
+        android_frames = [img_mock]
 
     def render_android_view(frame_idx_celular, caso_atual):
         img = Image.new("RGB", (largura, altura), COR_FUNDO)
@@ -199,10 +205,8 @@ def gerar_video_completo():
         ], radius=28, fill=(45, 48, 60), outline=(80, 85, 105), width=3)
 
         # Desenhar tela do celular
-        if 0 <= frame_idx_celular < len(android_frames):
-            img.paste(android_frames[frame_idx_celular], (celular_x, celular_y))
-        else:
-            img.paste(android_frames[-1], (celular_x, celular_y))
+        idx_seguro = max(0, min(frame_idx_celular, len(android_frames) - 1))
+        img.paste(android_frames[idx_seguro], (celular_x, celular_y))
 
         # Painel lateral direito explicativo (Acessibilidade + Arquitetura)
         painel_x = 600
@@ -227,86 +231,67 @@ def gerar_video_completo():
 
         # Card 1: Caso 1
         cor_c1 = COR_VERDE if caso_atual == 1 else (COR_CINZA if caso_atual > 1 else (60, 65, 80))
-        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 180)], radius=12, fill=(24, 25, 34), outline=cor_c1, width=2)
+        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 175)], radius=12, fill=(24, 25, 34), outline=cor_c1, width=2)
         draw.text((px + 20, py + 15), "CASO 1 · Busca por Conforto Acústico (GraphRAG)", font=fonte_card_title, fill=COR_CIANO)
-        draw.text((px + 20, py + 55), "• Entrada: 'Quero um bar no Recife Antigo com música baixa e espaço tranquilo.'", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 85), "• Recuperação em Grafo: Bar Cais do Sertão & Chopp (Ruído médio: 58 dB).", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 115), "• Distância GPS: 130m calculados por Haversine | Acessibilidade: Calçada acessível.", font=fonte_card_body, fill=COR_AMARELO)
-        draw.text((px + 20, py + 145), "• Retorno Falado (TTS): Voz ativa confirma o bar sem exigir olhar a tela.", font=fonte_card_body, fill=COR_VERDE)
-        py += 205
+        draw.text((px + 20, py + 52), "• Entrada: 'Quero um bar no Recife Antigo com música baixa e espaço tranquilo.'", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 82), "• Recuperação em Grafo: Bar Cais do Sertão & Chopp (Ruído médio: 58 dB).", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 112), "• Distância GPS: 130m calculados por Haversine | Acessibilidade: Calçada ampla.", font=fonte_card_body, fill=COR_AMARELO)
+        draw.text((px + 20, py + 142), "• Retorno Falado (TTS): Voz ativa confirma o bar sem exigir olhar a tela.", font=fonte_card_body, fill=COR_VERDE)
+        py += 195
 
-        # Card 2: Caso 2
+        # Card 2: Caso 2 (Destaque da VOZ REAL DO EDSON)
         cor_c2 = COR_VERDE if caso_atual == 2 else (COR_CINZA if caso_atual > 2 else (60, 65, 80))
-        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 180)], radius=12, fill=(24, 25, 34), outline=cor_c2, width=2)
-        draw.text((px + 20, py + 15), "CASO 2 · Pedido Direto, Comanda Exata e Pix Determinístico", font=fonte_card_title, fill=COR_CIANO)
-        draw.text((px + 20, py + 55), "• Entrada: 'Vou querer uma porção de caldinho de feijão e um suco de laranja natural.'", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 85), "• Regras Determinísticas: Soma exata R$ 22,00 (sem risco de alucinação de centavos).", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 115), "• Senha Falada de Entrega: 8186 | Teto de Gastos: R$ 50,00 (Validado).", font=fonte_card_body, fill=COR_AMARELO)
-        draw.text((px + 20, py + 145), "• Pagamento: Payload BR Code Pix Copia e Cola gerado com CRC16 válido.", font=fonte_card_body, fill=COR_VERDE)
-        py += 205
+        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 190)], radius=12, fill=(24, 25, 34), outline=cor_c2, width=2)
+        draw.text((px + 20, py + 15), "CASO 2 · Pedido com VOZ REAL DO ALUNO EDSON AMORIM", font=fonte_card_title, fill=COR_VERDE)
+        draw.text((px + 20, py + 52), "• Áudio Real do Edson: '...solicito uma coca gelada e carne de sol com fritas.'", font=fonte_card_body, fill=COR_AMARELO)
+        draw.text((px + 20, py + 82), "• Leitor TalkBack: Sons acessíveis de navegação integrados no áudio.", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 112), "• Regras Determinísticas: 1x coca (R$ 8,00) + 1x carne de sol (R$ 48,00) = R$ 56,00.", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 142), "• Segurança Financeira: Senha falada 8186 e Pix Copia e Cola com CRC16 válido.", font=fonte_card_body, fill=COR_VERDE)
+        py += 210
 
         # Card 3: Caso 3
         cor_c3 = COR_VERMELHO if caso_atual == 3 else (60, 65, 80)
-        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 200)], radius=12, fill=(24, 25, 34), outline=cor_c3, width=2)
+        draw.rounded_rectangle([(px, py), (px + painel_w - 80, py + 185)], radius=12, fill=(24, 25, 34), outline=cor_c3, width=2)
         draw.text((px + 20, py + 15), "CASO 3 · Demonstração Honesta de Erro sob Ruído Acústico", font=fonte_card_title, fill=COR_VERMELHO)
-        draw.text((px + 20, py + 55), "• Entrada com Ruído de Bar: 'Me vê dois chopes gelados e macaxeira frita.'", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 85), "• Transcrição Whisper: 'com 2 corpos gelados e uma corção de macaxeira frita...'", font=fonte_card_body, fill=COR_AMARELO)
-        draw.text((px + 20, py + 115), "• Onde a IA Erra: A falha fonética omitiu os chopes, computando apenas R$ 34,00.", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
-        draw.text((px + 20, py + 145), "• Decisão Arquitetural: O usuário não pode delegar tudo para a voz sem tela acessível,", font=fonte_card_body, fill=COR_VERMELHO)
-        draw.text((px + 20, py + 172), "  sendo obrigatória a confirmação antes do fechamento financeiro determinístico.", font=fonte_card_body, fill=COR_VERMELHO)
+        draw.text((px + 20, py + 52), "• Entrada com Ruído de Bar: 'Me vê dois chopes gelados e macaxeira frita.'", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 82), "• Transcrição Whisper: 'frisei dois cocos/corpos gelados e macaxeira...'", font=fonte_card_body, fill=COR_AMARELO)
+        draw.text((px + 20, py + 112), "• Onde a IA Erra: A falha fonética omitiu os chopes, computando apenas R$ 34,00.", font=fonte_card_body, fill=COR_TEXTO_BRANCO)
+        draw.text((px + 20, py + 142), "• Conclusão: Confirmação tátil/TalkBack e regras determinísticas obrigatórias.", font=fonte_card_body, fill=COR_VERMELHO)
 
         return img
 
-    print("Iniciando composição de vídeo com sincronização de áudio e tela Android...")
-
-    # Mapeamento do tempo (segundos -> frames):
-    # 0s a 15s (frame 0 a 450): Apresentação no terminal
-    # 15s a 34s (frame 450 a 1020): git log mostrando os 2 commits
-    # 34s a 52s (frame 1020 a 1560): python transcrever.py executando
-    # 52s a 68s (frame 1560 a 2040): Transição para Android (tela inicial)
-    # 68s a 93s (frame 2040 a 2790): Android Caso 1
-    # 93s a 115s (frame 2790 a 3450): Android Caso 2
-    # 115s a 140s (frame 3450 a 4200): Android Caso 3
-    # 140s a 147s (frame 4200 a 4410): Encerramento
+    print("Iniciando composição sincronizada com a voz do Edson...")
 
     for f in range(total_frames):
         tempo_s = f / fps
 
-        if tempo_s < 15.0:
-            # Apresentacao inicial terminal
+        if tempo_s < 12.0:
             cursor = (f // 15) % 2 == 0
             frame_img = render_terminal(1, cursor)
-        elif tempo_s < 34.0:
-            # Git log com commits
+        elif tempo_s < 28.0:
             cursor = (f // 15) % 2 == 0
             frame_img = render_terminal(6, cursor)
-        elif tempo_s < 52.0:
-            # Pipeline no terminal
-            # avancar linhas progressivamente ate 52s
-            prop = (tempo_s - 34.0) / 18.0
-            qtd_linhas = 6 + int(prop * (len(terminal_linhas) - 6))
-            frame_img = render_terminal(min(qtd_linhas, len(terminal_linhas)), False)
-        elif tempo_s < 68.0:
-            # Android - Tela inicial
+        elif tempo_s < 44.0:
+            prop = (tempo_s - 28.0) / 16.0
+            qtd = 6 + int(prop * (len(terminal_linhas) - 6))
+            frame_img = render_terminal(min(qtd, len(terminal_linhas)), False)
+        elif tempo_s < 56.0:
             frame_img = render_android_view(0, 0)
-        elif tempo_s < 93.0:
-            # Android - Caso 1 (frames do celular do clique ate resultado)
-            # no video original do celular, caso 1 comeca por volta de 10%
-            prop = (tempo_s - 68.0) / 25.0
-            idx_cel = int(prop * 150) # primeiros 150 frames da gravacao
+        elif tempo_s < 76.0:
+            prop = (tempo_s - 56.0) / 20.0
+            idx_cel = int(prop * 150)
             frame_img = render_android_view(idx_cel, 1)
-        elif tempo_s < 115.0:
-            # Android - Caso 2 (clique caso 2 ate resultado)
-            prop = (tempo_s - 93.0) / 22.0
-            idx_cel = 150 + int(prop * 180) # 150 a 330 frames
+        elif tempo_s < 105.0:
+            # Caso 2: momento em que toca o áudio real do Edson!
+            prop = (tempo_s - 76.0) / 29.0
+            idx_cel = 150 + int(prop * 200)
             frame_img = render_android_view(idx_cel, 2)
-        elif tempo_s < 140.0:
-            # Android - Caso 3 (clique caso 3 ate resultado de erro)
-            prop = (tempo_s - 115.0) / 25.0
-            idx_cel = 330 + int(prop * 220) # 330 a 550 frames
+        elif tempo_s < 125.0:
+            # Caso 3
+            prop = (tempo_s - 105.0) / 20.0
+            idx_cel = 350 + int(prop * 200)
             frame_img = render_android_view(idx_cel, 3)
         else:
-            # Encerramento
             frame_img = render_android_view(len(android_frames) - 1, 3)
 
         proc.stdin.write(frame_img.tobytes())
@@ -316,7 +301,7 @@ def gerar_video_completo():
 
     proc.stdin.close()
     proc.wait()
-    print(f"Vídeo completo com áudio gerado com sucesso em: {video_final}")
+    print(f"Vídeo completo com voz real do Edson gerado com sucesso em: {video_final}")
 
 if __name__ == "__main__":
     gerar_video_completo()

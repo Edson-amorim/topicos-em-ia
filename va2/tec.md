@@ -39,9 +39,9 @@ Detected language 'en' with probability 0.938385
 
 **o commit:** [c032f22 · alteracao minima: pedidos de bar, graphrag, regras deterministicas e apk android](https://github.com/Edson-amorim/topicos-em-ia/commit/c032f22)
 
-**a entrada:** antes, um áudio em inglês com trecho de discurso oficial de John F. Kennedy (`audio.mp3` / `jfk.flac`), fornecido pelo repositório do faster-whisper; agora, três áudios em português brasileiro (`tec/audios/`) simulando o fluxo real do Comanda Falada (uma busca por voz de bar acessível com baixo ruído acústico no Recife Antigo, um pedido claro de cardápio e um pedido sob ruído de bar), combinados com uma base estruturada de conhecimento em grafo de bares do Recife, cardápios e relatos de conforto acústico (`tec/bares_grafo.json`), além do aplicativo nativo Android gerado em APK (`tec/comanda-falada.apk`).
+**a entrada:** antes, um áudio em inglês com trecho de discurso oficial de John F. Kennedy (`audio.mp3` / `jfk.flac`), fornecido pelo repositório do faster-whisper; agora, áudios em português brasileiro (`tec/audios/`) simulando o fluxo real do Comanda Falada, incluindo a gravação com a **voz real do próprio aluno Edson Amorim** (`audio_edson_pedido.wav`) com leitor de telas ativo no celular solicitando itens de bar (*"uma coca gelada e uma porção de carne de sol com fritas"*), busca por voz de bar acessível com baixo ruído acústico no Recife Antigo e pedido sob ruído de bar, combinados com uma base estruturada em grafo de bares do Recife e cardápios (`tec/bares_grafo.json`), além do aplicativo nativo Android gerado em APK (`tec/comanda-falada.apk`).
 
-**a saída:** antes, apenas as linhas de texto em inglês com marcações de tempo e probabilidade da língua; agora, o pipeline completo das 4 peças da arquitetura funcionando em conjunto: transcrição em português com termos de cardápio no contexto (`initial_prompt`), recuperação de bar calmo via GraphRAG (`NetworkX`), distância em metros por Haversine GPS, soma exata da comanda em reais (R$ 22,00) sem erro de centavos, validação de teto de gasto, senha falada de 4 dígitos (8186), código Pix Copia e Cola (BR Code EMV) com CRC16 válido e APK demonstrativo funcional para Android.
+**a saída:** antes, apenas as linhas de texto em inglês com marcações de tempo e probabilidade da língua; agora, o pipeline completo das 4 peças da arquitetura funcionando em conjunto: transcrição em português com termos de cardápio no contexto (`initial_prompt`), recuperação de bar calmo via GraphRAG (`NetworkX`), distância em metros por Haversine GPS, transcrição da voz real do aluno com extração estruturada dos pedidos, soma exata da comanda em reais (R$ 56,00) sem erro de centavos, validação de teto de gasto, senha falada de 4 dígitos (8186), código Pix Copia e Cola (BR Code EMV) com CRC16 válido e APK demonstrativo funcional para Android.
 
 **o comando e a saída, colados como vieram:**
 
@@ -50,7 +50,7 @@ $ python transcrever.py
 ======================================================================
 COMANDA FALADA - DEMONSTRAÇÃO TECNOLÓGICA DAS 4 PEÇAS
 ======================================================================
-[1/4] Grafo carregado com 17 nós e 17 arestas.
+[1/4] Grafo carregado com 19 nós e 19 arestas.
 >>> Carregando modelo Whisper small (CPU INT8)...
 
 ----------------------------------------------------------------------
@@ -65,24 +65,24 @@ Transcrição Whisper [pt, prob 1.00]: 'Quero um bar no Recife Antigo com músic
     Distância GPS (Haversine): 130.0 metros da sua localização
 
 ----------------------------------------------------------------------
-CASO 2 · PEDIDO DIRETO, CÁLCULO DE COMANDA EXATA E PIX DETERMINÍSTICO
-Entrada de Áudio: audio2_pedido_direto.wav
-Transcrição Whisper [pt, prob 1.00]: 'Vou querer uma porção de caldinho de feijão e um suco de laranja natural, por favor.'
+CASO 2 · PEDIDO DIRETO COM VOZ REAL DO USUÁRIO, CÁLCULO E PIX
+Entrada de Áudio: audio_edson_pedido.wav (Gravação real do aluno Edson Amorim)
+Transcrição Whisper [pt, prob 1.00]: 'pausado, pausado, pausado, botão olá, solicito por gentileza, uma coca gelada e uma porção de carne de sol com fritas parado, botão'
 [Extração Estruturada] Itens identificados no cardápio: 2
- -> 1x caldinho de feijao (R$ 12.00)
- -> 1x suco de laranja natural (R$ 10.00)
+ -> 1x coca gelada (R$ 8.00)
+ -> 1x carne de sol com fritas (R$ 48.00)
 
 [Regras Determinísticas - Comanda]
- -> Total da Comanda: R$ 22,00
+ -> Total da Comanda: R$ 56,00
  -> Status do Teto: Dentro do teto de gastos estipulado.
  -> Senha Falada de Entrega: 8186
  -> Código Copia e Cola Pix (BR Code):
-    00020126480014br.gov.bcb.pix0126pix@barcaisdosertao.com.br520400005303986540522.005802BR5918Bar Cais do Sertao6006Recife62100506PEDIDO63046AB6
+    00020126480014br.gov.bcb.pix0126pix@barcaisdosertao.com.br520400005303986540556.005802BR5918Bar Cais do Sertao6006Recife62100506PEDIDO63043BF9
 
 ----------------------------------------------------------------------
 CASO 3 · PEDIDO COM RUÍDO ACÚSTICO DE BAR (ONDE O MODELO ERRA)
 Entrada de Áudio: audio3_pedido_ruido.wav
-Transcrição Whisper [pt, prob 1.00]: 'com 2 corpos gelados e uma corção de macaxeira frita com queijo coalho'
+Transcrição Whisper [pt, prob 1.00]: 'frisei dois cocos gelados e uma coção de macaxeira frita com queijo coalho'
 [Extração Estruturada com Ruído] Itens reconhecidos: 1
  -> 1x macaxeira frita com queijo coalho (R$ 34.00)
  -> Total Calculado: R$ 34,00
@@ -96,7 +96,7 @@ Transcrição Whisper [pt, prob 1.00]: 'com 2 corpos gelados e uma corção de m
 
 ## 4 · o vídeo
 
-**link:** [tec/demonstracao.mp4](https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/demonstracao.mp4) (arquivo público sem login no repositório) · **duração:** 2 min 26 s · **o que aparece:** vídeo narrado com voz em português exibindo na ordem: o histórico git com os dois commits (`84bb835` e `c032f22`), a execução do `python transcrever.py` no terminal e a execução real do aplicativo nativo gravada diretamente na tela do celular Android do aluno (Samsung Galaxy A15), acionando os 3 casos de teste (GraphRAG para busca de bar calmo a 130m, cálculo determinístico da comanda de R$ 22,00 com senha e Pix, e demonstração honesta da falha acústica sob ruído de bar no Caso 3).
+**link:** [tec/demonstracao.mp4](https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/demonstracao.mp4) (arquivo público sem login no repositório) · **duração:** 2 min 11 s · **o que aparece:** vídeo narrado com voz em português e áudio real com a **própria voz do aluno Edson Amorim** no Caso 2 com leitor de telas TalkBack ativo, exibindo na ordem: o histórico git com os dois commits (`84bb835` e `c032f22`), a execução do `python transcrever.py` no terminal e a execução real do aplicativo nativo gravada diretamente na tela do celular Android do aluno (Samsung Galaxy A15), acionando os 3 casos de teste (GraphRAG para busca de bar calmo a 130m, cálculo determinístico da comanda de R$ 56,00 com senha e Pix da voz real do aluno, e demonstração honesta da falha acústica sob ruído de bar no Caso 3).
 
 ## 5 · o que deu certo e o que errou, sem IA
 
