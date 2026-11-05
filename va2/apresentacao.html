@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apresentação · Comanda Falada: Passo à Frente — Edson Amorim (AI for Good · UFRPE)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #334155;
+      --text: #f8fafc;
+      --text-muted: #cbd5e1;
+      --accent: #38bdf8;
+      --accent-strong: #0284c7;
+      --success: #4ade80;
+      --warning: #facc15;
+      --danger: #f87171;
+      --border: #475569;
+      --focus: #fde047;
+    }
+
+    body.light-mode {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-alt: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #334155;
+      --accent: #0369a1;
+      --accent-strong: #0284c7;
+      --success: #15803d;
+      --warning: #a16207;
+      --danger: #b91c1c;
+      --border: #94a3b8;
+      --focus: #d97706;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1.125rem;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: underline;
+      font-weight: 600;
+    }
+
+    a:focus, button:focus, [tabindex]:focus {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 1rem;
+      background: var(--focus);
+      color: #000;
+      padding: 0.75rem 1.25rem;
+      z-index: 1000;
+      border-radius: 0.5rem;
+      font-weight: 700;
+    }
+
+    .skip-link:focus {
+      top: 1rem;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      padding: 2rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      margin: 0.25rem 0 0.75rem 0;
+      font-size: 2.2rem;
+      line-height: 1.25;
+    }
+
+    h2 {
+      font-size: 1.65rem;
+      margin-top: 0;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    button {
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 2px solid var(--border);
+      padding: 0.6rem 1.1rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    nav {
+      background: var(--surface-alt);
+      border-bottom: 2px solid var(--border);
+      padding: 1rem 1.5rem;
+    }
+
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    main {
+      padding: 2rem 1.5rem;
+    }
+
+    section.card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .subcard {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 1rem;
+    }
+
+    caption {
+      text-align: left;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface-alt);
+    }
+
+    .status-ok {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .status-part {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .status-no {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .highlight-box {
+      background: var(--surface-alt);
+      border-left: 6px solid var(--accent);
+      padding: 1.25rem;
+      border-radius: 0.5rem;
+      margin: 1.25rem 0;
+    }
+
+    footer {
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <a href="#conteudo-principal" class="skip-link">Pular direto para o conteúdo principal</a>
+
+  <header role="banner">
+    <div class="container">
+      <span class="badge">UFRPE · Tópicos Avançados em IA: AI for Good · Prof. Lucas Silva Figueiredo</span>
+      <h1>Comanda Falada · Passo à Frente</h1>
+      <p>
+        <strong>Autor:</strong> Edson Amorim ·
+        <strong>Plataforma Alvo:</strong> Android (validado em Samsung Galaxy A15 com TalkBack + Backend em Python)
+      </p>
+      <p>
+        Apresentação consolidada do projeto, tecnologias base demonstráveis (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/tec.md">tec.md</a>),
+        concorrentes de mercado e artigos científicos de universidades (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/cmp.md">cmp.md</a>)
+        e ideação híbrida (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/brw.md">brw.md</a>).
+      </p>
+      <div class="toolbar" role="region" aria-label="Controles de acessibilidade e áudio">
+        <button type="button" onclick="lerTudo()" aria-label="Ouvir a apresentação inteira em voz alta">Ouvir Apresentação Completa</button>
+        <button type="button" onclick="pararLeitura()" aria-label="Parar leitura em voz alta">Parar Áudio</button>
+        <button type="button" onclick="alternarTema()" aria-label="Alternar entre alto contraste escuro e modo claro">Alternar Alto Contraste / Claro</button>
+      </div>
+    </div>
+  </header>
+
+  <nav aria-label="Sumário da Apresentação">
+    <div class="container">
+      <ul>
+        <li><a href="#parte-1">1. O que é o Projeto</a></li>
+        <li><a href="#parte-2">2. As 4 Tecnologias e Concorrentes Técnicas</a></li>
+        <li><a href="#parte-3">3. Concorrentes de Mercado (Apps)</a></li>
+        <li><a href="#parte-4">4. Concorrentes de Universidades (Artigos)</a></li>
+        <li><a href="#parte-5">5. Matriz Comparativa e Diferencial</a></li>
+        <li><a href="#parte-6">6. Resumo de 30 Segundos para a Banca</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main id="conteudo-principal" class="container" role="main">
+
+    <!-- PARTE 1 -->
+    <section id="parte-1" class="card" aria-labelledby="titulo-parte-1">
+      <h2 id="titulo-parte-1">Parte 1 · O que é o Projeto: Comanda Falada · Passo à Frente</h2>
+      <button type="button" onclick="lerSecao('parte-1')">Ouvir Parte 1</button>
+
+      <h3>1.1. A Crise e a Dor Real (Com Dados Verificados)</h3>
+      <ul>
+        <li><strong>7,9 milhões de brasileiros</strong> têm dificuldade severa para enxergar (Censo IBGE 2022).</li>
+        <li>O Brasil tem <strong>1,5 milhão de bares e restaurantes</strong> movimentando <strong>R$ 540 bilhões por ano</strong> (Abrasel), mas <strong>97,1% das páginas e cardápios digitais brasileiros falham em acessibilidade</strong> para leitores de tela (Movimento Web para Todos / BigDataCorp).</li>
+        <li><strong>Na prática:</strong> Cardápios em papel, foto ou QR Code na mesa exigem enquadrar a câmera (ruim para cegos e para quem tem tremor nas mãos). Garçons estão ocupados e nem toda pessoa cega tem facilidade de comunicação para abordar estranhos e pedir que leiam preços. Além disso, andar com papel-moeda traz risco de troco errado, erro na conta ou assalto.</li>
+      </ul>
+
+      <h3>1.2. Como Funciona do Começo ao Fim (Efeito Waze: Sem Caridade)</h3>
+      <ol>
+        <li><strong>Interesse Próprio para Todos:</strong> Qualquer cliente que enxerga usa o sistema para furar a fila do garçom e a fila do caixa no fim da noite. Sem perceber, essa rede mantém os cardápios e as avaliações de conforto dos bares sempre atualizados para todos.</li>
+        <li><strong>Antes de Sair de Casa ou a Caminho (no Silêncio):</strong> A pessoa cega conversa por voz para escolher um bar confortável (com música baixa e espaço acessível), filtra os pratos disponíveis dentro do seu orçamento, adianta o pedido e deixa o Pix encaminhado (só cobrado se o bar confirmar mesa e estoque em até 5 minutos).</li>
+        <li><strong>Na Chegada ao Bar:</strong> O GPS avisa a cozinha quando o cliente chega perto e libera uma <strong>senha falada de 4 dígitos</strong> para o garçom entregar o prato na mesa certa, enquanto regras matemáticas exatas conferem a conta sem erro de centavos.</li>
+      </ol>
+    </section>
+
+    <!-- PARTE 2 -->
+    <section id="parte-2" class="card" aria-labelledby="titulo-parte-2">
+      <h2 id="titulo-parte-2">Parte 2 · As 4 Tecnologias do Projeto e Suas Concorrentes Técnicas (tec.md)</h2>
+      <button type="button" onclick="lerSecao('parte-2')">Ouvir Parte 2</button>
+
+      <p>
+        Todas as peças foram validadas a partir do código-fonte no computador e em aplicativo nativo Android
+        (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/comanda-falada.apk">comanda-falada.apk</a>)
+        rodando no celular <strong>Samsung Galaxy A15</strong> com o leitor de telas <strong>TalkBack</strong> ativo e gravação com a própria voz do aluno Edson Amorim.
+      </p>
+
+      <table>
+        <caption>Tabela das 4 Peças Tecnológicas, Licenças e Alternativas Descartadas</caption>
+        <thead>
+          <tr>
+            <th scope="col">Peça</th>
+            <th scope="col">Papel</th>
+            <th scope="col">O que faz no projeto</th>
+            <th scope="col">Licença</th>
+            <th scope="col">Por que escolhemos esta e descartamos as concorrentes técnicas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Faster-Whisper</strong> (<a href="https://github.com/SYSTRAN/faster-whisper">SYSTRAN/faster-whisper</a>)</td>
+            <td>Central (PC / Servidor)</td>
+            <td>Transcreve o áudio da fala do cliente em texto usando o modelo <code>small</code> em CPU INT8 com frase de contexto (<code>initial_prompt</code>) do cardápio.</td>
+            <td>MIT</td>
+            <td>Roda rápido em CPU comum e erra menos pratos. O <strong>Whisper original da OpenAI</strong> (MIT) é até 4x mais lento em CPU, e o <strong>Vosk</strong> (Apache 2.0) erra mais pontuação e nomes próprios de comidas.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Whisper.cpp</strong> (<a href="https://github.com/ggml-org/whisper.cpp">ggml-org/whisper.cpp</a>)</td>
+            <td>Central (Nativo no Android)</td>
+            <td>Roda a transcrição de voz diretamente no processador ARM do celular Android, alimentando o app e o APK demonstrativo.</td>
+            <td>MIT</td>
+            <td>Roda direto no Android sem burocracia e sem internet. O <strong>Faster-Whisper</strong> não roda no Android, e o <strong>Sherpa-ONNX</strong> (Apache 2.0) exige conversões ONNX bem mais complexas.</td>
+          </tr>
+          <tr>
+            <td><strong>3. NetworkX + Qwen3-4B (via Ollama)</strong> (<a href="https://github.com/networkx/networkx">NetworkX</a> / <a href="https://huggingface.co/Qwen/Qwen3-4B">Qwen3-4B</a>)</td>
+            <td>Apoio de IA (GraphRAG)</td>
+            <td>Estrutura cardápios bagunçados, nível de ruído em decibéis e relatos de conforto num grafo (19 nós e 19 arestas) e extrai o pedido em JSON fixo.</td>
+            <td>BSD-3-Clause · Apache 2.0 · MIT</td>
+            <td>Roda leve e sem custo por chamada. O banco <strong>Neo4j</strong> (GPLv3) é pesado demais para o protótipo, e o <strong>Microsoft GraphRAG</strong> (MIT) exige dezenas de chamadas lentas e caras de LLM.</td>
+          </tr>
+          <tr>
+            <td><strong>4. Regras Exatas Determinísticas</strong> (Python e Java Android)</td>
+            <td>Apoio Determinístico</td>
+            <td>Calcula distância GPS por Haversine (130m), soma a conta sem erro (R$ 56,00), valida teto de gasto, gera senha falada de 4 dígitos (<code>8186</code>) e código Pix oficial (BR Code com CRC16).</td>
+            <td>MIT</td>
+            <td>Regras matemáticas nunca alucinam centavos. Deixar soma da conta, senha ou código Pix para um LLM traz risco financeiro inaceitável.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="highlight-box">
+        <h3>O que deu certo e onde a IA errou nos nossos testes reais:</h3>
+        <ul>
+          <li><strong>Caso 1 (Busca de Bar Confortável):</strong> Acertou 100%, filtrando no grafo o <em>Bar Cais do Sertão &amp; Chopp</em> no Recife Antigo (58 dB, música instrumental baixa, calçada acessível) a 130 metros pelo GPS.</li>
+          <li><strong>Caso 2 (Voz Real do Edson com TalkBack ligado):</strong> Transcreveu o pedido falado mesmo com a voz do leitor de telas ao fundo (<em>"pausado, botão, olá, solicito por gentileza, uma coca gelada e uma porção de carne de sol com fritas"</em>), somou exatos <strong>R$ 56,00</strong> (R$ 8,00 + R$ 48,00), gerou a senha <strong>8186</strong> e o código Pix válido.</li>
+          <li><strong>Caso 3 (Onde a IA Erra — Pedido sob Ruído de Bar):</strong> Com barulho de bar ao fundo, o Whisper trocou <em>"dois chopes gelados"</em> por <em>"dois corpos gelados"</em> e omitiu a bebida da conta (cobrando R$ 34,00 em vez de R$ 57,00). <strong>Lição para o projeto:</strong> o cliente não pode delegar tudo cegamente à voz no barulho; precisa pedir antes de sair ou confirmar na tela tátil acessível, e as regras determinísticas impedem cobrança de item alucinado.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- PARTE 3 -->
+    <section id="parte-3" class="card" aria-labelledby="titulo-parte-3">
+      <h2 id="titulo-parte-3">Parte 3 · Concorrentes de Mercado (Aplicativos Comerciais — cmp.md)</h2>
+      <button type="button" onclick="lerSecao('parte-3')">Ouvir Parte 3</button>
+
+      <p>Avaliamos 10 ferramentas de mercado ( mais 2 encontradas no teste cético de derrubada). Os <strong>3 concorrentes comerciais mais próximos</strong> são:</p>
+
+      <div class="grid-2">
+        <div class="subcard">
+          <h3>1. Anota AI (O Mais Próximo no Mercado)</h3>
+          <p><strong>Site:</strong> <a href="https://anota.ai/">anota.ai</a></p>
+          <p><strong>No que é bom:</strong> Atendente virtual com IA no WhatsApp para milhares de bares e restaurantes; tira dúvidas, anota pedido adiantado e recebe Pix sem papel-moeda.</p>
+          <p><strong>Onde falha:</strong> Atende apenas um restaurante isolado por vez (foco em delivery), envia link de cardápio visual, <strong>não compara qual bar é confortável/acessível antes de sair</strong> e não libera preparo na mesa via GPS com senha falada.</p>
+        </div>
+
+        <div class="subcard">
+          <h3>2. Envision AI (Tecnologia Assistiva para Cegos)</h3>
+          <p><strong>Site:</strong> <a href="https://www.letsenvision.com/">letsenvision.com</a></p>
+          <p><strong>No que é bom:</strong> Escaneia cardápios impressos pela câmera (OCR) e usa LLM (<em>Ask Envision</em>) para responder perguntas por voz sobre os pratos (superando <em>Be My Eyes</em> e <em>Seeing AI</em> em perguntas diretas sobre o documento).</p>
+          <p><strong>Onde falha:</strong> Exige já estar sentado no bar com o cardápio de papel na mão e fotografar página por página; não escolhe bar antes de sair nem faz pedido ou pagamento Pix.</p>
+        </div>
+
+        <div class="subcard">
+          <h3>3. Goomer (Autoatendimento Presencial)</h3>
+          <p><strong>Site:</strong> <a href="https://www.goomer.com.br/">goomer.com.br</a></p>
+          <p><strong>No que é bom:</strong> Plataforma líder no Brasil de cardápio em QR Code na mesa e autoatendimento (à frente do <em>Abrahão</em>); corta a espera pelo garçom e a fila do caixa.</p>
+          <p><strong>Onde falha:</strong> Depende de mirar a câmera no QR Code da mesa ou tocar em tablet visual, obrigando a varrer telas sem conversa por voz e sem filtro de conforto antes de sair.</p>
+        </div>
+
+        <div class="subcard">
+          <h3>Outros Apps Avaliados (Peças Parciais)</h3>
+          <ul>
+            <li><strong>Guiaderodas e SoundPrint:</strong> Mapeiam acessibilidade física ou barulho em decibéis antes de sair, mas não têm cardápio do dia nem fazem pedido ou Pix.</li>
+            <li><strong>Lazarillo:</strong> Guia por GPS falado até a porta do bar, mas não filtra pratos nem faz pedido.</li>
+            <li><strong>Allset:</strong> Faz pedido e pagamento antecipado para salão (<em>dine-in</em>), mas é 100% visual, sem voz para cegos e sem filtro de conforto.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARTE 4 -->
+    <section id="parte-4" class="card" aria-labelledby="titulo-parte-4">
+      <h2 id="titulo-parte-4">Parte 4 · Concorrentes de Artigos de Universidades (cmp.md)</h2>
+      <button type="button" onclick="lerSecao('parte-4')">Ouvir Parte 4</button>
+
+      <p>Revisamos 11 artigos científicos em conferências internacionais de excelência da ACM (<strong>ASSETS Qualis A1</strong>, <strong>CHI Qualis A1</strong>, <strong>W4A</strong>, <strong>UIST A1</strong>, <strong>ICML A1</strong> e <strong>NeurIPS A1</strong>). Os <strong>4 artigos universitários centrais</strong> que cercam o nosso projeto são:</p>
+
+      <ol>
+        <li>
+          <strong>AccessMenu (Venkatraman et al., 2025 — Old Dominion University e Michigan State University · Conferência ACM W4A 2025):</strong>
+          <ul>
+            <li><strong>Link oficial:</strong> <a href="https://digitalcommons.odu.edu/computerscience_fac_pubs/407">DOI 10.1145/3744257.3744275</a></li>
+            <li><strong>O que a universidade construiu:</strong> Extensão de navegador que usa LLM multimodal para extrair e limpar cardápios bagunçados em imagem ou PDF nos sites de restaurantes e permite a usuários cegos filtrar pratos com perguntas em linguagem natural (validado com 10 cegos).</li>
+            <li><strong>Por que é o nosso concorrente científico mais próximo e onde ele para:</strong> Ele já limpa cardápios bagunçados com IA, mas roda no navegador de computador para pedir delivery em um site por vez. <strong>Não compara o conforto presencial entre bares, não fecha pedido nem Pix adiantados e não libera o preparo na mesa pelo GPS com senha falada.</strong></li>
+          </ul>
+        </li>
+
+        <li>
+          <strong>Improving Mealtime Experiences of People with Visual Impairments (Chung et al., 2021 — Conferência ACM W4A 2021):</strong>
+          <ul>
+            <li><strong>Link oficial:</strong> <a href="https://doi.org/10.1145/3430263.3452421">DOI 10.1145/3430263.3452421</a></li>
+            <li><strong>O que a universidade descobriu:</strong> Pesquisa com 91 pessoas cegas que comprova que <strong>79,1% sentem desconforto ao pedir ajuda em restaurantes</strong> e <strong>61,5% evitam comer fora sozinhos</strong>, além de protótipo por comando de voz.</li>
+            <li><strong>Onde falha:</strong> O protótipo só ajuda a localizar onde está a comida dentro do prato <strong>depois que já foi servida na mesa</strong>; não escolhe o bar, não lê preços antes de sair e não faz pedido nem Pix.</li>
+          </ul>
+        </li>
+
+        <li>
+          <strong>"Siri Talks at You" (Abdolrahmani et al., 2018 — University of Maryland Baltimore County e UC Irvine · Conferência ACM ASSETS 2018, Qualis A1):</strong>
+          <ul>
+            <li><strong>Link oficial:</strong> <a href="https://doi.org/10.1145/3234695.3236344">DOI 10.1145/3234695.3236344</a></li>
+            <li><strong>O que a universidade provou:</strong> Estudou adultos cegos usando assistentes de voz na rua e em locais públicos barulhentos, provando que o ruído ambiente faz a transcrição falhar e expõe a privacidade da pessoa cega.</li>
+            <li><strong>Como usamos isso no projeto:</strong> É a base científica que justifica pedir por voz <strong>antes de sair de casa (no silêncio)</strong> e usar tela acessível e senha curta no salão do bar.</li>
+          </ul>
+        </li>
+
+        <li>
+          <strong>The Effects of "Not Knowing What You Don't Know" (Bigham et al., 2017 — Carnegie Mellon University · Conferência ACM ASSETS 2017, Qualis A1):</strong>
+          <ul>
+            <li><strong>Link oficial:</strong> <a href="https://doi.org/10.1145/3132525.3132533">DOI 10.1145/3132525.3132533</a></li>
+            <li><strong>O que a universidade provou:</strong> Experimento com 30 cegos e 30 videntes navegando em páginas web reais, incluindo cardápio de restaurante com preços sem cabeçalho e ícones sem texto. Prova que a pessoa cega gasta quase o dobro do tempo sem saber se o prato não existe ou se a página é inacessível, mas não cria o sistema de pedido e pagamento.</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+    <!-- PARTE 5 -->
+    <section id="parte-5" class="card" aria-labelledby="titulo-parte-5">
+      <h2 id="titulo-parte-5">Parte 5 · Matriz Comparativa: Onde Ganhamos, Onde Empatamos e Onde Perdemos</h2>
+      <button type="button" onclick="lerSecao('parte-5')">Ouvir Parte 5</button>
+
+      <table>
+        <caption>Legenda: Faz (Sim) · Faz em parte · Não faz · Sem evidência</caption>
+        <thead>
+          <tr>
+            <th scope="col">Trabalho</th>
+            <th scope="col">1. Conversa por voz sem fotografar cardápio na mesa</th>
+            <th scope="col">2. Compara bares por conforto e acessibilidade antes de sair</th>
+            <th scope="col">3. Envia pedido à cozinha e fecha Pix sem fila</th>
+            <th scope="col">4. Evita falar alto ou mirar câmera no salão barulhento</th>
+            <th scope="col">5. Lê cardápio de papel fora da rede ou localiza comida no prato</th>
+            <th scope="col">6. Já testado em larga escala com usuários ou em operação comercial</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Anota AI (Mercado)</strong></td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-part">Em parte</td>
+          </tr>
+          <tr>
+            <td><strong>Envision AI (Mercado)</strong></td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+            <td class="status-ok">Faz</td>
+          </tr>
+          <tr>
+            <td><strong>Goomer (Mercado)</strong></td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-part">Em parte</td>
+          </tr>
+          <tr>
+            <td><strong>Chung et al. (2021, W4A)</strong></td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+            <td class="status-ok">Faz</td>
+          </tr>
+          <tr>
+            <td><strong>Abdolrahmani et al. (2018, ASSETS)</strong></td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+          </tr>
+          <tr>
+            <td><strong>Bigham et al. (2017, ASSETS)</strong></td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+          </tr>
+          <tr>
+            <td><strong>AccessMenu (2025, W4A)</strong></td>
+            <td class="status-part">Em parte</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-no">Não faz</td>
+            <td>? (Só web)</td>
+            <td class="status-no">Não faz</td>
+            <td class="status-ok">Faz</td>
+          </tr>
+          <tr>
+            <td><strong>Comanda Falada (A Minha Ideia)</strong></td>
+            <td class="status-ok"><strong>Faz</strong></td>
+            <td class="status-ok"><strong>Faz</strong></td>
+            <td class="status-ok"><strong>Faz</strong></td>
+            <td class="status-ok"><strong>Faz</strong></td>
+            <td class="status-no"><strong>Não faz (Perde)</strong></td>
+            <td class="status-no"><strong>Não faz (Perde)</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- PARTE 6 -->
+    <section id="parte-6" class="card" aria-labelledby="titulo-parte-6">
+      <h2 id="titulo-parte-6">Parte 6 · Resumo Final em 30 Segundos (Com as Palavras do Aluno)</h2>
+      <button type="button" onclick="lerSecao('parte-6')">Ouvir Parte 6</button>
+
+      <div class="highlight-box">
+        <p>
+          <strong>1. Quem já ataca o problema e o que faltou neles:</strong><br>
+          "Todos abordam a crise de forma distinta; o <strong>Anota AI</strong> é o mais próximo no mercado (e o <strong>AccessMenu 2025</strong> nas universidades), só que eles não pensam no local confortável, e o <strong>Goomer</strong> também não. O que faltou neles foi a opção de filtrar o local mais acessível antes de sair."
+        </p>
+        <p>
+          <strong>2. O diferencial do Comanda Falada · Passo à Frente:</strong><br>
+          "O diferencial da minha ideia é a forma de resolver: unir o filtro do bar confortável (alimentado por qualquer cliente que não gosta de esperar em fila) com o pedido por voz antes de sair, a entrega no GPS com senha de 4 dígitos e o pagamento antecipado no Pix calculado por regras exatas que não erram a conta."
+        </p>
+      </div>
+
+      <h3>Links Oficiais do Projeto no GitHub</h3>
+      <ul>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia">Repositório Principal (Edson-amorim/topicos-em-ia)</a></li>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/brw.md">Artefato 1 · Brainwriting Híbrido (va2/brw.md)</a></li>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/cmp.md">Artefato 2 · Competidores e Contribuição (va2/cmp.md)</a></li>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/va2/tec.md">Artefato 3 · Tecnologia Base Demonstrável (va2/tec.md)</a></li>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/demonstracao.mp4">Vídeo Demonstrativo (tec/demonstracao.mp4 — PC + Samsung Galaxy A15 com TalkBack)</a></li>
+        <li><a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/comanda-falada.apk">Aplicativo Android Nativo (tec/comanda-falada.apk)</a></li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer role="contentinfo">
+    <div class="container">
+      <p>Projeto Comanda Falada · Passo à Frente — Edson Amorim · UFRPE (2026)</p>
+    </div>
+  </footer>
+
+  <script>
+    function falarTexto(texto) {
+      if (!('speechSynthesis' in window)) {
+        alert('Seu navegador não suporta síntese de voz nativa.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(texto);
+      utter.lang = 'pt-BR';
+      utter.rate = 1.05;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function lerSecao(idSecao) {
+      const el = document.getElementById(idSecao);
+      if (el) {
+        falarTexto(el.innerText);
+      }
+    }
+
+    function lerTudo() {
+      const main = document.getElementById('conteudo-principal');
+      if (main) {
+        falarTexto(main.innerText);
+      }
+    }
+
+    function pararLeitura() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function alternarTema() {
+      document.body.classList.toggle('light-mode');
+    }
+  </script>
+</body>
+</html>
