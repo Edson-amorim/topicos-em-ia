@@ -2,80 +2,285 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#FAFAFA">
+    android:padding="14dp"
+    android:background="#0F172A">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvTitulo"
+        <!-- Cabeçalho Principal -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Comanda Falada · Passo à Frente"
-            android:textSize="22sp"
+            android:orientation="vertical"
+            android:background="#1E293B"
+            android:padding="14dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvTitulo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🍽️ Comanda Falada · Passo à Frente"
+                android:textSize="21sp"
+                android:textStyle="bold"
+                android:textColor="#FACC15"
+                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Busca de cardápios em bares e restaurantes, soma inteligente da comanda e pagamento Pix nos bancos do celular." />
+
+            <TextView
+                android:id="@+id/tvSubtitulo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Busca de Cardápios + Soma Exata por IA + Pagamento nos Bancos do Celular"
+                android:textSize="14sp"
+                android:textColor="#E2E8F0"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Painel de Voz / Status em Tempo Real -->
+        <TextView
+            android:id="@+id/tvResultado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#172554"
+            android:padding="12dp"
+            android:text="🔊 Toque em um Bar ou Restaurante abaixo para ouvir e abrir o cardápio."
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#1A237E"
-            android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Acessibilidade por voz em bares."
-            android:paddingBottom="12dp" />
+            android:textColor="#FEF08A"
+            android:accessibilityLiveRegion="polite"
+            android:layout_marginBottom="14dp" />
+
+        <!-- SEÇÃO 1: BUSCA DE BARES E RESTAURANTES -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. ESCOLHA O BAR OU RESTAURANTE:"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#38BDF8"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btnFiltroAcustico"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="52dp"
+                android:text="🔉 Só Conforto Acústico"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0369A1"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnFiltroTodos"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="52dp"
+                android:text="🍽️ Todos os Locais (4)"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#334155"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnBuscarVozLocal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="🎤 Buscar Bar, Restaurante ou Prato por Voz"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#6D28D9"
+            android:layout_marginBottom="10dp" />
+
+        <!-- Lista dinâmica de Bares e Restaurantes -->
+        <LinearLayout
+            android:id="@+id/containerEstabelecimentos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp" />
+
+        <!-- SEÇÃO 2: CARDÁPIO INTERATIVO DO LOCAL SELECIONADO -->
+        <TextView
+            android:id="@+id/tvTituloCardapio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2. CARDÁPIO DO ESTABELECIMENTO:"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#FACC15"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnPedirPorVoz"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="🎙️ Falar Pedido para a IA Somar na Comanda"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0F766E"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Lista dinâmica de Itens do Cardápio -->
+        <LinearLayout
+            android:id="@+id/containerCardapio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp" />
+
+        <!-- SEÇÃO 3: SOMA DA COMANDA PELA IA -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="3. SUA COMANDA E SOMA AUTOMÁTICA DA IA:"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#4ADE80"
+            android:layout_marginBottom="6dp" />
 
         <TextView
-            android:id="@+id/tvSubtitulo"
+            android:id="@+id/tvResumoComanda"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Demonstração Tecnológica Android (Whisper + GraphRAG + Regras Exatas)"
-            android:textSize="14sp"
-            android:textColor="#424242"
-            android:paddingBottom="16dp" />
+            android:background="#1E293B"
+            android:padding="14dp"
+            android:text="Sua comanda está vazia. Toque nos itens do cardápio acima para adicionar."
+            android:textSize="15sp"
+            android:textColor="#F8FAFC"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <Button
+                android:id="@+id/btnOuvirComanda"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="52dp"
+                android:text="🔊 Ouvir Soma"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#1D4ED8"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnAlterarTeto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="52dp"
+                android:text="🎯 Teto: R$ 100"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#4338CA"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnLimparComanda"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="52dp"
+                android:text="🗑️ Limpar"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#991B1B"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+
+        <!-- SEÇÃO 4: BOTÃO PARA PAGAR NOS BANCOS INSTALADOS NO CELULAR -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="4. PAGAMENTO PIX NOS BANCOS DO SEU CELULAR:"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#FACC15"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnPagarBanco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="64dp"
+            android:text="🏦 COPIAR PIX E ABRIR APP DO BANCO NO CELULAR"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#15803D"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/containerBancosInstalados"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="18dp" />
+
+        <!-- SEÇÃO 5: ATALHOS DOS 3 CASOS DE DEMONSTRAÇÃO DA DISCIPLINA (TEC.MD) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="5. CASOS DE TESTE DA DISCIPLINA (AI4GOOD):"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#94A3B8"
+            android:layout_marginBottom="6dp" />
 
         <Button
             android:id="@+id/btnCaso1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="54dp"
-            android:text="1. Buscar Bar com Conforto Acústico"
-            android:textSize="15sp"
-            android:layout_marginBottom="8dp" />
+            android:minHeight="48dp"
+            android:text="Caso 1: Buscar Bar com Conforto Acústico"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#334155"
+            android:layout_marginBottom="6dp" />
 
         <Button
             android:id="@+id/btnCaso2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="54dp"
-            android:text="2. Fazer Pedido, Calcular Conta e Pix"
-            android:textSize="15sp"
-            android:layout_marginBottom="8dp" />
+            android:minHeight="48dp"
+            android:text="Caso 2: Pedido Caldinho + Suco (R$ 22,00) e Pix"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#334155"
+            android:layout_marginBottom="6dp" />
 
         <Button
             android:id="@+id/btnCaso3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="54dp"
-            android:text="3. Testar Ruído de Bar (Onde a IA Erra)"
-            android:textSize="15sp"
-            android:layout_marginBottom="16dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Painel de Saída e Acessibilidade:"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#212121"
-            android:paddingBottom="6dp" />
-
-        <TextView
-            android:id="@+id/tvResultado"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#EEEEEE"
-            android:padding="12dp"
-            android:text="Pressione um dos botões acima para executar o pipeline no aparelho."
+            android:minHeight="48dp"
+            android:text="Caso 3: Testar Ruído de Bar (Onde a IA Erra)"
             android:textSize="14sp"
-            android:textColor="#1B5E20"
-            android:accessibilityLiveRegion="polite" />
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#334155"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 </ScrollView>

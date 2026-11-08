@@ -3,7 +3,9 @@
     {
       "id": "bar_cais_antigo",
       "nome": "Bar Cais do Sertão & Chopp",
+      "tipo": "Bar & Petiscaria",
       "bairro": "Recife Antigo",
+      "chave_pix": "pix@barcaisdosertao.com.br",
       "coordenadas": {
         "latitude": -8.0617,
         "longitude": -34.8711
@@ -20,34 +22,41 @@
         {"item": "chope gelado", "preco": 11.50, "categoria": "bebida"},
         {"item": "macaxeira frita com queijo coalho", "preco": 34.00, "categoria": "petisco"},
         {"item": "coca gelada", "preco": 8.00, "categoria": "bebida"},
-        {"item": "carne de sol com fritas", "preco": 48.00, "categoria": "petisco"},
+        {"item": "carne de sol com fritas", "preco": 48.00, "categoria": "prato principal"},
         {"item": "agua mineral sem gas", "preco": 6.00, "categoria": "bebida"}
       ]
     },
     {
-      "id": "bar_boemia_ruidoso",
-      "nome": "Boteco do Galo Frito",
-      "bairro": "Recife Antigo",
+      "id": "rest_sabor_agreste",
+      "nome": "Restaurante Sabor do Agreste",
+      "tipo": "Restaurante Regional",
+      "bairro": "Graças",
+      "chave_pix": "pagamento@sabordagreste.com.br",
       "coordenadas": {
-        "latitude": -8.0635,
-        "longitude": -34.8732
+        "latitude": -8.0482,
+        "longitude": -34.9012
       },
       "conforto_acustico": {
-        "nivel_ruido": "alto",
-        "decibeis_medio": 84,
-        "tipo_som": "musica ao vivo com percussao alta e caixas de som no corredor",
-        "acessibilidade": "mesas apertadas, barulho dificulta comunicacao e leitor de telas"
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 54,
+        "tipo_som": "ambiente climatizado silencioso sem caixa de som",
+        "acessibilidade": "rampa de entrada, mesas espacadas, atendimento prioritario na mesa"
       },
       "cardapio": [
-        {"item": "chope gelado", "preco": 10.00, "categoria": "bebida"},
-        {"item": "espetinho de carne", "preco": 15.00, "categoria": "petisco"},
-        {"item": "cerveja lata", "preco": 8.00, "categoria": "bebida"}
+        {"item": "arrumadinho de charque completo", "preco": 38.00, "categoria": "prato principal"},
+        {"item": "escondidinho de carne de sol", "preco": 36.00, "categoria": "prato principal"},
+        {"item": "bolinho de bacalhau (6 unid)", "preco": 28.00, "categoria": "entrada"},
+        {"item": "caldo verde com torradas", "preco": 15.00, "categoria": "entrada"},
+        {"item": "suco de acerola com laranja", "preco": 10.50, "categoria": "bebida"},
+        {"item": "cafe expresso com bolo de rolo", "preco": 16.50, "categoria": "sobremesa"}
       ]
     },
     {
       "id": "bar_jardim_boa_viagem",
-      "nome": "Varanda Jardim da Praia",
+      "nome": "Restaurante Varanda Jardim da Praia",
+      "tipo": "Restaurante & Frutos do Mar",
       "bairro": "Boa Viagem",
+      "chave_pix": "pix@varandajardim.com.br",
       "coordenadas": {
         "latitude": -8.1256,
         "longitude": -34.9015
@@ -61,7 +70,33 @@
       "cardapio": [
         {"item": "caldinho de camarao", "preco": 16.00, "categoria": "entrada"},
         {"item": "suco de laranja natural", "preco": 11.00, "categoria": "bebida"},
-        {"item": "isca de peixe com molho tartaro", "preco": 42.00, "categoria": "petisco"}
+        {"item": "isca de peixe com molho tartaro", "preco": 42.00, "categoria": "petisco"},
+        {"item": "moqueca pernambucana individual", "preco": 54.00, "categoria": "prato principal"},
+        {"item": "agua de coco gelada", "preco": 9.00, "categoria": "bebida"},
+        {"item": "pudim de leite condensado", "preco": 14.00, "categoria": "sobremesa"}
+      ]
+    },
+    {
+      "id": "bar_boemia_ruidoso",
+      "nome": "Boteco do Galo Frito",
+      "tipo": "Boteco Boêmio",
+      "bairro": "Recife Antigo",
+      "chave_pix": "pix@botecogalofrito.com.br",
+      "coordenadas": {
+        "latitude": -8.0635,
+        "longitude": -34.8732
+      },
+      "conforto_acustico": {
+        "nivel_ruido": "alto",
+        "decibeis_medio": 84,
+        "tipo_som": "musica ao vivo com percussao alta e caixas de som no corredor",
+        "acessibilidade": "mesas apertadas, barulho dificulta comunicacao e leitor de telas"
+      },
+      "cardapio": [
+        {"item": "chope gelado", "preco": 10.00, "categoria": "bebida"},
+        {"item": "espetinho de carne com farofa", "preco": 15.00, "categoria": "petisco"},
+        {"item": "porcao de pastel de festa (8 unid)", "preco": 26.00, "categoria": "petisco"},
+        {"item": "cerveja lata", "preco": 8.00, "categoria": "bebida"}
       ]
     }
   ]

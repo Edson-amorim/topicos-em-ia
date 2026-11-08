@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.ufrpe.comandafalada"
-    android:versionCode="1"
-    android:versionName="1.0">
+    android:versionCode="2"
+    android:versionName="2.0">
 
     <uses-sdk
         android:minSdkVersion="26"
@@ -12,14 +12,45 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <!-- Visibilidade de pacotes no Android 11+ para abrir apps de bancos instalados no celular -->
+    <queries>
+        <package android:name="com.nu.production" />
+        <package android:name="br.com.intermedium" />
+        <package android:name="com.itau" />
+        <package android:name="com.bradesco" />
+        <package android:name="br.com.bb.android" />
+        <package android:name="br.com.gabba.Caixa" />
+        <package android:name="br.gov.caixa.tem" />
+        <package android:name="com.santander.app" />
+        <package android:name="com.picpay" />
+        <package android:name="com.mercadopago.wallet" />
+        <package android:name="com.c6bank.app" />
+        <package android:name="br.com.uol.ps.myaccount" />
+        <package android:name="br.com.neon" />
+        <package android:name="br.com.bradesco.next" />
+        <package android:name="br.com.willbank" />
+        <package android:name="br.com.sicredi.app" />
+        <package android:name="br.com.sicoob.app" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 
     <application
         android:label="@string/app_name"
         android:allowBackup="true"
-        android:theme="@android:style/Theme.DeviceDefault.Light">
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
