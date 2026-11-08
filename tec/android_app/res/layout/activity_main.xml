@@ -27,13 +27,13 @@
                 android:textSize="21sp"
                 android:textStyle="bold"
                 android:textColor="#FACC15"
-                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Busca de cardápios em bares e restaurantes, soma inteligente da comanda e pagamento Pix nos bancos do celular." />
+                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Localize qualquer bar ou restaurante do Brasil com filtro por região e por estado, ouça o cardápio, some a comanda pela IA e pague nos bancos do celular." />
 
             <TextView
                 android:id="@+id/tvSubtitulo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Busca de Cardápios + Soma Exata por IA + Pagamento nos Bancos do Celular"
+                android:text="Busca Nacional por Região e Estado + Cardápio + Soma IA + App do Banco"
                 android:textSize="14sp"
                 android:textColor="#E2E8F0"
                 android:layout_marginTop="4dp" />
@@ -46,22 +46,63 @@
             android:layout_height="wrap_content"
             android:background="#172554"
             android:padding="12dp"
-            android:text="🔊 Toque em um Bar ou Restaurante abaixo para ouvir e abrir o cardápio."
+            android:text="🔊 Use os filtros de Região e Estado ou digite o nome de qualquer Bar para abrir o cardápio."
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FEF08A"
             android:accessibilityLiveRegion="polite"
             android:layout_marginBottom="14dp" />
 
-        <!-- SEÇÃO 1: BUSCA DE BARES E RESTAURANTES -->
+        <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO E LOCALIZAÇÃO DE QUALQUER BAR -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. ESCOLHA O BAR OU RESTAURANTE:"
-            android:textSize="17sp"
+            android:text="1. FILTRAR POR REGIÃO, ESTADO OU LOCALIZAR QUALQUER BAR:"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#38BDF8"
             android:layout_marginBottom="8dp" />
+
+        <!-- Linha de Filtros: Região e Estado -->
+        <Button
+            android:id="@+id/btnFiltroRegiao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="🗺️ Filtrar por Região: Todas as Regiões (Brasil)"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1E3A8A"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnFiltroEstado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="🏳️ Filtrar por Estado (UF): Todos os Estados"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0F766E"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Caixa de Busca para Localizar Qualquer Bar / Restaurante / Cidade -->
+        <EditText
+            android:id="@+id/etBuscaQualquerBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:hint="Digite o nome de qualquer bar, cidade ou estado..."
+            android:textColor="#FFFFFF"
+            android:textColorHint="#94A3B8"
+            android:background="#1E293B"
+            android:padding="12dp"
+            android:singleLine="true"
+            android:inputType="text"
+            android:contentDescription="Caixa de texto para localizar qualquer bar, restaurante, bairro ou cidade com cardápio disponível"
+            android:layout_marginBottom="6dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -70,11 +111,45 @@
             android:layout_marginBottom="8dp">
 
             <Button
+                android:id="@+id/btnLocalizarBarTexto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="54dp"
+                android:text="🔎 Localizar Bar / Cardápio"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#0284C7"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnBuscarVozLocal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="54dp"
+                android:text="🎤 Localizar por Voz"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#6D28D9"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+
+        <!-- Filtros Acústicos e Mostrar Todos -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp">
+
+            <Button
                 android:id="@+id/btnFiltroAcustico"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="52dp"
+                android:minHeight="50dp"
                 android:text="🔉 Só Conforto Acústico"
                 android:textSize="13sp"
                 android:textColor="#FFFFFF"
@@ -86,25 +161,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:minHeight="52dp"
-                android:text="🍽️ Todos os Locais (4)"
+                android:minHeight="50dp"
+                android:text="🔄 Limpar Filtros"
                 android:textSize="13sp"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#334155"
                 android:layout_marginStart="4dp" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnBuscarVozLocal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="54dp"
-            android:text="🎤 Buscar Bar, Restaurante ou Prato por Voz"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#6D28D9"
-            android:layout_marginBottom="10dp" />
 
         <!-- Lista dinâmica de Bares e Restaurantes -->
         <LinearLayout

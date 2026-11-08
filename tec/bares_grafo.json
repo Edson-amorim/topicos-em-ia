@@ -4,12 +4,13 @@
       "id": "bar_cais_antigo",
       "nome": "Bar Cais do Sertão & Chopp",
       "tipo": "Bar & Petiscaria",
+      "regiao": "Nordeste",
+      "estado": "Pernambuco",
+      "uf": "PE",
+      "cidade": "Recife",
       "bairro": "Recife Antigo",
       "chave_pix": "pix@barcaisdosertao.com.br",
-      "coordenadas": {
-        "latitude": -8.0617,
-        "longitude": -34.8711
-      },
+      "coordenadas": {"latitude": -8.0617, "longitude": -34.8711},
       "conforto_acustico": {
         "nivel_ruido": "baixo",
         "decibeis_medio": 58,
@@ -30,12 +31,13 @@
       "id": "rest_sabor_agreste",
       "nome": "Restaurante Sabor do Agreste",
       "tipo": "Restaurante Regional",
+      "regiao": "Nordeste",
+      "estado": "Pernambuco",
+      "uf": "PE",
+      "cidade": "Recife",
       "bairro": "Graças",
       "chave_pix": "pagamento@sabordagreste.com.br",
-      "coordenadas": {
-        "latitude": -8.0482,
-        "longitude": -34.9012
-      },
+      "coordenadas": {"latitude": -8.0482, "longitude": -34.9012},
       "conforto_acustico": {
         "nivel_ruido": "baixo",
         "decibeis_medio": 54,
@@ -55,12 +57,13 @@
       "id": "bar_jardim_boa_viagem",
       "nome": "Restaurante Varanda Jardim da Praia",
       "tipo": "Restaurante & Frutos do Mar",
+      "regiao": "Nordeste",
+      "estado": "Pernambuco",
+      "uf": "PE",
+      "cidade": "Recife",
       "bairro": "Boa Viagem",
       "chave_pix": "pix@varandajardim.com.br",
-      "coordenadas": {
-        "latitude": -8.1256,
-        "longitude": -34.9015
-      },
+      "coordenadas": {"latitude": -8.1256, "longitude": -34.9015},
       "conforto_acustico": {
         "nivel_ruido": "medio",
         "decibeis_medio": 65,
@@ -77,15 +80,216 @@
       ]
     },
     {
+      "id": "bar_pelourinho_bahia",
+      "nome": "Bar & Restaurante Solar do Pelourinho",
+      "tipo": "Bar & Culinária Baiana",
+      "regiao": "Nordeste",
+      "estado": "Bahia",
+      "uf": "BA",
+      "cidade": "Salvador",
+      "bairro": "Pelourinho",
+      "chave_pix": "pix@solardopelourinho.com.br",
+      "coordenadas": {"latitude": -12.9714, "longitude": -38.5086},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 60,
+        "tipo_som": "violao voz e mpb suave",
+        "acessibilidade": "salao terreo acessivel, cardapio falado e mesas largas"
+      },
+      "cardapio": [
+        {"item": "acaraje completo no prato", "preco": 24.00, "categoria": "entrada"},
+        {"item": "moqueca baiana de camarao e peixe", "preco": 58.00, "categoria": "prato principal"},
+        {"item": "bobó de camarao com arroz", "preco": 52.00, "categoria": "prato principal"},
+        {"item": "suco de cacau natural", "preco": 12.00, "categoria": "bebida"},
+        {"item": "cerveja artesanal gelada", "preco": 14.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_beira_mar_ceara",
+      "nome": "Boteco Brisa de Iracema",
+      "tipo": "Bar & Petiscaria Praiana",
+      "regiao": "Nordeste",
+      "estado": "Ceará",
+      "uf": "CE",
+      "cidade": "Fortaleza",
+      "bairro": "Meireles",
+      "chave_pix": "pix@brisadeiracema.com.br",
+      "coordenadas": {"latitude": -3.7258, "longitude": -38.4984},
+      "conforto_acustico": {
+        "nivel_ruido": "medio",
+        "decibeis_medio": 62,
+        "tipo_som": "som do mar e musica instrumental",
+        "acessibilidade": "rampa de acesso na orla, piso tatil e atendimento guia"
+      },
+      "cardapio": [
+        {"item": "baiao de dois cremoso com carne de sol", "preco": 44.00, "categoria": "prato principal"},
+        {"item": "patinha de caranguejo empanada", "preco": 32.00, "categoria": "petisco"},
+        {"item": "caldinho de peixe", "preco": 14.00, "categoria": "entrada"},
+        {"item": "cajuina gelada", "preco": 9.50, "categoria": "bebida"},
+        {"item": "chope pilsen gelado", "preco": 11.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_vila_madalena_sp",
+      "nome": "Bar & Bistrô Esquina Paulista",
+      "tipo": "Bar & Gastronomia",
+      "regiao": "Sudeste",
+      "estado": "São Paulo",
+      "uf": "SP",
+      "cidade": "São Paulo",
+      "bairro": "Vila Madalena",
+      "chave_pix": "pix@esquinapaulista.com.br",
+      "coordenadas": {"latitude": -23.5558, "longitude": -46.6896},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 57,
+        "tipo_som": "jazz e bossa nova em volume baixo",
+        "acessibilidade": "entrada nivelada sem degraus, banheiro adaptado e garcom treinado"
+      },
+      "cardapio": [
+        {"item": "coxinha cremosa de frango com catupiry (4 unid)", "preco": 26.00, "categoria": "entrada"},
+        {"item": "picanha na chapa com mandioca", "preco": 64.00, "categoria": "prato principal"},
+        {"item": "sanduiche de pernil paulistano", "preco": 31.00, "categoria": "petisco"},
+        {"item": "chope artesanal ipa", "preco": 16.00, "categoria": "bebida"},
+        {"item": "suco de laranja natural", "preco": 12.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_lapa_rj",
+      "nome": "Boteco Bossa de Copacabana",
+      "tipo": "Boteco Tradicional Carioca",
+      "regiao": "Sudeste",
+      "estado": "Rio de Janeiro",
+      "uf": "RJ",
+      "cidade": "Rio de Janeiro",
+      "bairro": "Copacabana",
+      "chave_pix": "pix@bossacopacabana.com.br",
+      "coordenadas": {"latitude": -22.9711, "longitude": -43.1825},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 59,
+        "tipo_som": "bossa nova acustica suave",
+        "acessibilidade": "calcada com piso tatil, mesas externas acessiveis"
+      },
+      "cardapio": [
+        {"item": "bolinho de feijoada (6 unid)", "preco": 29.00, "categoria": "entrada"},
+        {"item": "filé oswaldo aranha completo", "preco": 56.00, "categoria": "prato principal"},
+        {"item": "pastel de camarao com catupiry", "preco": 14.00, "categoria": "petisco"},
+        {"item": "chope carioca na regua", "preco": 11.00, "categoria": "bebida"},
+        {"item": "mate gelado com limao", "preco": 9.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_savassi_mg",
+      "nome": "Bar & Prosa da Savassi",
+      "tipo": "Bar Mineiro",
+      "regiao": "Sudeste",
+      "estado": "Minas Gerais",
+      "uf": "MG",
+      "cidade": "Belo Horizonte",
+      "bairro": "Savassi",
+      "chave_pix": "pix@prosadasavassi.com.br",
+      "coordenadas": {"latitude": -19.9386, "longitude": -43.9352},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 55,
+        "tipo_som": "clube da esquina instrumental baixo",
+        "acessibilidade": "acesso plano, mesas amplas e atendimento imediato"
+      },
+      "cardapio": [
+        {"item": "feijao tropeiro mineiro completo", "preco": 42.00, "categoria": "prato principal"},
+        {"item": "porcao de pao de queijo recheado com pernil", "preco": 28.00, "categoria": "entrada"},
+        {"item": "torresmo de barriga crocante", "preco": 32.00, "categoria": "petisco"},
+        {"item": "limonada suica", "preco": 10.00, "categoria": "bebida"},
+        {"item": "doce de leite com queijo canastra", "preco": 18.00, "categoria": "sobremesa"}
+      ]
+    },
+    {
+      "id": "bar_cidade_baixa_rs",
+      "nome": "Galpão & Chopp Gaúcho",
+      "tipo": "Bar & Parrilla",
+      "regiao": "Sul",
+      "estado": "Rio Grande do Sul",
+      "uf": "RS",
+      "cidade": "Porto Alegre",
+      "bairro": "Cidade Baixa",
+      "chave_pix": "pix@galpaogaucho.com.br",
+      "coordenadas": {"latitude": -30.0392, "longitude": -51.2214},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 56,
+        "tipo_som": "musica acustica ambiente",
+        "acessibilidade": "rampa de acesso e iluminacao/espaco confortavel"
+      },
+      "cardapio": [
+        {"item": "entrecot grelhado com batata rustica", "preco": 59.00, "categoria": "prato principal"},
+        {"item": "polenta frita com queijo parmesao", "preco": 24.00, "categoria": "entrada"},
+        {"item": "linguica campeira aperitivo", "preco": 34.00, "categoria": "petisco"},
+        {"item": "chope artesanal pilsen", "preco": 12.00, "categoria": "bebida"},
+        {"item": "suco de uva integral", "preco": 11.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_asa_sul_df",
+      "nome": "Varanda do Cerrado Bar & Cozinha",
+      "tipo": "Bar & Restaurante",
+      "regiao": "Centro-Oeste",
+      "estado": "Distrito Federal",
+      "uf": "DF",
+      "cidade": "Brasília",
+      "bairro": "Asa Sul",
+      "chave_pix": "pix@varandadocerrado.com.br",
+      "coordenadas": {"latitude": -15.8195, "longitude": -47.9022},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 55,
+        "tipo_som": "mpb instrumental em volume de conversa",
+        "acessibilidade": "quadra plana com rampa e piso tatil completo"
+      },
+      "cardapio": [
+        {"item": "galinhada goiana com pequi opcional", "preco": 41.00, "categoria": "prato principal"},
+        {"item": "pastelzinho de carne seca (6 unid)", "preco": 25.00, "categoria": "entrada"},
+        {"item": "tilapia grelhada com legumes", "preco": 46.00, "categoria": "prato principal"},
+        {"item": "suco de maracuja natural", "preco": 10.50, "categoria": "bebida"},
+        {"item": "chope claro gelado", "preco": 12.00, "categoria": "bebida"}
+      ]
+    },
+    {
+      "id": "bar_estacao_docas_pa",
+      "nome": "Restaurante & Bar Estação Amazônia",
+      "tipo": "Bar & Culinária Amazônica",
+      "regiao": "Norte",
+      "estado": "Pará",
+      "uf": "PA",
+      "cidade": "Belém",
+      "bairro": "Campina",
+      "chave_pix": "pix@estacaoamazonia.com.br",
+      "coordenadas": {"latitude": -1.4485, "longitude": -48.5002},
+      "conforto_acustico": {
+        "nivel_ruido": "baixo",
+        "decibeis_medio": 58,
+        "tipo_som": "som ambiente da baia e violao regional suave",
+        "acessibilidade": "corredores largos, rampa de acesso e atendimento guiado"
+      },
+      "cardapio": [
+        {"item": "tacaca tradicional na cuia", "preco": 26.00, "categoria": "entrada"},
+        {"item": "filhote grelhado com arroz de jambu", "preco": 62.00, "categoria": "prato principal"},
+        {"item": "unha de caranguejo paraense", "preco": 22.00, "categoria": "petisco"},
+        {"item": "suco de cupuacu gelado", "preco": 11.00, "categoria": "bebida"},
+        {"item": "creme de acai com tapioca", "preco": 18.00, "categoria": "sobremesa"}
+      ]
+    },
+    {
       "id": "bar_boemia_ruidoso",
       "nome": "Boteco do Galo Frito",
       "tipo": "Boteco Boêmio",
+      "regiao": "Nordeste",
+      "estado": "Pernambuco",
+      "uf": "PE",
+      "cidade": "Recife",
       "bairro": "Recife Antigo",
       "chave_pix": "pix@botecogalofrito.com.br",
-      "coordenadas": {
-        "latitude": -8.0635,
-        "longitude": -34.8732
-      },
+      "coordenadas": {"latitude": -8.0635, "longitude": -34.8732},
       "conforto_acustico": {
         "nivel_ruido": "alto",
         "decibeis_medio": 84,
