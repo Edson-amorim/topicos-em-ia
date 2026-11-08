@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -44,14 +45,18 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         public final String regiao;
         public final double lat;
         public final double lon;
+        public final String[] cidadesPrincipais;
 
-        public EstadoInfo(String nome, String uf, String capital, String regiao, double lat, double lon) {
+        public EstadoInfo(String nome, String uf, String capital, String regiao, double lat, double lon, String... cidadesPrincipais) {
             this.nome = nome;
             this.uf = uf;
             this.capital = capital;
             this.regiao = regiao;
             this.lat = lat;
             this.lon = lon;
+            this.cidadesPrincipais = (cidadesPrincipais != null && cidadesPrincipais.length > 0)
+                    ? cidadesPrincipais
+                    : new String[]{capital};
         }
     }
 
@@ -151,37 +156,64 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private static final EstadoInfo[] ESTADOS_BRASIL = new EstadoInfo[]{
             // Nordeste
-            new EstadoInfo("Pernambuco", "PE", "Recife", "Nordeste", -8.0617, -34.8711),
-            new EstadoInfo("Bahia", "BA", "Salvador", "Nordeste", -12.9714, -38.5086),
-            new EstadoInfo("Ceará", "CE", "Fortaleza", "Nordeste", -3.7258, -38.4984),
-            new EstadoInfo("Paraíba", "PB", "João Pessoa", "Nordeste", -7.1195, -34.8450),
-            new EstadoInfo("Rio Grande do Norte", "RN", "Natal", "Nordeste", -5.7945, -35.2110),
-            new EstadoInfo("Alagoas", "AL", "Maceió", "Nordeste", -9.6658, -35.7350),
-            new EstadoInfo("Sergipe", "SE", "Aracaju", "Nordeste", -10.9472, -37.0731),
-            new EstadoInfo("Maranhão", "MA", "São Luís", "Nordeste", -2.5307, -44.3068),
-            new EstadoInfo("Piauí", "PI", "Teresina", "Nordeste", -5.0892, -42.8016),
+            new EstadoInfo("Pernambuco", "PE", "Recife", "Nordeste", -8.0617, -34.8711,
+                    "Recife", "Olinda", "Jaboatão dos Guararapes", "Caruaru", "Petrolina", "Garanhuns", "Paulista", "Cabo de Santo Agostinho", "Porto de Galinhas (Ipojuca)", "Vitória de Santo Antão"),
+            new EstadoInfo("Bahia", "BA", "Salvador", "Nordeste", -12.9714, -38.5086,
+                    "Salvador", "Feira de Santana", "Porto Seguro", "Ilhéus", "Vitória da Conquista", "Lauro de Freitas"),
+            new EstadoInfo("Ceará", "CE", "Fortaleza", "Nordeste", -3.7258, -38.4984,
+                    "Fortaleza", "Juazeiro do Norte", "Sobral", "Caucaia", "Jericoacoara"),
+            new EstadoInfo("Paraíba", "PB", "João Pessoa", "Nordeste", -7.1195, -34.8450,
+                    "João Pessoa", "Campina Grande", "Patos", "Cabedelo", "Sousa"),
+            new EstadoInfo("Rio Grande do Norte", "RN", "Natal", "Nordeste", -5.7945, -35.2110,
+                    "Natal", "Mossoró", "Parnamirim", "Pipa (Tibau do Sul)", "Caicó"),
+            new EstadoInfo("Alagoas", "AL", "Maceió", "Nordeste", -9.6658, -35.7350,
+                    "Maceió", "Arapiraca", "Maragogi", "Marechal Deodoro"),
+            new EstadoInfo("Sergipe", "SE", "Aracaju", "Nordeste", -10.9472, -37.0731,
+                    "Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"),
+            new EstadoInfo("Maranhão", "MA", "São Luís", "Nordeste", -2.5307, -44.3068,
+                    "São Luís", "Imperatriz", "Barreirinhas", "Caxias"),
+            new EstadoInfo("Piauí", "PI", "Teresina", "Nordeste", -5.0892, -42.8016,
+                    "Teresina", "Parnaíba", "Picos", "Floriano"),
             // Sudeste
-            new EstadoInfo("São Paulo", "SP", "São Paulo", "Sudeste", -23.5558, -46.6896),
-            new EstadoInfo("Rio de Janeiro", "RJ", "Rio de Janeiro", "Sudeste", -22.9711, -43.1825),
-            new EstadoInfo("Minas Gerais", "MG", "Belo Horizonte", "Sudeste", -19.9386, -43.9352),
-            new EstadoInfo("Espírito Santo", "ES", "Vitória", "Sudeste", -20.3155, -40.3128),
+            new EstadoInfo("São Paulo", "SP", "São Paulo", "Sudeste", -23.5558, -46.6896,
+                    "São Paulo", "Campinas", "Santos", "Ribeirão Preto", "São José dos Campos", "Sorocaba", "Guarulhos"),
+            new EstadoInfo("Rio de Janeiro", "RJ", "Rio de Janeiro", "Sudeste", -22.9711, -43.1825,
+                    "Rio de Janeiro", "Niterói", "Búzios", "Petrópolis", "Paraty", "Cabo Frio"),
+            new EstadoInfo("Minas Gerais", "MG", "Belo Horizonte", "Sudeste", -19.9386, -43.9352,
+                    "Belo Horizonte", "Uberlândia", "Ouro Preto", "Tiradentes", "Juiz de Fora", "Poços de Caldas"),
+            new EstadoInfo("Espírito Santo", "ES", "Vitória", "Sudeste", -20.3155, -40.3128,
+                    "Vitória", "Vila Velha", "Guarapari", "Serra", "Domingos Martins"),
             // Sul
-            new EstadoInfo("Rio Grande do Sul", "RS", "Porto Alegre", "Sul", -30.0392, -51.2214),
-            new EstadoInfo("Paraná", "PR", "Curitiba", "Sul", -25.4284, -49.2733),
-            new EstadoInfo("Santa Catarina", "SC", "Florianópolis", "Sul", -27.5954, -48.5480),
+            new EstadoInfo("Rio Grande do Sul", "RS", "Porto Alegre", "Sul", -30.0392, -51.2214,
+                    "Porto Alegre", "Gramado", "Canela", "Caxias do Sul", "Pelotas", "Bento Gonçalves"),
+            new EstadoInfo("Paraná", "PR", "Curitiba", "Sul", -25.4284, -49.2733,
+                    "Curitiba", "Foz do Iguaçu", "Londrina", "Maringá", "Ponta Grossa"),
+            new EstadoInfo("Santa Catarina", "SC", "Florianópolis", "Sul", -27.5954, -48.5480,
+                    "Florianópolis", "Balneário Camboriú", "Blumenau", "Joinville", "Itajaí"),
             // Centro-Oeste
-            new EstadoInfo("Distrito Federal", "DF", "Brasília", "Centro-Oeste", -15.8195, -47.9022),
-            new EstadoInfo("Goiás", "GO", "Goiânia", "Centro-Oeste", -16.6869, -49.2648),
-            new EstadoInfo("Mato Grosso", "MT", "Cuiabá", "Centro-Oeste", -15.6014, -56.0979),
-            new EstadoInfo("Mato Grosso do Sul", "MS", "Campo Grande", "Centro-Oeste", -20.4697, -54.6201),
+            new EstadoInfo("Distrito Federal", "DF", "Brasília", "Centro-Oeste", -15.8195, -47.9022,
+                    "Brasília", "Taguatinga", "Águas Claras", "Guará"),
+            new EstadoInfo("Goiás", "GO", "Goiânia", "Centro-Oeste", -16.6869, -49.2648,
+                    "Goiânia", "Caldas Novas", "Pirenópolis", "Anápolis", "Rio Verde"),
+            new EstadoInfo("Mato Grosso", "MT", "Cuiabá", "Centro-Oeste", -15.6014, -56.0979,
+                    "Cuiabá", "Chapada dos Guimarães", "Rondonópolis", "Sinop"),
+            new EstadoInfo("Mato Grosso do Sul", "MS", "Campo Grande", "Centro-Oeste", -20.4697, -54.6201,
+                    "Campo Grande", "Bonito", "Dourados", "Corumbá"),
             // Norte
-            new EstadoInfo("Pará", "PA", "Belém", "Norte", -1.4485, -48.5002),
-            new EstadoInfo("Amazonas", "AM", "Manaus", "Norte", -3.1190, -60.0217),
-            new EstadoInfo("Tocantins", "TO", "Palmas", "Norte", -10.1840, -48.3336),
-            new EstadoInfo("Rondônia", "RO", "Porto Velho", "Norte", -8.7619, -63.9039),
-            new EstadoInfo("Acre", "AC", "Rio Branco", "Norte", -9.9754, -67.8249),
-            new EstadoInfo("Amapá", "AP", "Macapá", "Norte", 0.0349, -51.0694),
-            new EstadoInfo("Roraima", "RR", "Boa Vista", "Norte", 2.8235, -60.6758)
+            new EstadoInfo("Pará", "PA", "Belém", "Norte", -1.4485, -48.5002,
+                    "Belém", "Santarém", "Alter do Chão", "Ananindeua", "Marabá"),
+            new EstadoInfo("Amazonas", "AM", "Manaus", "Norte", -3.1190, -60.0217,
+                    "Manaus", "Parintins", "Itacoatiara", "Manacapuru"),
+            new EstadoInfo("Tocantins", "TO", "Palmas", "Norte", -10.1840, -48.3336,
+                    "Palmas", "Araguaína", "Gurupi"),
+            new EstadoInfo("Rondônia", "RO", "Porto Velho", "Norte", -8.7619, -63.9039,
+                    "Porto Velho", "Ji-Paraná", "Ariquemes"),
+            new EstadoInfo("Acre", "AC", "Rio Branco", "Norte", -9.9754, -67.8249,
+                    "Rio Branco", "Cruzeiro do Sul"),
+            new EstadoInfo("Amapá", "AP", "Macapá", "Norte", 0.0349, -51.0694,
+                    "Macapá", "Santana"),
+            new EstadoInfo("Roraima", "RR", "Boa Vista", "Norte", 2.8235, -60.6758,
+                    "Boa Vista", "Rorainópolis")
     };
 
     private TextView tvResultado;
@@ -193,6 +225,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private LinearLayout containerBancosInstalados;
     private Button btnFiltroRegiao;
     private Button btnFiltroEstado;
+    private Button btnFiltroCidade;
+    private Button btnGoogleMapsRota;
+    private Button btnGoogleMapsExplorar;
     private Button btnLocalizarBarTexto;
     private Button btnFiltroAcustico;
     private Button btnFiltroTodos;
@@ -212,6 +247,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private String regiaoFiltroAtual = "Todas as Regiões";
     private String ufFiltroAtual = "TODOS";
+    private String cidadeFiltroAtual = "TODAS";
     private String termoBuscaAtual = "";
     private boolean filtrarApenasSilenciosos = false;
 
@@ -236,6 +272,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         btnFiltroRegiao = findViewById(R.id.btnFiltroRegiao);
         btnFiltroEstado = findViewById(R.id.btnFiltroEstado);
+        btnFiltroCidade = findViewById(R.id.btnFiltroCidade);
+        btnGoogleMapsRota = findViewById(R.id.btnGoogleMapsRota);
+        btnGoogleMapsExplorar = findViewById(R.id.btnGoogleMapsExplorar);
         btnLocalizarBarTexto = findViewById(R.id.btnLocalizarBarTexto);
         btnFiltroAcustico = findViewById(R.id.btnFiltroAcustico);
         btnFiltroTodos = findViewById(R.id.btnFiltroTodos);
@@ -268,6 +307,29 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             }
         });
 
+        btnFiltroCidade.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abrirDialogoFiltroCidade();
+            }
+        });
+
+        btnGoogleMapsRota.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (estabelecimentoSelecionado != null) {
+                    abrirBarNoGoogleMaps(estabelecimentoSelecionado, true);
+                }
+            }
+        });
+
+        btnGoogleMapsExplorar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                explorarBaresDaCidadeNoGoogleMaps();
+            }
+        });
+
         btnLocalizarBarTexto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -295,6 +357,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             public void onClick(View v) {
                 regiaoFiltroAtual = "Todas as Regiões";
                 ufFiltroAtual = "TODOS";
+                cidadeFiltroAtual = "TODAS";
                 termoBuscaAtual = "";
                 filtrarApenasSilenciosos = false;
                 etBuscaQualquerBar.setText("");
@@ -385,7 +448,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         renderizarBancosInstalados();
     }
 
-    // --- SELETORES DE FILTRO POR REGIÃO E POR ESTADO (UF) ---
+    // --- SELETORES DE FILTRO POR REGIÃO, ESTADO (UF) E CIDADE ---
 
     private void abrirDialogoFiltroRegiao() {
         falar("Escolha a região do Brasil para filtrar os bares e restaurantes.");
@@ -396,6 +459,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                     public void onClick(DialogInterface dialog, int which) {
                         regiaoFiltroAtual = REGIOES_BRASIL[which];
                         ufFiltroAtual = "TODOS";
+                        cidadeFiltroAtual = "TODAS";
                         termoBuscaAtual = "";
                         atualizarRotulosFiltros();
                         renderizarListaEstabelecimentos();
@@ -405,7 +469,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                             selecionarEstabelecimento(visiveis.get(0), true);
                         }
                         String msg = "Região selecionada: " + regiaoFiltroAtual + ". Encontrados " + visiveis.size() +
-                                " bares e restaurantes com cardápio disponível. Agora você também pode filtrar por Estado.";
+                                " bares com cardápio. Você também pode filtrar por Estado e por Cidade.";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -429,7 +493,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             opcoes[i + 1] = st.nome + " (" + st.uf + ") — Região " + st.regiao;
         }
 
-        falar("Escolha o Estado para filtrar os bares e cardápios disponíveis.");
+        falar("Escolha o Estado para filtrar os bares e as cidades.");
         new AlertDialog.Builder(this)
                 .setTitle("🏳️ Filtrar por Estado (UF):")
                 .setItems(opcoes, new DialogInterface.OnClickListener() {
@@ -437,6 +501,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == 0) {
                             ufFiltroAtual = "TODOS";
+                            cidadeFiltroAtual = "TODAS";
                             atualizarRotulosFiltros();
                             renderizarListaEstabelecimentos();
                             String msg = "Exibindo bares de todos os estados em " + regiaoFiltroAtual + ".";
@@ -447,10 +512,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         EstadoInfo escolhido = estadosDisponiveis.get(which - 1);
                         ufFiltroAtual = escolhido.uf;
                         regiaoFiltroAtual = escolhido.regiao;
+                        cidadeFiltroAtual = "TODAS";
                         termoBuscaAtual = "";
 
-                        // Garante que todo Estado do Brasil tenha pelo menos um bar com cardápio disponível!
-                        garantirBarComCardapioNoEstado(escolhido);
+                        garantirBarComCardapioNaCidade(escolhido, escolhido.capital);
 
                         atualizarRotulosFiltros();
                         renderizarListaEstabelecimentos();
@@ -459,8 +524,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         if (!visiveis.isEmpty()) {
                             selecionarEstabelecimento(visiveis.get(0), true);
                         }
-                        String msg = "Filtro por Estado ativado: " + escolhido.nome + " (" + escolhido.uf + "), Região " + escolhido.regiao +
-                                ". Cardápio de " + estabelecimentoSelecionado.nome + " aberto e pronto para escolher!";
+                        String msg = "Estado selecionado: " + escolhido.nome + " (" + escolhido.uf + "). Agora você pode tocar no filtro de Cidade para escolher entre " +
+                                escolhido.cidadesPrincipais.length + " cidades de " + escolhido.nome + "!";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -468,18 +533,153 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 .show();
     }
 
+    private void abrirDialogoFiltroCidade() {
+        final List<String> cidadesLista = new ArrayList<String>();
+        final List<EstadoInfo> estadoDeCadaCidade = new ArrayList<EstadoInfo>();
+
+        for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
+            EstadoInfo st = ESTADOS_BRASIL[i];
+            if (!ufFiltroAtual.equals("TODOS") && !st.uf.equalsIgnoreCase(ufFiltroAtual)) {
+                continue;
+            }
+            if (!regiaoFiltroAtual.equals("Todas as Regiões") && !st.regiao.equalsIgnoreCase(regiaoFiltroAtual)) {
+                continue;
+            }
+            for (int c = 0; c < st.cidadesPrincipais.length; c++) {
+                cidadesLista.add(st.cidadesPrincipais[c]);
+                estadoDeCadaCidade.add(st);
+            }
+        }
+
+        final String[] opcoes = new String[cidadesLista.size() + 1];
+        opcoes[0] = "🏙️ Todas as Cidades";
+        for (int i = 0; i < cidadesLista.size(); i++) {
+            EstadoInfo st = estadoDeCadaCidade.get(i);
+            opcoes[i + 1] = cidadesLista.get(i) + " (" + st.uf + ")";
+        }
+
+        falar("Escolha a cidade para localizar os bares e restaurantes com cardápio.");
+        new AlertDialog.Builder(this)
+                .setTitle("🏙️ Filtrar por Cidade:")
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            cidadeFiltroAtual = "TODAS";
+                            atualizarRotulosFiltros();
+                            renderizarListaEstabelecimentos();
+                            String msg = "Filtro de cidade limpo. Mostrando todas as cidades.";
+                            atualizarPainelEFalar(msg, msg);
+                            return;
+                        }
+
+                        String cidadeEscolhida = cidadesLista.get(which - 1);
+                        EstadoInfo stEscolhido = estadoDeCadaCidade.get(which - 1);
+                        regiaoFiltroAtual = stEscolhido.regiao;
+                        ufFiltroAtual = stEscolhido.uf;
+                        cidadeFiltroAtual = cidadeEscolhida;
+                        termoBuscaAtual = "";
+
+                        garantirBarComCardapioNaCidade(stEscolhido, cidadeEscolhida);
+
+                        atualizarRotulosFiltros();
+                        renderizarListaEstabelecimentos();
+
+                        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                        if (!visiveis.isEmpty()) {
+                            selecionarEstabelecimento(visiveis.get(0), true);
+                        }
+
+                        String msg = "Cidade selecionada: " + cidadeEscolhida + ", " + stEscolhido.nome +
+                                ". Cardápio de " + estabelecimentoSelecionado.nome + " aberto! Você também pode tocar no botão do Google Maps para abrir a rota.";
+                        atualizarPainelEFalar(msg, msg);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    // --- INTEGRAÇÃO COM O GOOGLE MAPS (ROTA GUIADA E BUSCA DE BARES NO MAPA) ---
+
+    private void abrirBarNoGoogleMaps(Estabelecimento est, boolean iniciarNavegacao) {
+        if (est == null) return;
+
+        String consulta = est.nome + ", " + est.bairro + ", " + est.cidade + " - " + est.uf;
+        String msg = "Abrindo o Google Maps para " + est.nome + " em " + est.cidade + ", " + est.estado + ".";
+        atualizarPainelEFalar(msg, msg);
+        Toast.makeText(this, "Abrindo Google Maps: " + est.nome + " (" + est.cidade + "/" + est.uf + ")", Toast.LENGTH_LONG).show();
+
+        try {
+            Uri uriGeo = Uri.parse("geo:" + est.latitude + "," + est.longitude + "?q=" + Uri.encode(consulta));
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, uriGeo);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            if (mapIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(mapIntent);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        // Fallback para qualquer app de mapas ou navegador com Google Maps oficial
+        try {
+            Uri uriWeb = Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(consulta));
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, uriWeb);
+            startActivity(webIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Não foi possível abrir o Google Maps.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void explorarBaresDaCidadeNoGoogleMaps() {
+        String localAlvo;
+        if (!cidadeFiltroAtual.equals("TODAS")) {
+            localAlvo = cidadeFiltroAtual + " - " + ufFiltroAtual;
+        } else if (!ufFiltroAtual.equals("TODOS")) {
+            EstadoInfo st = buscarEstadoPorUf(ufFiltroAtual);
+            localAlvo = st != null ? (st.capital + " - " + st.uf) : ufFiltroAtual;
+        } else if (estabelecimentoSelecionado != null) {
+            localAlvo = estabelecimentoSelecionado.cidade + " - " + estabelecimentoSelecionado.uf;
+        } else {
+            localAlvo = "Recife - PE";
+        }
+
+        String queryMaps = "Bares e Restaurantes com cardápio em " + localAlvo;
+        String msg = "Abrindo o Google Maps com todos os bares e restaurantes em " + localAlvo + ".";
+        atualizarPainelEFalar(msg, msg);
+        Toast.makeText(this, "Google Maps: " + queryMaps, Toast.LENGTH_LONG).show();
+
+        try {
+            Uri uriGeo = Uri.parse("geo:0,0?q=" + Uri.encode(queryMaps));
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, uriGeo);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            if (mapIntent.resolveActivity(getPackageManager()) != null) {
+                startActivity(mapIntent);
+                return;
+            }
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Uri uriWeb = Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(queryMaps));
+            Intent webIntent = new Intent(Intent.ACTION_VIEW, uriWeb);
+            startActivity(webIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Não foi possível abrir o Google Maps.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void abrirDialogoSugestoesDeBusca() {
         final String[] exemplos = new String[]{
                 "Bar do Cuscuz & Petiscos (Campina Grande - PB)",
+                "Boteco Alto da Sé (Olinda - PE)",
+                "Bar & Restaurante Pátio do Forró (Caruaru - PE)",
+                "Restaurante Bodódromo (Petrolina - PE)",
                 "Boteco Praia de Ponta Negra (Natal - RN)",
-                "Bar & Restaurante Pajuçara (Maceió - AL)",
                 "Bar Brahma Centro (São Paulo - SP)",
-                "Bar Lagoa & Bossa (Rio de Janeiro - RJ)",
                 "Bar do Alemão (Curitiba - PR)",
-                "Boteco Beira Mar Norte (Florianópolis - SC)",
                 "Bar & Peixaria Rio Negro (Manaus - AM)"
         };
-        falar("Digite o nome de qualquer bar na caixa de texto ou escolha uma sugestão abaixo.");
+        falar("Digite o nome de qualquer bar ou cidade na caixa de texto ou escolha uma sugestão abaixo.");
         new AlertDialog.Builder(this)
                 .setTitle("🔎 Localizar Qualquer Bar com Cardápio:")
                 .setItems(exemplos, new DialogInterface.OnClickListener() {
@@ -495,7 +695,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private void atualizarRotulosFiltros() {
         btnFiltroRegiao.setText("🗺️ Região: " + regiaoFiltroAtual + " (Toque p/ mudar)");
-        btnFiltroRegiao.setContentDescription("Filtrar por Região do Brasil. Região atual: " + regiaoFiltroAtual + ". Toque duas vezes para escolher entre Nordeste, Sudeste, Sul, Centro-Oeste ou Norte.");
+        btnFiltroRegiao.setContentDescription("Filtrar por Região do Brasil. Região atual: " + regiaoFiltroAtual + ". Toque duas vezes para escolher a região.");
 
         String textoEstado = "Todos os Estados";
         if (!ufFiltroAtual.equals("TODOS")) {
@@ -508,6 +708,15 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         }
         btnFiltroEstado.setText("🏳️ Estado (UF): " + textoEstado + " (Toque p/ mudar)");
         btnFiltroEstado.setContentDescription("Filtrar por Estado. Estado atual: " + textoEstado + ". Toque duas vezes para escolher qualquer estado do Brasil.");
+
+        String textoCidade = cidadeFiltroAtual.equals("TODAS") ? "Todas as Cidades" : cidadeFiltroAtual;
+        btnFiltroCidade.setText("🏙️ Cidade: " + textoCidade + " (Toque p/ escolher)");
+        btnFiltroCidade.setContentDescription("Filtrar por Cidade. Cidade atual: " + textoCidade + ". Toque duas vezes para escolher a cidade.");
+
+        if (estabelecimentoSelecionado != null) {
+            btnGoogleMapsRota.setText("📍 Rota no Maps: " + estabelecimentoSelecionado.nome);
+            btnGoogleMapsRota.setContentDescription("Abrir localização e rota no Google Maps para " + estabelecimentoSelecionado.nome + " em " + estabelecimentoSelecionado.cidade);
+        }
     }
 
     private EstadoInfo buscarEstadoPorUf(String uf) {
@@ -519,48 +728,51 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         return null;
     }
 
+    private String detectarCidadeNoTexto(String textoNorm, EstadoInfo stPreferido) {
+        if (stPreferido != null) {
+            for (int c = 0; c < stPreferido.cidadesPrincipais.length; c++) {
+                String cid = stPreferido.cidadesPrincipais[c];
+                if (textoNorm.contains(normalizarTexto(cid))) {
+                    return cid;
+                }
+            }
+        }
+        for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
+            EstadoInfo st = ESTADOS_BRASIL[i];
+            for (int c = 0; c < st.cidadesPrincipais.length; c++) {
+                String cid = st.cidadesPrincipais[c];
+                if (textoNorm.contains(normalizarTexto(cid))) {
+                    return cid;
+                }
+            }
+        }
+        if (!cidadeFiltroAtual.equals("TODAS")) return cidadeFiltroAtual;
+        return stPreferido != null ? stPreferido.capital : "Recife";
+    }
+
     private EstadoInfo detectarEstadoNoTexto(String textoNorm) {
         for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
             EstadoInfo st = ESTADOS_BRASIL[i];
+            for (int c = 0; c < st.cidadesPrincipais.length; c++) {
+                if (textoNorm.contains(normalizarTexto(st.cidadesPrincipais[c]))) {
+                    return st;
+                }
+            }
             String nomeSt = normalizarTexto(st.nome);
-            String capSt = normalizarTexto(st.capital);
             String ufSt = st.uf.toLowerCase(Locale.US);
-            if (textoNorm.contains(nomeSt) || textoNorm.contains(capSt) ||
+            if (textoNorm.contains(nomeSt) ||
                     textoNorm.contains(" " + ufSt + " ") || textoNorm.endsWith(" " + ufSt) ||
                     textoNorm.contains("-" + ufSt) || textoNorm.contains("(" + ufSt + ")")) {
                 return st;
             }
         }
-        if (textoNorm.contains("campina grande") || textoNorm.contains("paraiba")) return buscarEstadoPorUf("PB");
-        if (textoNorm.contains("caruaru") || textoNorm.contains("petrolina") || textoNorm.contains("olinda") || textoNorm.contains("recife")) return buscarEstadoPorUf("PE");
-        if (textoNorm.contains("ponta negra") || textoNorm.contains("mossoro")) return buscarEstadoPorUf("RN");
-        if (textoNorm.contains("pajucara")) return buscarEstadoPorUf("AL");
         return null;
     }
 
-    /**
-     * Localiza qualquer bar ou restaurante informado pelo usuário (por texto ou voz).
-     * Se não existir no catálogo inicial, cria dinamicamente o estabelecimento com cardápio completo disponível!
-     */
     private void localizarQualquerBarComCardapio(String consultaOriginal) {
         String norm = normalizarTexto(consultaOriginal);
         if (norm.isEmpty()) return;
 
-        // 1. Verificar se o usuário falou o nome de uma Região ou Estado
-        for (int i = 1; i < REGIOES_BRASIL.length; i++) {
-            if (norm.equals(normalizarTexto(REGIOES_BRASIL[i])) || norm.equals("regiao " + normalizarTexto(REGIOES_BRASIL[i]))) {
-                regiaoFiltroAtual = REGIOES_BRASIL[i];
-                ufFiltroAtual = "TODOS";
-                termoBuscaAtual = "";
-                atualizarRotulosFiltros();
-                renderizarListaEstabelecimentos();
-                List<Estabelecimento> vis = obterEstabelecimentosFiltrados();
-                if (!vis.isEmpty()) selecionarEstabelecimento(vis.get(0), true);
-                return;
-            }
-        }
-
-        // 2. Procurar no catálogo se algum bar já corresponde ao nome, cidade, bairro, estado ou prato
         Estabelecimento encontrado = null;
         for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
             Estabelecimento est = catalogoEstabelecimentos.get(i);
@@ -571,15 +783,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             }
         }
 
-        // 3. Se não estava cadastrado com esse nome exato, localiza/cria dinamicamente o bar com cardápio disponível!
         if (encontrado == null) {
             EstadoInfo estadoDetectado = detectarEstadoNoTexto(norm);
             if (estadoDetectado == null && !ufFiltroAtual.equals("TODOS")) {
                 estadoDetectado = buscarEstadoPorUf(ufFiltroAtual);
             }
             if (estadoDetectado == null) {
-                estadoDetectado = ESTADOS_BRASIL[0]; // Pernambuco padrão se não especificado
+                estadoDetectado = ESTADOS_BRASIL[0];
             }
+
+            String cidadeDetectada = detectarCidadeNoTexto(norm, estadoDetectado);
 
             String nomeFormatado = consultaOriginal.trim();
             if (!normalizarTexto(nomeFormatado).contains("bar") &&
@@ -596,13 +809,14 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                     "bar_dinamico_" + Math.abs(norm.hashCode()),
                     nomeFormatado,
                     estadoDetectado,
-                    estadoDetectado.capital
+                    cidadeDetectada
             );
             catalogoEstabelecimentos.add(0, encontrado);
         }
 
         regiaoFiltroAtual = encontrado.regiao;
         ufFiltroAtual = encontrado.uf;
+        cidadeFiltroAtual = encontrado.cidade;
         filtrarApenasSilenciosos = false;
         termoBuscaAtual = "";
         atualizarRotulosFiltros();
@@ -611,25 +825,26 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         String msgVisual = "✅ Localizado com Cardápio Disponível:\n" +
                 "• " + encontrado.nome + " — " + encontrado.cidade + "/" + encontrado.uf + " (Região " + encontrado.regiao + ")\n" +
                 "• Conforto Acústico: " + encontrado.decibeisMedio + " dB (" + encontrado.nivelRuido + ")\n" +
-                "• Cardápio com " + encontrado.cardapio.size() + " pratos e bebidas já aberto abaixo para você escolher!";
-        String msgFalada = "Bar localizado com cardápio disponível: " + encontrado.nome + ", em " +
-                encontrado.cidade + ", estado de " + encontrado.estado + ", região " + encontrado.regiao +
-                ". O cardápio já está aberto abaixo para você escolher os itens e a IA somar sua comanda!";
+                "• Toque em 'Rota no Maps' para abrir no Google Maps ou escolha os pratos abaixo!";
+        String msgFalada = "Bar localizado: " + encontrado.nome + ", na cidade de " +
+                encontrado.cidade + ", estado de " + encontrado.estado +
+                ". O cardápio está aberto abaixo e o botão do Google Maps está pronto para traçar a rota!";
         atualizarPainelEFalar(msgVisual, msgFalada);
     }
 
-    private void garantirBarComCardapioNoEstado(EstadoInfo st) {
+    private void garantirBarComCardapioNaCidade(EstadoInfo st, String cidade) {
         for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
-            if (catalogoEstabelecimentos.get(i).uf.equalsIgnoreCase(st.uf)) {
+            Estabelecimento est = catalogoEstabelecimentos.get(i);
+            if (est.uf.equalsIgnoreCase(st.uf) && est.cidade.equalsIgnoreCase(cidade)) {
                 return;
             }
         }
-        String nomeBar = "Bar & Restaurante Central de " + st.capital;
+        String nomeBar = "Bar & Restaurante Estação de " + cidade;
         Estabelecimento novo = criarEstabelecimentoComCardapioRegional(
-                "bar_est_" + st.uf.toLowerCase(Locale.US),
+                "bar_cid_" + normalizarTexto(cidade + "_" + st.uf).replaceAll("[^a-z0-9]", ""),
                 nomeBar,
                 st,
-                st.capital
+                cidade
         );
         catalogoEstabelecimentos.add(novo);
     }
@@ -649,17 +864,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 st.nome,
                 st.uf,
                 cidade,
-                "Centro / Orla",
+                "Centro / Polo Gastronômico",
                 chavePix,
                 st.lat,
                 st.lon,
                 57,
                 "Baixo (Confortável)",
                 "Ambiente agradável com som acústico controlado",
-                "Entrada acessível, cardápio digital estruturado para TalkBack e pagamento Pix imediato"
+                "Entrada acessível, localizado no Google Maps, cardápio estruturado para TalkBack e Pix imediato"
         );
 
-        // Adiciona especialidades da região + itens clássicos de qualquer bar brasileiro
         if (st.regiao.equals("Nordeste")) {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_1", "Carne de Sol na Nata com Macaxeira", "Prato Principal", 4600, "carne", "sol", "macaxeira"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_2", "Caldinho Regional (Feijão ou Camarão)", "Entrada", 1400, "caldinho", "feijao", "camarao"));
@@ -700,7 +914,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private void carregarGrafoNacionalDeBares() {
         catalogoEstabelecimentos.clear();
 
-        // 1. Pernambuco (PE) - Nordeste
+        // 1. Pernambuco (PE) - Recife Antigo
         Estabelecimento barCais = new Estabelecimento(
                 "bar_cais_antigo",
                 "Bar Cais do Sertão & Chopp",
@@ -720,7 +934,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barCais.cardapio.add(new ItemCardapio("cais_agua", "Água Mineral sem Gás", "Bebida", 600, "agua", "mineral"));
         catalogoEstabelecimentos.add(barCais);
 
-        // 2. Pernambuco (PE) - Restaurante Sabor do Agreste
+        // 2. Pernambuco (PE) - Recife Graças
         Estabelecimento restAgreste = new Estabelecimento(
                 "rest_sabor_agreste",
                 "Restaurante Sabor do Agreste",
@@ -739,7 +953,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         restAgreste.cardapio.add(new ItemCardapio("agr_bolo_rolo", "Café Expresso com Bolo de Rolo", "Sobremesa", 1650, "cafe", "bolo de rolo", "sobremesa"));
         catalogoEstabelecimentos.add(restAgreste);
 
-        // 3. Pernambuco (PE) - Varanda Jardim da Praia
+        // 3. Pernambuco (PE) - Recife Boa Viagem
         Estabelecimento restVaranda = new Estabelecimento(
                 "bar_jardim_boa_viagem",
                 "Restaurante Varanda Jardim da Praia",
@@ -758,7 +972,43 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         restVaranda.cardapio.add(new ItemCardapio("var_pudim", "Pudim de Leite Condensado", "Sobremesa", 1400, "pudim", "sobremesa"));
         catalogoEstabelecimentos.add(restVaranda);
 
-        // 4. Bahia (BA) - Nordeste
+        // 4. Pernambuco (PE) - Olinda
+        Estabelecimento barOlinda = new Estabelecimento(
+                "bar_alto_da_se_olinda",
+                "Mirante & Tapioquinha do Alto da Sé",
+                "Bar & Mirante Regional",
+                "Nordeste", "Pernambuco", "PE", "Olinda", "Alto da Sé",
+                "pix@mirantealtodase.com.br",
+                -8.0138, -34.8492, 59, "Baixo (Confortável)",
+                "Brisa do alto e chorinho pernambucano baixo",
+                "Acesso ao terraço térreo, mesas espaçadas e garçom guia"
+        );
+        barOlinda.cardapio.add(new ItemCardapio("oli_tapioca", "Tapioca de Carne de Sol com Queijo Coalho", "Entrada", 1800, "tapioca", "queijo", "carne"));
+        barOlinda.cardapio.add(new ItemCardapio("oli_caldinho", "Caldinho de Sururu e Feijão", "Entrada", 1400, "caldinho", "sururu", "feijao"));
+        barOlinda.cardapio.add(new ItemCardapio("oli_peixe", "Peixada Pernambucana Completa", "Prato Principal", 5200, "peixada", "peixe"));
+        barOlinda.cardapio.add(new ItemCardapio("oli_chope", "Chope Artesanal de Olinda", "Bebida", 1200, "chope", "chopp"));
+        barOlinda.cardapio.add(new ItemCardapio("oli_suco", "Suco de Mangaba Natural", "Bebida", 1100, "suco", "mangaba"));
+        catalogoEstabelecimentos.add(barOlinda);
+
+        // 5. Pernambuco (PE) - Caruaru
+        Estabelecimento barCaruaru = new Estabelecimento(
+                "bar_alto_do_moura_caruaru",
+                "Bodega & Bar Mestre Vitalino",
+                "Bar & Carne de Sol",
+                "Nordeste", "Pernambuco", "PE", "Caruaru", "Alto do Moura",
+                "pix@bodegavitalino.com.br",
+                -8.2842, -36.0125, 57, "Baixo (Confortável)",
+                "Forró pé de serra instrumental suave",
+                "Rampa de acesso na entrada e salão amplo"
+        );
+        barCaruaru.cardapio.add(new ItemCardapio("car_carne", "Carne de Sol do Agreste com Queijo Manteiga", "Prato Principal", 4900, "carne de sol", "queijo"));
+        barCaruaru.cardapio.add(new ItemCardapio("car_buchada", "Porção de Sarapatel / Petisco Regional", "Entrada", 2400, "sarapatel", "porcao"));
+        barCaruaru.cardapio.add(new ItemCardapio("car_macaxeira", "Macaxeira Cozida na Manteiga de Garrafa", "Petisco", 1800, "macaxeira", "manteiga"));
+        barCaruaru.cardapio.add(new ItemCardapio("car_suco", "Suco de Graviola Natural", "Bebida", 1000, "suco", "graviola"));
+        barCaruaru.cardapio.add(new ItemCardapio("car_chope", "Cerveja Gelada / Chope", "Bebida", 1100, "cerveja", "chope"));
+        catalogoEstabelecimentos.add(barCaruaru);
+
+        // 6. Bahia (BA) - Salvador
         Estabelecimento barBahia = new Estabelecimento(
                 "bar_pelourinho_bahia",
                 "Bar & Restaurante Solar do Pelourinho",
@@ -776,7 +1026,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barBahia.cardapio.add(new ItemCardapio("ba_cerveja", "Cerveja Artesanal Gelada", "Bebida", 1400, "cerveja", "chope"));
         catalogoEstabelecimentos.add(barBahia);
 
-        // 5. Ceará (CE) - Nordeste
+        // 7. Ceará (CE) - Fortaleza
         Estabelecimento barCeara = new Estabelecimento(
                 "bar_beira_mar_ceara",
                 "Boteco Brisa de Iracema",
@@ -794,7 +1044,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barCeara.cardapio.add(new ItemCardapio("ce_chope", "Chope Pilsen Gelado", "Bebida", 1100, "chope", "chopp"));
         catalogoEstabelecimentos.add(barCeara);
 
-        // 6. São Paulo (SP) - Sudeste
+        // 8. São Paulo (SP)
         Estabelecimento barSp = new Estabelecimento(
                 "bar_vila_madalena_sp",
                 "Bar & Bistrô Esquina Paulista",
@@ -812,7 +1062,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barSp.cardapio.add(new ItemCardapio("sp_suco", "Suco de Laranja Natural", "Bebida", 1200, "suco", "laranja"));
         catalogoEstabelecimentos.add(barSp);
 
-        // 7. Rio de Janeiro (RJ) - Sudeste
+        // 9. Rio de Janeiro (RJ)
         Estabelecimento barRj = new Estabelecimento(
                 "bar_lapa_rj",
                 "Boteco Bossa de Copacabana",
@@ -830,7 +1080,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barRj.cardapio.add(new ItemCardapio("rj_mate", "Mate Gelado da Praia com Limão", "Bebida", 900, "mate", "limao"));
         catalogoEstabelecimentos.add(barRj);
 
-        // 8. Minas Gerais (MG) - Sudeste
+        // 10. Minas Gerais (MG)
         Estabelecimento barMg = new Estabelecimento(
                 "bar_savassi_mg",
                 "Bar & Prosa da Savassi",
@@ -848,7 +1098,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barMg.cardapio.add(new ItemCardapio("mg_doce", "Doce de Leite com Queijo Canastra", "Sobremesa", 1800, "doce de leite", "queijo"));
         catalogoEstabelecimentos.add(barMg);
 
-        // 9. Rio Grande do Sul (RS) - Sul
+        // 11. Rio Grande do Sul (RS)
         Estabelecimento barRs = new Estabelecimento(
                 "bar_cidade_baixa_rs",
                 "Galpão & Chopp Gaúcho",
@@ -866,7 +1116,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barRs.cardapio.add(new ItemCardapio("rs_uva", "Suco de Uva Integral", "Bebida", 1100, "suco", "uva"));
         catalogoEstabelecimentos.add(barRs);
 
-        // 10. Distrito Federal (DF) - Centro-Oeste
+        // 12. Distrito Federal (DF)
         Estabelecimento barDf = new Estabelecimento(
                 "bar_asa_sul_df",
                 "Varanda do Cerrado Bar & Cozinha",
@@ -884,7 +1134,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barDf.cardapio.add(new ItemCardapio("df_chope", "Chope Claro Gelado", "Bebida", 1200, "chope", "chopp"));
         catalogoEstabelecimentos.add(barDf);
 
-        // 11. Pará (PA) - Norte
+        // 13. Pará (PA)
         Estabelecimento barPa = new Estabelecimento(
                 "bar_estacao_docas_pa",
                 "Restaurante & Bar Estação Amazônia",
@@ -902,7 +1152,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         barPa.cardapio.add(new ItemCardapio("pa_acai", "Creme de Açaí com Tapioca", "Sobremesa", 1800, "acai", "tapioca"));
         catalogoEstabelecimentos.add(barPa);
 
-        // 12. Boteco do Galo Frito (PE - Ruidoso para Caso 3)
+        // 14. Boteco do Galo Frito (PE - Ruidoso para Caso 3)
         Estabelecimento botecoGalo = new Estabelecimento(
                 "bar_boemia_ruidoso",
                 "Boteco do Galo Frito",
@@ -928,6 +1178,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 continue;
             }
             if (!ufFiltroAtual.equals("TODOS") && !est.uf.equalsIgnoreCase(ufFiltroAtual)) {
+                continue;
+            }
+            if (!cidadeFiltroAtual.equals("TODAS") && !est.cidade.equalsIgnoreCase(cidadeFiltroAtual)) {
                 continue;
             }
             if (filtrarApenasSilenciosos && est.decibeisMedio > 65) {
@@ -962,42 +1215,73 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             final Estabelecimento est = visiveis.get(i);
             boolean selecionado = (est == estabelecimentoSelecionado);
 
+            LinearLayout linhaBar = new LinearLayout(this);
+            linhaBar.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams lpLinha = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lpLinha.setMargins(0, 0, 0, 14);
+            linhaBar.setLayoutParams(lpLinha);
+
             Button btnEst = new Button(this);
             btnEst.setAllCaps(false);
             btnEst.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-            btnEst.setPadding(28, 22, 28, 22);
-            btnEst.setTextSize(14f);
+            btnEst.setPadding(24, 20, 24, 20);
+            btnEst.setTextSize(13.5f);
             btnEst.setTypeface(null, selecionado ? Typeface.BOLD : Typeface.NORMAL);
             btnEst.setTextColor(Color.WHITE);
             btnEst.setBackgroundColor(selecionado ? Color.parseColor("#1D4ED8") : Color.parseColor("#1E293B"));
 
             String prefixo = selecionado ? "✅ [CARDÁPIO ABERTO] " : "🏪 ";
             String textoBotao = prefixo + est.nome + "\n" +
-                    "• Local: " + est.cidade + " - " + est.uf + " (" + est.bairro + " | Região " + est.regiao + ")\n" +
+                    "• Cidade: " + est.cidade + " - " + est.uf + " (" + est.bairro + " | " + est.regiao + ")\n" +
                     "• Ruído: " + est.decibeisMedio + " dB (" + est.nivelRuido + ")\n" +
-                    "• Cardápio Disponível: " + est.cardapio.size() + " opções (Toque p/ abrir cardápio)";
+                    "• Cardápio: " + est.cardapio.size() + " opções (Toque p/ abrir cardápio)";
             btnEst.setText(textoBotao);
             btnEst.setContentDescription(
-                    (selecionado ? "Cardápio aberto: " : "") + est.nome + ", em " + est.cidade + ", Estado " + est.estado +
-                            ", Região " + est.regiao + ". Ruído médio de " + est.decibeisMedio + " decibéis. " +
-                            est.acessibilidade + ". Toque duas vezes para abrir o cardápio com " + est.cardapio.size() + " itens."
+                    (selecionado ? "Cardápio aberto: " : "") + est.nome + ", na cidade de " + est.cidade +
+                            ", Estado " + est.estado + ", Região " + est.regiao + ". Ruído médio de " + est.decibeisMedio +
+                            " decibéis. Toque duas vezes para abrir o cardápio com " + est.cardapio.size() + " itens."
             );
 
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
+            LinearLayout.LayoutParams lpEst = new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1.0f
             );
-            lp.setMargins(0, 0, 0, 14);
-            btnEst.setLayoutParams(lp);
-
+            btnEst.setLayoutParams(lpEst);
             btnEst.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     selecionarEstabelecimento(est, true);
                 }
             });
+            linhaBar.addView(btnEst);
 
-            containerEstabelecimentos.addView(btnEst);
+            // Botão lateral direto para abrir este bar no Google Maps
+            Button btnMaps = new Button(this);
+            btnMaps.setAllCaps(false);
+            btnMaps.setText("📍\nMaps");
+            btnMaps.setTextSize(12f);
+            btnMaps.setTextColor(Color.WHITE);
+            btnMaps.setBackgroundColor(Color.parseColor("#B45309"));
+            btnMaps.setContentDescription("Abrir " + est.nome + " de " + est.cidade + " no Google Maps");
+            LinearLayout.LayoutParams lpMaps = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT
+            );
+            lpMaps.setMargins(8, 0, 0, 0);
+            btnMaps.setLayoutParams(lpMaps);
+            btnMaps.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    abrirBarNoGoogleMaps(est, true);
+                }
+            });
+            linhaBar.addView(btnMaps);
+
+            containerEstabelecimentos.addView(linhaBar);
         }
     }
 
@@ -1006,6 +1290,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             quantidadesComanda.clear();
         }
         estabelecimentoSelecionado = novoEst;
+        atualizarRotulosFiltros();
         renderizarListaEstabelecimentos();
         renderizarCardapioEstabelecimento();
         recalcularComanda();
@@ -1019,8 +1304,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         String msgVisual = "Cardápio aberto: " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + " — Região " + novoEst.regiao + ").\n" +
                 "Conforto Acústico: " + novoEst.decibeisMedio + " dB (" + novoEst.nivelRuido + ").\n" +
-                "Toque nos itens abaixo para escolher e a IA somará sua comanda!";
-        String msgFalada = "Cardápio aberto de " + novoEst.nome + ", em " + novoEst.cidade + ", " + novoEst.estado +
+                "Toque em 📍 Maps para ver a rota ou escolha os itens no cardápio abaixo!";
+        String msgFalada = "Cardápio aberto de " + novoEst.nome + ", na cidade de " + novoEst.cidade + ", " + novoEst.estado +
                 ", ruído de " + novoEst.decibeisMedio + " decibéis. Cardápio disponível: " + resumoItens.toString() +
                 ". Toque nos itens para adicionar à comanda.";
         atualizarPainelEFalar(msgVisual, msgFalada);
@@ -1460,10 +1745,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
             final String[] frasesBusca = new String[]{
                     "Quero um bar no Recife Antigo em Pernambuco com música baixa",
-                    "Localizar bar no Pelourinho em Salvador na Bahia",
-                    "Buscar bar na Vila Madalena em São Paulo",
+                    "Localizar bar no Alto da Sé em Olinda",
+                    "Buscar bar em Caruaru no Alto do Moura",
                     "Localizar Bar do Cuscuz em Campina Grande na Paraíba",
-                    "Buscar bar na Cidade Baixa em Porto Alegre no Rio Grande do Sul",
+                    "Buscar bar na Vila Madalena em São Paulo",
                     "Localizar restaurante na Estação das Docas em Belém do Pará"
             };
             new AlertDialog.Builder(this)
@@ -1518,7 +1803,6 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         List<ItemCardapio> itensIdentificados = encontrarItensNaFrase(norm, estAlvo);
         if (itensIdentificados.isEmpty() && estAlvo != null && !estAlvo.cardapio.isEmpty()) {
-            // Se o usuário pediu genericamente "prato principal" ou "entrada" ou "bebida"
             for (int i = 0; i < estAlvo.cardapio.size(); i++) {
                 ItemCardapio item = estAlvo.cardapio.get(i);
                 if (norm.contains(normalizarTexto(item.categoria))) {
@@ -1578,22 +1862,24 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private void executarCaso1() {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
+        cidadeFiltroAtual = "Recife";
         filtrarApenasSilenciosos = true;
         atualizarRotulosFiltros();
         selecionarEstabelecimento(catalogoEstabelecimentos.get(0), false);
         String msg = "[Caso 1 · Busca de Bar Acústico]\n\n" +
                 "Voz Reconhecida: 'Quero um bar no Recife Antigo com música baixa e espaço tranquilo para conversar.'\n\n" +
                 "Recuperação em Grafo (GraphRAG):\n" +
-                "• Região: Nordeste | Estado: Pernambuco (PE)\n" +
+                "• Região: Nordeste | Estado: Pernambuco (PE) | Cidade: Recife\n" +
                 "• Bar Selecionado: Bar Cais do Sertão & Chopp (Recife Antigo)\n" +
                 "• Ruído Médio: 58 dB (música instrumental ambiente baixa)\n" +
-                "• Cardápio carregado abaixo com 7 opções!";
-        atualizarPainelEFalar(msg, "Bar encontrado em Pernambuco, Região Nordeste: Bar Cais do Sertão, com cinquenta e oito decibéis e cardápio aberto.");
+                "• Cardápio aberto e botão do Google Maps pronto para traçar a rota!";
+        atualizarPainelEFalar(msg, "Bar encontrado em Recife, Pernambuco: Bar Cais do Sertão, com cinquenta e oito decibéis e cardápio aberto.");
     }
 
     private void executarCaso2() {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
+        cidadeFiltroAtual = "Recife";
         filtrarApenasSilenciosos = false;
         atualizarRotulosFiltros();
         Estabelecimento cais = catalogoEstabelecimentos.get(0);
@@ -1618,6 +1904,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private void executarCaso3() {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
+        cidadeFiltroAtual = "Recife";
         filtrarApenasSilenciosos = false;
         atualizarRotulosFiltros();
         Estabelecimento cais = catalogoEstabelecimentos.get(0);
@@ -1739,7 +2026,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS && tts != null) {
             tts.setLanguage(new Locale("pt", "BR"));
-            falar("Comanda Falada, Passo à Frente. Filtre por Região ou por Estado do Brasil, ou localize qualquer bar para ouvir o cardápio, somar a comanda pela IA e pagar no aplicativo do seu banco.");
+            falar("Comanda Falada, Passo à Frente. Filtre por Região, Estado e Cidade, integre com o Google Maps, escolha os itens do cardápio para a IA somar e pague no aplicativo do seu banco.");
         }
     }
 

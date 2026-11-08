@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="br.ufrpe.comandafalada"
-    android:versionCode="2"
-    android:versionName="2.0">
+    android:versionCode="3"
+    android:versionName="3.0">
 
     <uses-sdk
         android:minSdkVersion="26"
@@ -14,8 +14,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
-    <!-- Visibilidade de pacotes no Android 11+ para abrir apps de bancos instalados no celular -->
+    <!-- Visibilidade de pacotes no Android 11+ para Google Maps e Bancos instalados no celular -->
     <queries>
+        <!-- Google Maps e Waze -->
+        <package android:name="com.google.android.apps.maps" />
+        <package android:name="com.waze" />
+
+        <!-- Principais Bancos e Carteiras Digitais do Brasil -->
         <package android:name="com.nu.production" />
         <package android:name="br.com.intermedium" />
         <package android:name="com.itau" />
@@ -33,9 +38,18 @@
         <package android:name="br.com.willbank" />
         <package android:name="br.com.sicredi.app" />
         <package android:name="br.com.sicoob.app" />
+
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="google.navigation" />
         </intent>
         <intent>
             <action android:name="android.intent.action.VIEW" />

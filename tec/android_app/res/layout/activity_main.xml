@@ -27,13 +27,13 @@
                 android:textSize="21sp"
                 android:textStyle="bold"
                 android:textColor="#FACC15"
-                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Localize qualquer bar ou restaurante do Brasil com filtro por região e por estado, ouça o cardápio, some a comanda pela IA e pague nos bancos do celular." />
+                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Filtre por Região, Estado e Cidade, integre com o Google Maps, ouça o cardápio, some a comanda pela IA e pague nos bancos do celular." />
 
             <TextView
                 android:id="@+id/tvSubtitulo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Busca Nacional por Região e Estado + Cardápio + Soma IA + App do Banco"
+                android:text="Região, Estado e Cidade + Google Maps + Cardápio + Soma IA + Bancos"
                 android:textSize="14sp"
                 android:textColor="#E2E8F0"
                 android:layout_marginTop="4dp" />
@@ -46,30 +46,29 @@
             android:layout_height="wrap_content"
             android:background="#172554"
             android:padding="12dp"
-            android:text="🔊 Use os filtros de Região e Estado ou digite o nome de qualquer Bar para abrir o cardápio."
+            android:text="🔊 Filtre por Região, Estado e Cidade, abra no Google Maps ou escolha um Bar abaixo."
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FEF08A"
             android:accessibilityLiveRegion="polite"
             android:layout_marginBottom="14dp" />
 
-        <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO E LOCALIZAÇÃO DE QUALQUER BAR -->
+        <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO, CIDADE E GOOGLE MAPS -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. FILTRAR POR REGIÃO, ESTADO OU LOCALIZAR QUALQUER BAR:"
+            android:text="1. FILTROS (REGIÃO, ESTADO, CIDADE) E GOOGLE MAPS:"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#38BDF8"
             android:layout_marginBottom="8dp" />
 
-        <!-- Linha de Filtros: Região e Estado -->
         <Button
             android:id="@+id/btnFiltroRegiao"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="54dp"
-            android:text="🗺️ Filtrar por Região: Todas as Regiões (Brasil)"
+            android:minHeight="52dp"
+            android:text="🗺️ Filtrar por Região: Todas as Regiões"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
@@ -80,13 +79,59 @@
             android:id="@+id/btnFiltroEstado"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="54dp"
+            android:minHeight="52dp"
             android:text="🏳️ Filtrar por Estado (UF): Todos os Estados"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:backgroundTint="#0F766E"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnFiltroCidade"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="🏙️ Filtrar por Cidade: Todas as Cidades"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#047857"
             android:layout_marginBottom="8dp" />
+
+        <!-- Botões de Integração Direta com o Google Maps -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btnGoogleMapsRota"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="54dp"
+                android:text="📍 Rota no Google Maps p/ Este Bar"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#B45309"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnGoogleMapsExplorar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="54dp"
+                android:text="🗺️ Ver Bares da Cidade no Maps"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#D97706"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
 
         <!-- Caixa de Busca para Localizar Qualquer Bar / Restaurante / Cidade -->
         <EditText
