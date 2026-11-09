@@ -14,8 +14,9 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.speech.tts.TextToSpeech;
 import android.view.View;
+import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
+public class MainActivity extends Activity {
 
     private static final int REQ_VOZ_BUSCA_LOCAL = 101;
     private static final int REQ_VOZ_PEDIDO_CARDAPIO = 102;
@@ -241,7 +242,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private Button btnCaso2;
     private Button btnCaso3;
 
-    private TextToSpeech tts;
+    private AccessibilityManager accessibilityManager;
     private final List<Estabelecimento> catalogoEstabelecimentos = new ArrayList<Estabelecimento>();
     private Estabelecimento estabelecimentoSelecionado;
 
@@ -288,7 +289,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         btnCaso2 = findViewById(R.id.btnCaso2);
         btnCaso3 = findViewById(R.id.btnCaso3);
 
-        tts = new TextToSpeech(this, this);
+        accessibilityManager = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
 
         carregarGrafoNacionalDeBares();
         estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
@@ -2013,29 +2014,29 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private void atualizarPainelEFalar(String textoVisual, String textoFalado) {
         tvResultado.setText("🔊 " + textoVisual);
+        tvResultado.setContentDescription(textoFalado);
         falar(textoFalado);
     }
 
+    /**
+     * Envia o anúncio diretamente para o Leitor de Tela nativo do Sistema Android (TalkBack / Assistente de Voz),
+     * sem criar um sintetizador TextToSpeech separado que atropele o leitor do sistema.
+     */
     private void falar(String texto) {
-        if (tts != null && texto != null && !texto.isEmpty()) {
-            tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "fala_comanda");
+        if (texto == null || texto.isEmpty()) return;
+        if (tvResultado != null) {
+            tvResultado.setContentDescription(texto);
+            tvResultado.announceForAccessibility(texto);
         }
-    }
-
-    @Override
-    public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS && tts != null) {
-            tts.setLanguage(new Locale("pt", "BR"));
-            falar("Comanda Falada, Passo à Frente. Filtre por Região, Estado e Cidade, integre com o Google Maps, escolha os itens do cardápio para a IA somar e pague no aplicativo do seu banco.");
+        if (accessibilityManager != null && accessibilityManager.isEnabled()) {
+            try {
+                AccessibilityEvent event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_ANNOUNCEMENT);
+                event.setClassName(getClass().getName());
+                event.setPackageName(getPackageName());
+                event.getText().add(texto);
+                accessibilityManager.sendAccessibilityEvent(event);
+            } catch (Exception ignored) {
+            }
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
-        super.onDestroy();
     }
 }
