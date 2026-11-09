@@ -26,7 +26,7 @@
   2. **Filtros Completos do Brasil (Região, Estado/UF e Cidade):**
      - **Filtro por Região:** Todas as 5 regiões do Brasil (`Nordeste`, `Sudeste`, `Sul`, `Centro-Oeste`, `Norte`).
      - **Filtro por Estado (UF):** Todos os 27 estados brasileiros (`AC` a `TO`).
-     - **Filtro por Cidade:** Capitais e principais cidades do interior e litoral nos 27 estados (ex.: em Pernambuco: Recife, Olinda, Jaboatão dos Guararapes, Caruaru, Petrolina, Garanhuns, Paulista, Cabo de Santo Agostinho, Vitória de Santo Antão).
+     - **Filtro por Cidade:** Inclui **todos os 185 municípios de Pernambuco** (`TODAS_CIDADES_PERNAMBUCO`, do Recife até Fernando de Noronha, Afrânio, Petrolina, Serra Talhada, Araripina, Salgueiro, Arcoverde, Pesqueira, Garanhuns, Caruaru, Gravatá, Vitória de Santo Antão, Goiana, Carpina, Tamandaré, etc.), além das principais cidades dos 27 estados e uma opção **"🔎 Pesquisar / Digitar Nome da Cidade..."** no topo da lista para filtrar rapidamente qualquer município sem precisar rolar toda a lista.
      - **Localizar Qualquer Bar com Cardápio Disponível:** Busca por texto ou voz que encontra bares do catálogo ou gera automaticamente o cardápio regional completo para qualquer bar ou restaurante de qualquer cidade do Brasil.
   3. **Integração de Mão Dupla com o Google Maps (App -> Maps e Maps -> App):**
      - **Do Comanda Falada para o Google Maps:** Botão `📍 Maps` ao lado de cada bar, botão `📍 Rota no Maps` para traçar a rota até o bar selecionado e botão `🗺️ Ver Bares da Cidade no Maps`.

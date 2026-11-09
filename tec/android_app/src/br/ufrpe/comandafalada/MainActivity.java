@@ -155,26 +155,66 @@ public class MainActivity extends Activity {
             "Norte"
     };
 
+    private static final String[] TODAS_CIDADES_PERNAMBUCO = new String[]{
+            "Recife", "Olinda", "Jaboatão dos Guararapes", "Caruaru", "Petrolina",
+            "Paulista", "Cabo de Santo Agostinho", "Camaragibe", "Garanhuns", "Vitória de Santo Antão",
+            "Igarassu", "São Lourenço da Mata", "Santa Cruz do Capibaribe", "Abreu e Lima", "Ipojuca",
+            "Serra Talhada", "Araripina", "Gravatá", "Carpina", "Goiana",
+            "Belo Jardim", "Arcoverde", "Ouricuri", "Escada", "Pesqueira",
+            "Surubim", "Palmares", "Moreno", "Bezerros", "Salgueiro",
+            "São Bento do Una", "Buíque", "Limoeiro", "Paudalho", "Timbaúba",
+            "Brejo da Madre de Deus", "Bom Conselho", "Ribeirão", "Toritama", "Barreiros",
+            "Águas Belas", "Lajedo", "Santa Maria da Boa Vista", "Afogados da Ingazeira", "Aliança",
+            "Agrestina", "Água Preta", "Afrânio", "Alagoinha", "Altinho",
+            "Amaraji", "Angelim", "Araçoiaba", "Barra de Guabiraba", "Belém de Maria",
+            "Belém do São Francisco", "Betânia", "Bodocó", "Bom Jardim", "Bonito",
+            "Brejão", "Brejinho", "Buenos Aires", "Cabrobó", "Cachoeirinha",
+            "Caetés", "Calçado", "Calumbi", "Camocim de São Félix", "Camutanga",
+            "Canhotinho", "Capoeiras", "Carnaíba", "Carnaubeira da Penha", "Casinhas",
+            "Catende", "Cedro", "Chã de Alegria", "Chã Grande", "Condado",
+            "Correntes", "Cortês", "Cumaru", "Cupira", "Custódia",
+            "Dormentes", "Exu", "Feira Nova", "Fernando de Noronha", "Ferreiros",
+            "Flores", "Floresta", "Frei Miguelinho", "Gameleira", "Glória do Goitá",
+            "Granito", "Iati", "Ibimirim", "Ibirajuba", "Iguaracy",
+            "Inajá", "Ingazeira", "Ipubi", "Itacuruba", "Itaíba",
+            "Itamaracá (Ilha de Itamaracá)", "Itambé", "Itapetim", "Itapissuma", "Itaquitinga",
+            "Jaqueira", "Jataúba", "Jatobá", "João Alfredo", "Joaquim Nabuco",
+            "Jucati", "Jupi", "Jurema", "Lagoa de Itaenga", "Lagoa do Carro",
+            "Lagoa do Ouro", "Lagoa dos Gatos", "Lagoa Grande", "Machados", "Manari",
+            "Maraial", "Mirandiba", "Moreilândia", "Nazaré da Mata", "Orobó",
+            "Orocó", "Palmeirina", "Panelas", "Paranatama", "Parnamirim",
+            "Passira", "Pedra", "Petrolândia", "Poção", "Pombos",
+            "Primavera", "Quipapá", "Quixaba", "Riacho das Almas", "Rio Formoso",
+            "Sairé", "Salgadinho", "Salgueiro", "Saloá", "Sanharó",
+            "Santa Cruz", "Santa Cruz da Baixa Verde", "Santa Filomena", "Santa Maria do Cambucá", "Santa Terezinha",
+            "São Benedito do Sul", "São Caitano", "São João", "São Joaquim do Monte", "São José da Coroa Grande",
+            "São José do Belmonte", "São José do Egito", "São Vicente Férrer", "Serrita", "Sertânia",
+            "Sirinhaém", "Solidão", "Tabira", "Tacaimbó", "Tacaratu",
+            "Tamandaré", "Taquaritinga do Norte", "Terezinha", "Terra Nova", "Tracunhaém",
+            "Trindade", "Triunfo", "Tupanatinga", "Tuparetama", "Venturosa",
+            "Verdejante", "Vertente do Lério", "Vertentes", "Vicência", "Xexéu"
+    };
+
     private static final EstadoInfo[] ESTADOS_BRASIL = new EstadoInfo[]{
             // Nordeste
             new EstadoInfo("Pernambuco", "PE", "Recife", "Nordeste", -8.0617, -34.8711,
-                    "Recife", "Olinda", "Jaboatão dos Guararapes", "Caruaru", "Petrolina", "Garanhuns", "Paulista", "Cabo de Santo Agostinho", "Porto de Galinhas (Ipojuca)", "Vitória de Santo Antão"),
+                    TODAS_CIDADES_PERNAMBUCO),
             new EstadoInfo("Bahia", "BA", "Salvador", "Nordeste", -12.9714, -38.5086,
-                    "Salvador", "Feira de Santana", "Porto Seguro", "Ilhéus", "Vitória da Conquista", "Lauro de Freitas"),
+                    "Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Juazeiro", "Itabuna", "Lauro de Freitas", "Ilhéus", "Jequié", "Teixeira de Freitas", "Barreiras", "Alagoinhas", "Porto Seguro", "Simões Filho", "Paulo Afonso", "Eunápolis", "Santo Antônio de Jesus", "Valença", "Candeias", "Guanambi", "Jacobina", "Serrinha", "Senhor do Bonfim", "Dias d'Ávila"),
             new EstadoInfo("Ceará", "CE", "Fortaleza", "Nordeste", -3.7258, -38.4984,
-                    "Fortaleza", "Juazeiro do Norte", "Sobral", "Caucaia", "Jericoacoara"),
+                    "Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral", "Crato", "Itapipoca", "Maranguape", "Iguatu", "Quixadá", "Pacatuba", "Aquiraz", "Quixeramobim", "Canindé", "Russas", "Tianguá", "Crateús", "Aracati", "Cascavel", "Pacajus", "Icó", "Horizonte", "Camocim", "Jericoacoara"),
             new EstadoInfo("Paraíba", "PB", "João Pessoa", "Nordeste", -7.1195, -34.8450,
-                    "João Pessoa", "Campina Grande", "Patos", "Cabedelo", "Sousa"),
+                    "João Pessoa", "Campina Grande", "Santa Rita", "Patos", "Bayeux", "Sousa", "Cabedelo", "Cajazeiras", "Guarabira", "Sapé", "Mamanguape", "Queimadas", "São Bento", "Monteiro", "Esperança", "Pombal", "Catolé do Rocha", "Conde", "Areia", "Bananeiras"),
             new EstadoInfo("Rio Grande do Norte", "RN", "Natal", "Nordeste", -5.7945, -35.2110,
-                    "Natal", "Mossoró", "Parnamirim", "Pipa (Tibau do Sul)", "Caicó"),
+                    "Natal", "Mossoró", "Parnamirim", "São Gonçalo do Amarante", "Macaíba", "Ceará-Mirim", "Caicó", "Assu", "Currais Novos", "São José de Mipibu", "Santa Cruz", "Nova Cruz", "Apodi", "João Câmara", "Pau dos Ferros", "Tibau do Sul (Pipa)", "Touros"),
             new EstadoInfo("Alagoas", "AL", "Maceió", "Nordeste", -9.6658, -35.7350,
-                    "Maceió", "Arapiraca", "Maragogi", "Marechal Deodoro"),
+                    "Maceió", "Arapiraca", "Rio Largo", "Palmeira dos Índios", "União dos Palmares", "Penedo", "São Miguel dos Campos", "Campo Alegre", "Delmiro Gouveia", "Coruripe", "Marechal Deodoro", "Santana do Ipanema", "Maragogi", "Piranhas"),
             new EstadoInfo("Sergipe", "SE", "Aracaju", "Nordeste", -10.9472, -37.0731,
-                    "Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana"),
+                    "Aracaju", "Nossa Senhora do Socorro", "Lagarto", "Itabaiana", "São Cristóvão", "Estância", "Tobias Barreto", "Itabaianinha", "Simão Dias", "Nossa Senhora da Glória", "Propriá", "Canindé de São Francisco"),
             new EstadoInfo("Maranhão", "MA", "São Luís", "Nordeste", -2.5307, -44.3068,
-                    "São Luís", "Imperatriz", "Barreirinhas", "Caxias"),
+                    "São Luís", "Imperatriz", "São José de Ribamar", "Timon", "Caxias", "Paço do Lumiar", "Codó", "Açailândia", "Bacabal", "Balsas", "Santa Inês", "Barra do Corda", "Pinheiro", "Chapadinha", "Barreirinhas"),
             new EstadoInfo("Piauí", "PI", "Teresina", "Nordeste", -5.0892, -42.8016,
-                    "Teresina", "Parnaíba", "Picos", "Floriano"),
+                    "Teresina", "Parnaíba", "Picos", "Piripiri", "Floriano", "Barras", "Campo Maior", "União", "Altos", "Esperantina", "José de Freitas", "Pedro II", "Oeiras", "São Raimundo Nonato", "Luís Correia"),
             // Sudeste
             new EstadoInfo("São Paulo", "SP", "São Paulo", "Sudeste", -23.5558, -46.6896,
                     "São Paulo", "Campinas", "Santos", "Ribeirão Preto", "São José dos Campos", "Sorocaba", "Guarulhos"),
@@ -554,8 +594,13 @@ public class MainActivity extends Activity {
     }
 
     private void abrirDialogoFiltroCidade() {
+        exibirDialogoCidadesFiltradas("");
+    }
+
+    private void exibirDialogoCidadesFiltradas(final String filtroDigitado) {
         final List<String> cidadesLista = new ArrayList<String>();
         final List<EstadoInfo> estadoDeCadaCidade = new ArrayList<EstadoInfo>();
+        final String normFiltro = normalizarTexto(filtroDigitado);
 
         for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
             EstadoInfo st = ESTADOS_BRASIL[i];
@@ -566,25 +611,38 @@ public class MainActivity extends Activity {
                 continue;
             }
             for (int c = 0; c < st.cidadesPrincipais.length; c++) {
-                cidadesLista.add(st.cidadesPrincipais[c]);
+                String nomeCid = st.cidadesPrincipais[c];
+                if (!normFiltro.isEmpty() && !normalizarTexto(nomeCid).contains(normFiltro)) {
+                    continue;
+                }
+                cidadesLista.add(nomeCid);
                 estadoDeCadaCidade.add(st);
             }
         }
 
-        final String[] opcoes = new String[cidadesLista.size() + 1];
-        opcoes[0] = "🏙️ Todas as Cidades";
+        final String[] opcoes = new String[cidadesLista.size() + 2];
+        opcoes[0] = "🔎 Pesquisar / Digitar Nome da Cidade...";
+        opcoes[1] = "🏙️ Todas as Cidades";
         for (int i = 0; i < cidadesLista.size(); i++) {
             EstadoInfo st = estadoDeCadaCidade.get(i);
-            opcoes[i + 1] = cidadesLista.get(i) + " (" + st.uf + ")";
+            opcoes[i + 2] = cidadesLista.get(i) + " (" + st.uf + ")";
         }
 
-        falar("Escolha a cidade para localizar os bares e restaurantes com cardápio.");
+        String tituloDialogo = ufFiltroAtual.equals("PE")
+                ? "🏙️ Todas as 185 Cidades de Pernambuco (" + cidadesLista.size() + "):"
+                : "🏙️ Filtrar por Cidade (" + cidadesLista.size() + " opções):";
+
+        falar("Escolha a cidade na lista de " + cidadesLista.size() + " municípios ou toque na primeira opção para pesquisar a cidade pelo nome.");
         new AlertDialog.Builder(this)
-                .setTitle("🏙️ Filtrar por Cidade:")
+                .setTitle(tituloDialogo)
                 .setItems(opcoes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == 0) {
+                            abrirDialogoPesquisarCidadePorNome();
+                            return;
+                        }
+                        if (which == 1) {
                             cidadeFiltroAtual = "TODAS";
                             atualizarRotulosFiltros();
                             renderizarListaEstabelecimentos();
@@ -593,30 +651,66 @@ public class MainActivity extends Activity {
                             return;
                         }
 
-                        String cidadeEscolhida = cidadesLista.get(which - 1);
-                        EstadoInfo stEscolhido = estadoDeCadaCidade.get(which - 1);
-                        regiaoFiltroAtual = stEscolhido.regiao;
-                        ufFiltroAtual = stEscolhido.uf;
-                        cidadeFiltroAtual = cidadeEscolhida;
-                        termoBuscaAtual = "";
-
-                        garantirBarComCardapioNaCidade(stEscolhido, cidadeEscolhida);
-
-                        atualizarRotulosFiltros();
-                        renderizarListaEstabelecimentos();
-
-                        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
-                        if (!visiveis.isEmpty()) {
-                            selecionarEstabelecimento(visiveis.get(0), true);
-                        }
-
-                        String msg = "Cidade selecionada: " + cidadeEscolhida + ", " + stEscolhido.nome +
-                                ". Cardápio de " + estabelecimentoSelecionado.nome + " aberto! Você também pode tocar no botão do Google Maps para abrir a rota.";
-                        atualizarPainelEFalar(msg, msg);
+                        String cidadeEscolhida = cidadesLista.get(which - 2);
+                        EstadoInfo stEscolhido = estadoDeCadaCidade.get(which - 2);
+                        selecionarCidadeEEstado(stEscolhido, cidadeEscolhida);
                     }
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+
+    private void abrirDialogoPesquisarCidadePorNome() {
+        final EditText input = new EditText(this);
+        input.setHint("Ex: Caruaru, Petrolina, Gravatá, Pesqueira...");
+        input.setSingleLine(true);
+        falar("Digite o nome de qualquer cidade de Pernambuco ou do Brasil e toque em Filtrar Cidade.");
+
+        new AlertDialog.Builder(this)
+                .setTitle("🔎 Digite o Nome da Cidade:")
+                .setView(input)
+                .setPositiveButton("Filtrar Cidade", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String texto = input.getText() != null ? input.getText().toString().trim() : "";
+                        if (texto.isEmpty()) {
+                            exibirDialogoCidadesFiltradas("");
+                            return;
+                        }
+                        exibirDialogoCidadesFiltradas(texto);
+                    }
+                })
+                .setNeutralButton("Ver Todas (185 de PE)", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ufFiltroAtual = "PE";
+                        regiaoFiltroAtual = "Nordeste";
+                        exibirDialogoCidadesFiltradas("");
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void selecionarCidadeEEstado(EstadoInfo stEscolhido, String cidadeEscolhida) {
+        regiaoFiltroAtual = stEscolhido.regiao;
+        ufFiltroAtual = stEscolhido.uf;
+        cidadeFiltroAtual = cidadeEscolhida;
+        termoBuscaAtual = "";
+
+        garantirBarComCardapioNaCidade(stEscolhido, cidadeEscolhida);
+
+        atualizarRotulosFiltros();
+        renderizarListaEstabelecimentos();
+
+        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+        if (!visiveis.isEmpty()) {
+            selecionarEstabelecimento(visiveis.get(0), true);
+        }
+
+        String msg = "Cidade selecionada: " + cidadeEscolhida + ", " + stEscolhido.nome +
+                ". Cardápio de " + estabelecimentoSelecionado.nome + " aberto! Você também pode tocar no botão do Google Maps para abrir a rota.";
+        atualizarPainelEFalar(msg, msg);
     }
 
     // --- INTEGRAÇÃO COM O GOOGLE MAPS (ROTA GUIADA E BUSCA DE BARES NO MAPA) ---
