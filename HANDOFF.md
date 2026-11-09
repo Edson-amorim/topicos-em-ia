@@ -47,6 +47,7 @@
        - Também inclui o botão `📲 Abrir Cardápio de Bar Vindo do Google Maps` dentro do app para importar da área de transferência ou testar o fluxo em 1 toque.
   4. **Cardápio Interativo + Soma da Comanda pela IA + Pagamento nos Bancos do Celular:**
      - Escolha de pratos, petiscos, bebidas e sobremesas por toque (`➕` / `➖ 1`) ou por comando de voz (`🎙️ Falar Pedido para a IA Somar na Comanda`).
+     - **Pergunta sobre a Taxa de 10% do Garçom (`perguntarTaxaDezPorCento`):** Na soma da comanda (ao tocar no botão `💁 Deseja adicionar os 10% na soma?`, ao ouvir a soma ou antes de copiar o Pix e abrir o banco), o app pergunta em voz alta pelo leitor de tela (TalkBack) e na tela se o usuário quer adicionar os **10% de taxa de serviço**, exibindo o **Subtotal dos itens**, o **valor exato dos 10%** e a **Soma Total com ou sem os 10%**!
      - Soma exata em centavos (`R$`), alerta de teto de gastos (`R$ 50`, `R$ 100`, `R$ 150`, `R$ 200`), senha falada de 4 dígitos e geração de **Pix Copia e Cola (BR Code BACEN com CRC16 válido)**.
      - Detecção dos **aplicativos de bancos instalados no celular** (`Nubank`, `Banco Inter`, `Itaú`, `Bradesco`, `Banco do Brasil`, `Caixa`, `Caixa Tem`, `Santander`, `PicPay`, `Mercado Pago`, `C6 Bank`, `PagBank`, `Neon`, `Next`, `Will Bank`, `Sicredi`, `Sicoob`, etc.): copia o Pix automaticamente e abre o app do banco escolhido.
 

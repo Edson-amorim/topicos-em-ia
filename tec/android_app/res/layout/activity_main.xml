@@ -315,6 +315,19 @@
             android:textColor="#F8FAFC"
             android:layout_marginBottom="8dp" />
 
+        <Button
+            android:id="@+id/btnTaxaServico"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="💁 Deseja adicionar os 10% do garçom? (Atual: Não)"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0F766E"
+            android:contentDescription="Pergunta: Deseja adicionar os dez por cento de taxa de serviço na soma da comanda? Toque duas vezes para escolher Sim ou Não."
+            android:layout_marginBottom="8dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

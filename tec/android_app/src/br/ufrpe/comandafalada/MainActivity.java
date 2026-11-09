@@ -287,6 +287,7 @@ public class MainActivity extends Activity {
     private Button btnFiltroTodos;
     private Button btnBuscarVozLocal;
     private Button btnPedirPorVoz;
+    private Button btnTaxaServico;
     private Button btnOuvirComanda;
     private Button btnAlterarTeto;
     private Button btnLimparComanda;
@@ -308,6 +309,9 @@ public class MainActivity extends Activity {
 
     private final Map<String, Integer> quantidadesComanda = new LinkedHashMap<String, Integer>();
     private int tetoGastosCentavos = 10000; // R$ 100,00 padrão
+    private boolean adicionarTaxaDezPorCento = false;
+    private int ultimoSubtotalCentavos = 0;
+    private int ultimaTaxaServicoCentavos = 0;
     private String senhaEntregaAtual = "8186";
     private String ultimoPayloadPix = "";
     private int ultimoTotalCentavos = 0;
@@ -337,6 +341,7 @@ public class MainActivity extends Activity {
         btnFiltroTodos = findViewById(R.id.btnFiltroTodos);
         btnBuscarVozLocal = findViewById(R.id.btnBuscarVozLocal);
         btnPedirPorVoz = findViewById(R.id.btnPedirPorVoz);
+        btnTaxaServico = findViewById(R.id.btnTaxaServico);
         btnOuvirComanda = findViewById(R.id.btnOuvirComanda);
         btnAlterarTeto = findViewById(R.id.btnAlterarTeto);
         btnLimparComanda = findViewById(R.id.btnLimparComanda);
@@ -457,6 +462,13 @@ public class MainActivity extends Activity {
                         REQ_VOZ_PEDIDO_CARDAPIO,
                         "Fale os itens do cardápio de " + estabelecimentoSelecionado.nome + " para a IA somar na comanda"
                 );
+            }
+        });
+
+        btnTaxaServico.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                perguntarTaxaDezPorCento(false, null);
             }
         });
 
@@ -1996,7 +2008,23 @@ public class MainActivity extends Activity {
             }
         }
 
-        ultimoTotalCentavos = somaCentavos;
+        ultimoSubtotalCentavos = somaCentavos;
+        ultimaTaxaServicoCentavos = adicionarTaxaDezPorCento ? (int) Math.round(somaCentavos * 0.10) : 0;
+        ultimoTotalCentavos = ultimoSubtotalCentavos + ultimaTaxaServicoCentavos;
+
+        if (btnTaxaServico != null) {
+            int valorDezExemplo = (int) Math.round(somaCentavos * 0.10);
+            String sufixoValor = somaCentavos > 0 ? (" (" + formatarMoedaCentavos(valorDezExemplo) + ")") : "";
+            String textoBtnTaxa = adicionarTaxaDezPorCento
+                    ? "✅ 10% do Garçom Adicionado: Sim" + sufixoValor + " (Toque p/ mudar)"
+                    : "💁 Deseja adicionar os 10% na soma? (Atual: Não" + sufixoValor + ")";
+            btnTaxaServico.setText(textoBtnTaxa);
+            btnTaxaServico.setContentDescription(
+                    "Pergunta da soma: Deseja adicionar os dez por cento de taxa de serviço? Situação atual: " +
+                            (adicionarTaxaDezPorCento ? "Sim, dez por cento incluído" : "Não, sem taxa de dez por cento") +
+                            ". Toque duas vezes para responder Sim ou Não."
+            );
+        }
 
         if (totalUnidades == 0) {
             ultimoPayloadPix = "";
@@ -2008,18 +2036,24 @@ public class MainActivity extends Activity {
             return;
         }
 
-        boolean dentroDoTeto = somaCentavos <= tetoGastosCentavos;
-        senhaEntregaAtual = String.format(Locale.US, "%04d", 1000 + Math.abs((estabelecimentoSelecionado.id.hashCode() + somaCentavos) % 9000));
+        boolean dentroDoTeto = ultimoTotalCentavos <= tetoGastosCentavos;
+        senhaEntregaAtual = String.format(Locale.US, "%04d", 1000 + Math.abs((estabelecimentoSelecionado.id.hashCode() + ultimoTotalCentavos) % 9000));
         ultimoPayloadPix = gerarPayloadPix(
                 estabelecimentoSelecionado.chavePix,
                 estabelecimentoSelecionado.nome,
                 estabelecimentoSelecionado.cidade,
-                somaCentavos / 100.0,
+                ultimoTotalCentavos / 100.0,
                 "PED" + senhaEntregaAtual
         );
 
         sb.append("----------------------------------------\n");
-        sb.append("💰 SOMA TOTAL DA COMANDA: ").append(formatarMoedaCentavos(somaCentavos)).append("\n");
+        sb.append("🧾 Subtotal dos Itens: ").append(formatarMoedaCentavos(ultimoSubtotalCentavos)).append("\n");
+        sb.append("💁 Taxa de Serviço (10%): ").append(
+                adicionarTaxaDezPorCento
+                        ? ("+ " + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + " (Incluída)")
+                        : "R$ 0,00 (Não incluída)"
+        ).append("\n");
+        sb.append("💰 SOMA TOTAL DA COMANDA: ").append(formatarMoedaCentavos(ultimoTotalCentavos)).append("\n");
         sb.append("🎯 Teto de Gastos (").append(formatarMoedaCentavos(tetoGastosCentavos)).append("): ")
                 .append(dentroDoTeto ? "✅ Dentro do limite" : "⚠️ ULTRAPASSOU O TETO!").append("\n");
         sb.append("🔑 Senha Falada de Entrega: ").append(senhaEntregaAtual).append("\n");
@@ -2027,10 +2061,63 @@ public class MainActivity extends Activity {
 
         tvResumoComanda.setText(sb.toString());
         tvResumoComanda.setContentDescription(
-                "Resumo da comanda em " + estabelecimentoSelecionado.nome + ". Total somado pela IA: " +
-                        formatarMoedaCentavos(somaCentavos) + ". Senha de entrega: " + senhaEntregaAtual + "."
+                "Resumo da comanda em " + estabelecimentoSelecionado.nome +
+                        ". Subtotal dos itens: " + formatarMoedaCentavos(ultimoSubtotalCentavos) +
+                        ". Taxa de dez por cento: " + (adicionarTaxaDezPorCento ? formatarMoedaCentavos(ultimaTaxaServicoCentavos) : "não incluída") +
+                        ". Soma total pela IA: " + formatarMoedaCentavos(ultimoTotalCentavos) +
+                        ". Senha de entrega: " + senhaEntregaAtual + "."
         );
-        btnPagarBanco.setText("🏦 PAGAR " + formatarMoedaCentavos(somaCentavos) + " NO APP DO SEU BANCO");
+        btnPagarBanco.setText("🏦 PAGAR " + formatarMoedaCentavos(ultimoTotalCentavos) + " NO APP DO SEU BANCO");
+    }
+
+    /**
+     * Pergunta em voz alta pelo leitor de tela (TalkBack) e em diálogo se o usuário deseja adicionar os 10% na soma.
+     */
+    private void perguntarTaxaDezPorCento(final boolean abrirPagamentoDepois, final BancoAppInfo bancoEspecifico) {
+        if (ultimoSubtotalCentavos <= 0 && abrirPagamentoDepois) {
+            String msg = "Sua comanda ainda está vazia! Escolha pelo menos um item do cardápio para a IA somar.";
+            atualizarPainelEFalar(msg, msg);
+            return;
+        }
+
+        final int subtotal = ultimoSubtotalCentavos;
+        final int valorDez = (int) Math.round(subtotal * 0.10);
+        final int totalComDez = subtotal + valorDez;
+
+        final String[] opcoes = new String[]{
+                "✅ Sim, adicionar os 10% (+" + formatarMoedaCentavos(valorDez) + " -> Total: " + formatarMoedaCentavos(totalComDez) + ")",
+                "❌ Não adicionar os 10% (Manter apenas o subtotal: " + formatarMoedaCentavos(subtotal) + ")"
+        };
+
+        String perguntaFalada = "Deseja adicionar os dez por cento de taxa de serviço na soma da comanda? " +
+                "Com os dez por cento (" + formatarMoedaCentavos(valorDez) + "), o total fica " + formatarMoedaCentavos(totalComDez) +
+                ". Sem os dez por cento, o total fica " + formatarMoedaCentavos(subtotal) + ". Escolha Sim ou Não.";
+        falar(perguntaFalada);
+
+        new AlertDialog.Builder(this)
+                .setTitle("💁 Deseja adicionar os 10% na soma?")
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        adicionarTaxaDezPorCento = (which == 0);
+                        recalcularComanda();
+
+                        String confirmacao = adicionarTaxaDezPorCento
+                                ? ("Taxa de 10% (" + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + ") adicionada! Nova soma total da comanda: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".")
+                                : ("Sem taxa de 10%. Soma total da comanda mantida em: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".");
+                        atualizarPainelEFalar(confirmacao, confirmacao);
+
+                        if (abrirPagamentoDepois) {
+                            if (bancoEspecifico != null) {
+                                executarAberturaBancoComPix(bancoEspecifico);
+                            } else {
+                                prosseguirPagamentoNosBancos();
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private void ouvirResumoFaladoDaComanda() {
@@ -2051,16 +2138,22 @@ public class MainActivity extends Activity {
                         .append(" custando ").append(formatarMoedaCentavos(qtd * item.precoCentavos)).append("; ");
             }
         }
+        fala.append("Subtotal dos itens: ").append(formatarMoedaCentavos(ultimoSubtotalCentavos)).append(". ");
+        if (adicionarTaxaDezPorCento) {
+            fala.append("Taxa de dez por cento incluída: ").append(formatarMoedaCentavos(ultimaTaxaServicoCentavos)).append(". ");
+        } else {
+            fala.append("Sem taxa de dez por cento. ");
+        }
         fala.append("Soma total da comanda: ").append(formatarMoedaCentavos(ultimoTotalCentavos)).append(". ");
         if (ultimoTotalCentavos > tetoGastosCentavos) {
             fala.append("Atenção: o valor passou do seu teto de ").append(formatarMoedaCentavos(tetoGastosCentavos)).append(". ");
         } else {
             fala.append("Valor dentro do seu teto de gastos. ");
         }
-        fala.append("Senha falada de entrega: ").append(senhaEntregaAtual)
-                .append(". Toque no botão verde Pagar no App do seu Banco para copiar o Pix e abrir o seu banco.");
+        fala.append("Deseja adicionar ou alterar os dez por cento antes de pagar?");
 
         atualizarPainelEFalar(fala.toString(), fala.toString());
+        perguntarTaxaDezPorCento(false, null);
     }
 
     private void alternarTetoDeGastos() {
@@ -2206,12 +2299,15 @@ public class MainActivity extends Activity {
     }
 
     private void copiarPixEAbrirBancoEspecifico(BancoAppInfo banco) {
-        if (ultimoTotalCentavos <= 0) {
+        if (ultimoSubtotalCentavos <= 0) {
             String msg = "Sua comanda ainda está vazia! Escolha pelo menos um item do cardápio antes de pagar no " + banco.nomeBanco + ".";
             atualizarPainelEFalar(msg, msg);
             return;
         }
+        perguntarTaxaDezPorCento(true, banco);
+    }
 
+    private void executarAberturaBancoComPix(BancoAppInfo banco) {
         copiarPixParaAreaDeTransferencia();
         String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
         String msg = "Código Pix Copia e Cola de " + valorFmt + " copiado! Abrindo o aplicativo " + banco.nomeBanco + " para finalizar o pagamento.";
@@ -2227,18 +2323,21 @@ public class MainActivity extends Activity {
     }
 
     private void acaoPagarComandaNosBancos() {
-        if (ultimoTotalCentavos <= 0) {
+        if (ultimoSubtotalCentavos <= 0) {
             String msg = "Sua comanda está vazia. Escolha os pratos ou bebidas no cardápio acima para a IA somar antes de abrir o aplicativo do banco!";
             atualizarPainelEFalar(msg, msg);
             return;
         }
+        perguntarTaxaDezPorCento(true, null);
+    }
 
+    private void prosseguirPagamentoNosBancos() {
         copiarPixParaAreaDeTransferencia();
         final String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
         final List<BancoAppInfo> bancosInstalados = detectarBancosInstaladosNoCelular();
 
         if (bancosInstalados.size() == 1) {
-            copiarPixEAbrirBancoEspecifico(bancosInstalados.get(0));
+            executarAberturaBancoComPix(bancosInstalados.get(0));
             return;
         }
 
@@ -2255,7 +2354,7 @@ public class MainActivity extends Activity {
                     .setItems(nomesOpcoes, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            copiarPixEAbrirBancoEspecifico(bancosInstalados.get(which));
+                            executarAberturaBancoComPix(bancosInstalados.get(which));
                         }
                     })
                     .setNegativeButton("Fechar", null)
