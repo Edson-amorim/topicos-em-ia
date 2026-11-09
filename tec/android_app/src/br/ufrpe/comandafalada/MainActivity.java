@@ -156,15 +156,14 @@ public class MainActivity extends Activity {
     };
 
     private static final String[] CATEGORIAS_ESTABELECIMENTO = new String[]{
-            "Todas as Categorias",
-            "Restaurantes e Self-Service",
+            "Todas as Categorias (Para Comer e Consumir)",
+            "Restaurantes, Bistrôs e Self-Service",
             "Bares, Botecos e Petiscarias",
             "Padarias, Cafeterias e Confeitarias",
             "Pizzarias, Hamburguerias e Lanchonetes",
             "Churrascarias, Espetinhos e Peixarias",
             "Sorveterias, Açaí, Docerias e Tapiocarias",
-            "Pontos Turísticos, Museus, Parques e Praias",
-            "Mercados Públicos, Feiras e Centros Culturais"
+            "Mercados Gastronômicos, Quiosques e Bistrôs Culturais"
     };
 
     private static final String[] TODAS_CIDADES_PERNAMBUCO = new String[]{
@@ -303,7 +302,7 @@ public class MainActivity extends Activity {
     private String regiaoFiltroAtual = "Todas as Regiões";
     private String ufFiltroAtual = "TODOS";
     private String cidadeFiltroAtual = "TODAS";
-    private String categoriaFiltroAtual = "Todas as Categorias";
+    private String categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
     private String termoBuscaAtual = "";
     private boolean filtrarApenasSilenciosos = false;
 
@@ -430,13 +429,13 @@ public class MainActivity extends Activity {
                 regiaoFiltroAtual = "Todas as Regiões";
                 ufFiltroAtual = "TODOS";
                 cidadeFiltroAtual = "TODAS";
-                categoriaFiltroAtual = "Todas as Categorias";
+                categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
                 termoBuscaAtual = "";
                 filtrarApenasSilenciosos = false;
                 etBuscaQualquerBar.setText("");
                 atualizarRotulosFiltros();
                 renderizarListaEstabelecimentos();
-                String msg = "Todos os filtros limpos. Exibindo todos os estabelecimentos para comer e visitar do Brasil com cardápio disponível.";
+                String msg = "Todos os filtros limpos. Exibindo apenas estabelecimentos onde o usuário pode comer e consumir com cardápio disponível.";
                 atualizarPainelEFalar(msg, msg);
             }
         });
@@ -737,9 +736,9 @@ public class MainActivity extends Activity {
     }
 
     private void abrirDialogoFiltroCategoria() {
-        falar("Escolha a categoria de estabelecimento que você deseja comer ou visitar.");
+        falar("Escolha a categoria de estabelecimento onde você deseja comer e consumir.");
         new AlertDialog.Builder(this)
-                .setTitle("🍽️ Filtrar por Categoria de Local:")
+                .setTitle("🍽️ Filtrar por Categoria (Só Locais p/ Comer):")
                 .setItems(CATEGORIAS_ESTABELECIMENTO, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -750,7 +749,7 @@ public class MainActivity extends Activity {
                         if (stAlvo == null) stAlvo = ESTADOS_BRASIL[0];
                         String cidAlvo = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : stAlvo.capital;
 
-                        if (!categoriaFiltroAtual.equals("Todas as Categorias")) {
+                        if (!categoriaFiltroAtual.startsWith("Todas as Categorias")) {
                             garantirEstabelecimentoNaCidadeECategoria(stAlvo, cidAlvo, categoriaFiltroAtual);
                         }
 
@@ -763,7 +762,7 @@ public class MainActivity extends Activity {
                         }
 
                         String msg = "Categoria selecionada: " + categoriaFiltroAtual + " em " + cidAlvo +
-                                ". Exibindo " + visiveis.size() + " locais para comer e visitar com cardápio aberto!";
+                                ". Exibindo " + visiveis.size() + " locais com alimentação e cardápio aberto!";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -815,8 +814,8 @@ public class MainActivity extends Activity {
             localAlvo = "Recife - PE";
         }
 
-        String tipoBuscaMaps = categoriaFiltroAtual.equals("Todas as Categorias")
-                ? "Restaurantes, Padarias, Cafeterias, Bares e Pontos Turísticos"
+        String tipoBuscaMaps = categoriaFiltroAtual.startsWith("Todas as Categorias")
+                ? "Restaurantes, Padarias, Cafeterias, Pizzarias, Lanchonetes e Bares"
                 : categoriaFiltroAtual;
         String queryMaps = tipoBuscaMaps + " em " + localAlvo;
         String msg = "Abrindo o Google Maps com " + tipoBuscaMaps + " em " + localAlvo + ".";
@@ -1124,19 +1123,19 @@ public class MainActivity extends Activity {
         regiaoFiltroAtual = encontrado.regiao;
         ufFiltroAtual = encontrado.uf;
         cidadeFiltroAtual = encontrado.cidade;
-        categoriaFiltroAtual = "Todas as Categorias";
+        categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
         filtrarApenasSilenciosos = false;
         termoBuscaAtual = "";
         atualizarRotulosFiltros();
         selecionarEstabelecimento(encontrado, true);
 
-        String msgVisual = "✅ Estabelecimento Localizado com Cardápio:\n" +
+        String msgVisual = "✅ Local p/ Comer e Consumir Localizado:\n" +
                 "• " + encontrado.nome + " [" + encontrado.tipo + "] — " + encontrado.cidade + "/" + encontrado.uf + "\n" +
                 "• Conforto Acústico: " + encontrado.decibeisMedio + " dB (" + encontrado.nivelRuido + ")\n" +
-                "• Toque em 'Rota no Maps' para visitar ou escolha no cardápio abaixo!";
-        String msgFalada = "Local encontrado: " + encontrado.nome + ", categoria " + encontrado.tipo +
+                "• Toque em 'Rota no Maps' ou escolha a comida/bebida no cardápio abaixo!";
+        String msgFalada = "Local para comer encontrado: " + encontrado.nome + ", categoria " + encontrado.tipo +
                 ", na cidade de " + encontrado.cidade + ", estado de " + encontrado.estado +
-                ". O cardápio está aberto abaixo e o botão do Google Maps está pronto para traçar a rota!";
+                ". O cardápio de comidas e bebidas está aberto abaixo!";
         atualizarPainelEFalar(msgVisual, msgFalada);
     }
 
@@ -1153,23 +1152,20 @@ public class MainActivity extends Activity {
         if (norm.contains("sorvet") || norm.contains("acai") || norm.contains("doceria") || norm.contains("tapioca") || norm.contains("bolo") || norm.contains("gelato")) {
             return "Sorveterias, Açaí, Docerias e Tapiocarias";
         }
-        if (norm.contains("museu") || norm.contains("parque") || norm.contains("praia") || norm.contains("mirante") || norm.contains("instituto") || norm.contains("castelo") || norm.contains("forte") || norm.contains("jardim") || norm.contains("marco zero") || norm.contains("turis")) {
-            return "Pontos Turísticos, Museus, Parques e Praias";
-        }
-        if (norm.contains("mercado") || norm.contains("feira") || norm.contains("artesanato") || norm.contains("cultural") || norm.contains("patio") || norm.contains("centro")) {
-            return "Mercados Públicos, Feiras e Centros Culturais";
+        if (norm.contains("mercado") || norm.contains("feira") || norm.contains("quiosque") || norm.contains("bistro") || norm.contains("mirante")) {
+            return "Mercados Gastronômicos, Quiosques e Bistrôs Culturais";
         }
         if (norm.contains("bar") || norm.contains("boteco") || norm.contains("chopp") || norm.contains("petisc")) {
             return "Bares, Botecos e Petiscarias";
         }
-        if (!categoriaFiltroAtual.equals("Todas as Categorias")) {
+        if (!categoriaFiltroAtual.startsWith("Todas as Categorias")) {
             return categoriaFiltroAtual;
         }
-        return "Restaurantes e Self-Service";
+        return "Restaurantes, Bistrôs e Self-Service";
     }
 
     private boolean pertenceACategoria(Estabelecimento est, String categoriaFiltro) {
-        if (categoriaFiltro == null || categoriaFiltro.equals("Todas as Categorias")) return true;
+        if (categoriaFiltro == null || categoriaFiltro.startsWith("Todas as Categorias")) return true;
         String t = normalizarTexto(est.tipo + " " + est.nome);
         String c = normalizarTexto(categoriaFiltro);
         if (c.contains("restaurantes")) {
@@ -1190,18 +1186,15 @@ public class MainActivity extends Activity {
         if (c.contains("sorveterias")) {
             return t.contains("sorvet") || t.contains("acai") || t.contains("doce") || t.contains("tapioca");
         }
-        if (c.contains("pontos turisticos")) {
-            return t.contains("turis") || t.contains("museu") || t.contains("mirante") || t.contains("parque") || t.contains("praia") || t.contains("instituto") || t.contains("visita");
-        }
         if (c.contains("mercados")) {
-            return t.contains("mercado") || t.contains("feira") || t.contains("cultural") || t.contains("artesanato") || t.contains("bodega");
+            return t.contains("mercado") || t.contains("quiosque") || t.contains("bistro") || t.contains("gastronomico") || t.contains("bodega") || t.contains("mirante");
         }
         return true;
     }
 
     private void garantirBarComCardapioNaCidade(EstadoInfo st, String cidade) {
-        String catAlvo = categoriaFiltroAtual.equals("Todas as Categorias")
-                ? "Restaurantes e Self-Service"
+        String catAlvo = categoriaFiltroAtual.startsWith("Todas as Categorias")
+                ? "Restaurantes, Bistrôs e Self-Service"
                 : categoriaFiltroAtual;
         garantirEstabelecimentoNaCidadeECategoria(st, cidade, catAlvo);
     }
@@ -1223,10 +1216,8 @@ public class MainActivity extends Activity {
             prefixoNome = "Churrascaria & Peixaria Brasa de " + cidade;
         } else if (cNorm.contains("sorveterias")) {
             prefixoNome = "Tapiocaria, Açaí & Sorveteria de " + cidade;
-        } else if (cNorm.contains("pontos turisticos")) {
-            prefixoNome = "Mirante, Museu & Café Cultural de " + cidade;
         } else if (cNorm.contains("mercados")) {
-            prefixoNome = "Mercado Público & Espaço Cultural de " + cidade;
+            prefixoNome = "Mercado Gastronômico & Bistrô de " + cidade;
         } else if (cNorm.contains("bares")) {
             prefixoNome = "Bar & Petiscaria Estação de " + cidade;
         } else {
@@ -1302,12 +1293,12 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Água de Coco ou Água Mineral Gelada", "Bebida", 700, "agua", "coco"));
             return novo;
         }
-        if (cNorm.contains("pontos turisticos") || cNorm.contains("mercados")) {
-            novo.cardapio.add(new ItemCardapio(idPrefix + "_1", "Ingresso / Visita Guiada Acessível com Áudio-Descrição", "Visitação Cultural", 1500, "ingresso", "visita", "guiada", "museu"));
-            novo.cardapio.add(new ItemCardapio(idPrefix + "_2", "Prato Típico Regional do Mercado / Bistrô Cultural", "Almoço Regional", 3800, "prato", "almoco", "regional"));
-            novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Tapioca ou Pastel de Feira com Caldo de Cana / Suco", "Lanche Tradicional", 1800, "tapioca", "pastel", "caldo", "suco"));
-            novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Café Especial com Bolo de Rolo ou Queijo Coalho", "Cafeteria Cultural", 1600, "cafe", "bolo", "queijo"));
-            novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Água de Coco Gelada do Quiosque / Mirante", "Bebida", 800, "agua", "coco"));
+        if (cNorm.contains("mercados")) {
+            novo.cardapio.add(new ItemCardapio(idPrefix + "_1", "Prato Típico Regional (Carne de Sol, Baião e Macaxeira)", "Almoço Regional", 3800, "prato", "almoco", "regional", "carne"));
+            novo.cardapio.add(new ItemCardapio(idPrefix + "_2", "Tapioca Recheada de Queijo Coalho com Carne de Sol", "Tapiocaria", 1800, "tapioca", "queijo", "carne"));
+            novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Pastel Especial Quentinho com Caldo de Cana / Suco", "Lanche Tradicional", 1600, "pastel", "caldo", "suco"));
+            novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Café Especial com Bolo de Rolo Pernambucano", "Cafeteria", 1500, "cafe", "bolo"));
+            novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Água de Coco Gelada ou Suco Natural da Fruta", "Bebida", 800, "agua", "coco", "suco"));
             return novo;
         }
 
@@ -1667,38 +1658,38 @@ public class MainActivity extends Activity {
         pizzariaRecife.cardapio.add(new ItemCardapio("piz_brownie", "Brownie de Chocolate Quente com Sorvete", "Sobremesa", 1900, "brownie", "sorvete"));
         catalogoEstabelecimentos.add(pizzariaRecife);
 
-        // 17. Ponto Turístico, Museu e Parque (PE - Visitar e Comer)
-        Estabelecimento museuBrennand = new Estabelecimento(
-                "turismo_brennand_recife",
-                "Instituto & Castelo Brennand + Café do Museu",
-                "Pontos Turísticos, Museus, Parques e Praias",
+        // 17. Bistrô e Cafeteria do Jardim (PE - Visitar para Comer e Consumir)
+        Estabelecimento bistroJardim = new Estabelecimento(
+                "bistro_cafe_jardim_recife",
+                "Bistrô & Cafeteria Jardim da Várzea",
+                "Mercados Gastronômicos, Quiosques e Bistrôs Culturais",
                 "Nordeste", "Pernambuco", "PE", "Recife", "Várzea",
-                "pix@institutobrennand.org.br",
+                "pix@bistrojardimvarzea.com.br",
                 -8.0531, -34.9628, 50, "Muito Baixo (Silencioso)",
-                "Jardins silenciosos e galerias com áudio-descrição",
-                "Acessibilidade completa, visita guiada tátil e cafeteria no jardim"
+                "Jardim silencioso com mesas ao ar livre",
+                "Acessibilidade completa, rampa e atendimento prioritário na mesa"
         );
-        museuBrennand.cardapio.add(new ItemCardapio("mus_ingresso", "Ingresso Visita Guiada Acessível com Áudio-Descrição", "Visitação Cultural", 2000, "ingresso", "visita", "museu"));
-        museuBrennand.cardapio.add(new ItemCardapio("mus_quiche", "Quiche de Queijo Reino com Salada Orgânica do Castelo", "Almoço Leve", 3200, "quiche", "salada", "almoco"));
-        museuBrennand.cardapio.add(new ItemCardapio("mus_cafe", "Café Especial Moído na Hora com Bolo de Noiva Pernambucano", "Cafeteria", 1900, "cafe", "bolo"));
-        museuBrennand.cardapio.add(new ItemCardapio("mus_suco", "Suco de Frutas Vermelhas ou Água de Coco", "Bebida", 1200, "suco", "agua"));
-        catalogoEstabelecimentos.add(museuBrennand);
+        bistroJardim.cardapio.add(new ItemCardapio("bis_quiche", "Quiche de Queijo do Reino com Salada e Grelhado", "Almoço", 3200, "quiche", "salada", "almoco"));
+        bistroJardim.cardapio.add(new ItemCardapio("bis_sanduiche", "Sanduíche Artesanal no Pão Ciabatta com Carne de Sol", "Lanche", 2600, "sanduiche", "carne", "pao"));
+        bistroJardim.cardapio.add(new ItemCardapio("bis_cafe", "Café Especial Moído na Hora com Bolo de Noiva Pernambucano", "Cafeteria", 1900, "cafe", "bolo"));
+        bistroJardim.cardapio.add(new ItemCardapio("bis_suco", "Suco de Frutas Vermelhas ou Água de Coco Gelada", "Bebida", 1200, "suco", "agua", "coco"));
+        catalogoEstabelecimentos.add(bistroJardim);
 
-        // 18. Mercado Público, Feira e Centro Cultural (PE)
+        // 18. Mercado Gastronômico de São José (PE)
         Estabelecimento mercadoSaoJose = new Estabelecimento(
                 "mercado_sao_jose_recife",
-                "Mercado de São José & Polo Cultural e Gastronômico",
-                "Mercados Públicos, Feiras e Centros Culturais",
+                "Boxes Gastronômicos do Mercado de São José",
+                "Mercados Gastronômicos, Quiosques e Bistrôs Culturais",
                 "Nordeste", "Pernambuco", "PE", "Recife", "São José",
                 "pix@mercadosaojose.com.br",
                 -8.0684, -34.8781, 63, "Médio (Agradável)",
-                "Movimento tradicional de feira cultural e artesanato",
-                "Corredores térreos e boxes de culinária típica e artesanato"
+                "Ambiente tradicional de boxes gastronômicos regionais",
+                "Corredores térreos e boxes de culinária típica pernambucana"
         );
         mercadoSaoJose.cardapio.add(new ItemCardapio("mer_macaxeira", "Macaxeira Cozida com Guisado de Carne de Sol / Bode", "Prato Regional", 3200, "macaxeira", "carne", "bode"));
         mercadoSaoJose.cardapio.add(new ItemCardapio("mer_tapioca", "Tapioca Rendada de Coco Fresco com Queijo Coalho", "Tapiocaria", 1500, "tapioca", "coco", "queijo"));
         mercadoSaoJose.cardapio.add(new ItemCardapio("mer_caldo", "Caldo de Cana Gelado com Limão + Pastel de Feira", "Lanche", 1400, "caldo", "cana", "pastel"));
-        mercadoSaoJose.cardapio.add(new ItemCardapio("mer_doce", "Rapadura Artesanal, Castanha de Caju e Bolo de Rolo", "Doces & Artesanato", 2000, "doce", "castanha", "bolo"));
+        mercadoSaoJose.cardapio.add(new ItemCardapio("mer_doce", "Bolo de Rolo Pernambucano com Café Quentinho", "Sobremesa", 1600, "doce", "cafe", "bolo"));
         catalogoEstabelecimentos.add(mercadoSaoJose);
 
         // 19. Sorveteria, Açaí e Tapiocaria (PE)
@@ -1749,7 +1740,10 @@ public class MainActivity extends Activity {
             if (!cidadeFiltroAtual.equals("TODAS") && !est.cidade.equalsIgnoreCase(cidadeFiltroAtual)) {
                 continue;
             }
-            if (!categoriaFiltroAtual.equals("Todas as Categorias") && !pertenceACategoria(est, categoriaFiltroAtual)) {
+            if (!categoriaFiltroAtual.startsWith("Todas as Categorias") && !pertenceACategoria(est, categoriaFiltroAtual)) {
+                continue;
+            }
+            if (est.cardapio == null || est.cardapio.isEmpty()) {
                 continue;
             }
             if (filtrarApenasSilenciosos && est.decibeisMedio > 65) {

@@ -5,38 +5,39 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v4.0 (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
+**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v5.0 (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2) ou Evoluções do App Android**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v4.0)
+## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v5.0)
 
 - **Arquivo APK Pronto para Instalação (Independente, Não Precisa da Pasta):**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~53,7 KB, assinado com V1/V2/V3).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~99,2 KB, assinado com V1/V2/V3).
+- **Ícone Oficial Personalizado (`@mipmap/ic_launcher` e `tec/icone_comanda_falada.png`):**
+  - Traz o **Símbolo Universal da Acessibilidade** no topo e **duas pessoas (uma pessoa com deficiência e uma pessoa sem deficiência) segurando juntas um cardápio aberto** com prato e itens de alimentação, em alto contraste e com descrição completa para o TalkBack.
 - **Código-Fonte Android:**
   - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\MainActivity.java`
   - `C:\topicos-em-ia\tec\android_app\res\layout\activity_main.xml`
   - `C:\topicos-em-ia\tec\android_app\AndroidManifest.xml`
-  - Script de compilação rápida: `C:\topicos-em-ia\tec\compilar_apk.ps1`
-- **Funcionalidades Implementadas no APK v4.0:**
+  - Scripts: `C:\topicos-em-ia\tec\compilar_apk.ps1` e `C:\topicos-em-ia\tec\gerar_icone.ps1`
+- **Funcionalidades Implementadas no APK v5.0:**
   1. **Leitor de Tela Nativo do Sistema Android (TalkBack):**
      - Removido qualquer sintetizador `TextToSpeech` interno separado para nunca atropelar o leitor do sistema.
      - Comunicação 100% integrada ao leitor de tela do sistema (`AccessibilityManager`, `View.announceForAccessibility(...)`, `AccessibilityEvent.TYPE_ANNOUNCEMENT`, `contentDescription` e `accessibilityLiveRegion="polite"`).
-  2. **Filtros Completos do Brasil (Região, Estado/UF, Cidade com os 185 Municípios de PE e Categorias de Estabelecimento):**
+  2. **Filtros Completos do Brasil (Região, Estado/UF, Cidade com os 185 Municípios de PE e Categorias Exclusivas para Comer e Consumir):**
      - **Filtro por Região:** Todas as 5 regiões do Brasil (`Nordeste`, `Sudeste`, `Sul`, `Centro-Oeste`, `Norte`).
      - **Filtro por Estado (UF):** Todos os 27 estados brasileiros (`AC` a `TO`).
      - **Filtro por Cidade:** Inclui **todos os 185 municípios de Pernambuco** (`TODAS_CIDADES_PERNAMBUCO`), além das principais cidades dos 27 estados e uma opção **"🔎 Pesquisar / Digitar Nome da Cidade..."** no topo da lista.
-     - **Filtro por Categoria (`CATEGORIAS_ESTABELECIMENTO`):** Permite filtrar e encontrar qualquer estabelecimento onde o usuário possa comer e visitar:
-       1. `Todas as Categorias`
-       2. `Restaurantes e Self-Service`
+     - **Filtro por Categoria (`CATEGORIAS_ESTABELECIMENTO` — Apenas locais onde o usuário pode comer e consumir):**
+       1. `Todas as Categorias (Para Comer e Consumir)`
+       2. `Restaurantes, Bistrôs e Self-Service`
        3. `Bares, Botecos e Petiscarias`
        4. `Padarias, Cafeterias e Confeitarias`
        5. `Pizzarias, Hamburguerias e Lanchonetes`
        6. `Churrascarias, Espetinhos e Peixarias`
        7. `Sorveterias, Açaí, Docerias e Tapiocarias`
-       8. `Pontos Turísticos, Museus, Parques e Praias`
-       9. `Mercados Públicos, Feiras e Centros Culturais`
+       8. `Mercados Gastronômicos, Quiosques e Bistrôs Culturais`
      - **Localizar Qualquer Estabelecimento com Cardápio Disponível:** Busca por texto, voz ou compartilhamento do Google Maps que encontra ou gera automaticamente o cardápio adequado à categoria para qualquer estabelecimento de qualquer cidade do Brasil.
   3. **Integração de Mão Dupla com o Google Maps (App -> Maps e Maps -> App):**
      - **Do Comanda Falada para o Google Maps:** Botão `📍 Maps` ao lado de cada bar, botão `📍 Rota no Maps` para traçar a rota até o bar selecionado e botão `🗺️ Ver Bares da Cidade no Maps`.

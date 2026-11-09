@@ -10,33 +10,49 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Cabeçalho Principal -->
+        <!-- Cabeçalho Principal com Ícone de Acessibilidade e Inclusão -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:background="#1E293B"
             android:padding="14dp"
             android:layout_marginBottom="12dp">
 
-            <TextView
-                android:id="@+id/tvTitulo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="🍽️ Comanda Falada · Passo à Frente"
-                android:textSize="21sp"
-                android:textStyle="bold"
-                android:textColor="#FACC15"
-                android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Filtre por Região, Estado e Cidade, integre com o Google Maps, ouça o cardápio, some a comanda pela IA e pague nos bancos do celular." />
+            <ImageView
+                android:id="@+id/ivIconeApp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@mipmap/ic_launcher"
+                android:contentDescription="Ícone do Comanda Falada: símbolo universal da acessibilidade no topo e pessoas com e sem deficiência segurando juntas um cardápio aberto."
+                android:layout_marginEnd="12dp" />
 
-            <TextView
-                android:id="@+id/tvSubtitulo"
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Região, Estado e Cidade + Google Maps + Cardápio + Soma IA + Bancos"
-                android:textSize="14sp"
-                android:textColor="#E2E8F0"
-                android:layout_marginTop="4dp" />
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvTitulo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🍽️ Comanda Falada · Passo à Frente"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#FACC15"
+                    android:contentDescription="Aplicativo Comanda Falada, Passo à Frente. Estabelecimentos para comer e consumir com filtro por Região, Estado, Cidade e Categoria, integração com Google Maps, soma pela IA e pagamento nos bancos." />
+
+                <TextView
+                    android:id="@+id/tvSubtitulo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Locais p/ Comer + Filtros + Maps + Soma IA + Bancos"
+                    android:textSize="13sp"
+                    android:textColor="#E2E8F0"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Painel de Voz / Status em Tempo Real -->
