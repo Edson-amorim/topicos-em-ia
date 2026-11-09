@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollPrincipal"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="14dp"
@@ -263,15 +264,30 @@
             android:orientation="vertical"
             android:layout_marginBottom="16dp" />
 
-        <!-- SEÇÃO 2: CARDÁPIO INTERATIVO DO LOCAL SELECIONADO -->
+        <!-- SEÇÃO 2: CARDÁPIO COMPLETO E INTERATIVO DO LOCAL SELECIONADO -->
         <TextView
             android:id="@+id/tvTituloCardapio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="2. CARDÁPIO DO ESTABELECIMENTO:"
+            android:text="2. CARDÁPIO COMPLETO DO ESTABELECIMENTO:"
             android:textSize="17sp"
             android:textStyle="bold"
             android:textColor="#FACC15"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnAbrirCardapioPopUp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="📖 Abrir Cardápio Completo em Lista Rápida (100% dos Itens)"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#1D4ED8"
+            android:contentDescription="Abrir janela com todos os itens do cardápio completo deste estabelecimento para escolher rapidamente com o TalkBack"
             android:layout_marginBottom="6dp" />
 
         <Button

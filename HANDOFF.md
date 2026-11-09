@@ -5,15 +5,15 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v5.0 (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
+**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v5.2 (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2) ou Evoluções do App Android**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v5.0)
+## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v5.2)
 
 - **Arquivo APK Pronto para Instalação (Independente, Não Precisa da Pasta):**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~99,2 KB, assinado com V1/V2/V3).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~107,4 KB, assinado com V1/V2/V3).
 - **Ícone Oficial Personalizado (`@mipmap/ic_launcher` e `tec/icone_comanda_falada.png`):**
   - Traz o **Símbolo Universal da Acessibilidade** no topo e **duas pessoas (uma pessoa com deficiência e uma pessoa sem deficiência) segurando juntas um cardápio aberto** com prato e itens de alimentação, em alto contraste e com descrição completa para o TalkBack.
 - **Código-Fonte Android:**
@@ -45,7 +45,9 @@
        - Registrados `intent-filter`s no `AndroidManifest.xml` (`ACTION_SEND` `text/plain` e `ACTION_VIEW` para `geo:`, `maps.google.com`, `google.com/maps`, `maps.app.goo.gl`, `goo.gl`).
        - Quando o usuário está no **Google Maps**, escolhe qualquer bar ou restaurante, toca em **"Compartilhar"** e seleciona **Comanda Falada** (ou abre um link do Google Maps), o `MainActivity` recebe o local (`tratarIntentRecebidaDoGoogleMaps`), identifica o bar e a cidade e **abre imediatamente o cardápio interativo** daquele bar para o usuário escolher os itens!
        - Também inclui o botão `📲 Abrir Cardápio de Bar Vindo do Google Maps` dentro do app para importar da área de transferência ou testar o fluxo em 1 toque.
-  4. **Cardápio Interativo + Soma da Comanda pela IA + Pagamento nos Bancos do Celular:**
+  4. **Cardápio Completo Interativo (16 a 24 Itens por Estabelecimento + Janela Rápida + Rolagem/Foco Automático) + Soma da Comanda com 10% + Pagamento nos Bancos do Celular:**
+     - **Cardápio Completo (`completarCardapioDoEstabelecimento`):** Todos os estabelecimentos (tanto os 20 pré-carregados quanto qualquer local aberto via filtro de cidade/categoria ou Google Maps) possuem agora um **cardápio completo de 16 a 24 itens** divididos por seções (`Entrada`, `Petisco`, `Prato Principal`, `Prato Individual`, `Lanche / Pizzaria / Tapiocaria`, `Bebida sem Álcool`, `Bebida Alcoólica / Drinks` e `Sobremesa / Cafeteria`).
+     - **Abertura Imediata em Janela Modal Acessível (`abrirDialogoCardapioCompletoInterativo`) + Foco Automático (`rolarParaCardapioEAbrirJanelaCompleta`):** Ao tocar em qualquer estabelecimento na lista (ou abrir pelo Google Maps / busca), o app rola automaticamente até a Seção 2, move o foco do TalkBack para o título do cardápio e abre imediatamente uma janela com **100% dos itens numerados** para o usuário escolher sem precisar varrer a lista de estabelecimentos. Também há o botão dedicado `📖 Abrir Cardápio Completo em Lista Rápida` no topo da Seção 2.
      - Escolha de pratos, petiscos, bebidas e sobremesas por toque (`➕` / `➖ 1`) ou por comando de voz (`🎙️ Falar Pedido para a IA Somar na Comanda`).
      - **Pergunta sobre a Taxa de 10% do Garçom (`perguntarTaxaDezPorCento`):** Na soma da comanda (ao tocar no botão `💁 Deseja adicionar os 10% na soma?`, ao ouvir a soma ou antes de copiar o Pix e abrir o banco), o app pergunta em voz alta pelo leitor de tela (TalkBack) e na tela se o usuário quer adicionar os **10% de taxa de serviço**, exibindo o **Subtotal dos itens**, o **valor exato dos 10%** e a **Soma Total com ou sem os 10%**!
      - Soma exata em centavos (`R$`), alerta de teto de gastos (`R$ 50`, `R$ 100`, `R$ 150`, `R$ 200`), senha falada de 4 dígitos e geração de **Pix Copia e Cola (BR Code BACEN com CRC16 válido)**.

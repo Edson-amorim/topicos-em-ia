@@ -20,6 +20,7 @@ import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -268,6 +269,7 @@ public class MainActivity extends Activity {
                     "Boa Vista", "Rorainópolis")
     };
 
+    private ScrollView scrollPrincipal;
     private TextView tvResultado;
     private TextView tvTituloCardapio;
     private TextView tvResumoComanda;
@@ -286,6 +288,7 @@ public class MainActivity extends Activity {
     private Button btnFiltroAcustico;
     private Button btnFiltroTodos;
     private Button btnBuscarVozLocal;
+    private Button btnAbrirCardapioPopUp;
     private Button btnPedirPorVoz;
     private Button btnTaxaServico;
     private Button btnOuvirComanda;
@@ -321,6 +324,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        scrollPrincipal = findViewById(R.id.scrollPrincipal);
         tvResultado = findViewById(R.id.tvResultado);
         tvTituloCardapio = findViewById(R.id.tvTituloCardapio);
         tvResumoComanda = findViewById(R.id.tvResumoComanda);
@@ -340,6 +344,7 @@ public class MainActivity extends Activity {
         btnFiltroAcustico = findViewById(R.id.btnFiltroAcustico);
         btnFiltroTodos = findViewById(R.id.btnFiltroTodos);
         btnBuscarVozLocal = findViewById(R.id.btnBuscarVozLocal);
+        btnAbrirCardapioPopUp = findViewById(R.id.btnAbrirCardapioPopUp);
         btnPedirPorVoz = findViewById(R.id.btnPedirPorVoz);
         btnTaxaServico = findViewById(R.id.btnTaxaServico);
         btnOuvirComanda = findViewById(R.id.btnOuvirComanda);
@@ -452,6 +457,13 @@ public class MainActivity extends Activity {
                         REQ_VOZ_BUSCA_LOCAL,
                         "Fale o nome de qualquer bar, restaurante, cidade, estado ou região do Brasil"
                 );
+            }
+        });
+
+        btnAbrirCardapioPopUp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abrirDialogoCardapioCompletoInterativo();
             }
         });
 
@@ -887,10 +899,12 @@ public class MainActivity extends Activity {
         if (textoExtraido != null && !textoExtraido.trim().isEmpty()) {
             etBuscaQualquerBar.setText(textoExtraido);
             localizarQualquerBarComCardapio(textoExtraido);
-            String avisoMaps = "📍 Recebido do Google Maps: cardápio de " + estabelecimentoSelecionado.nome +
-                    " (" + estabelecimentoSelecionado.cidade + "/" + estabelecimentoSelecionado.uf + ") aberto automaticamente! " +
-                    "Escolha os itens abaixo para a IA somar na comanda.";
+            String avisoMaps = "📍 Recebido do Google Maps: cardápio completo de " + estabelecimentoSelecionado.nome +
+                    " (" + estabelecimentoSelecionado.cidade + "/" + estabelecimentoSelecionado.uf + ") com " +
+                    estabelecimentoSelecionado.cardapio.size() + " itens aberto automaticamente! " +
+                    "Escolha os itens para a IA somar na comanda.";
             atualizarPainelEFalar(avisoMaps, avisoMaps);
+            rolarParaCardapioEAbrirJanelaCompleta();
         }
     }
 
@@ -1144,11 +1158,12 @@ public class MainActivity extends Activity {
         String msgVisual = "✅ Local p/ Comer e Consumir Localizado:\n" +
                 "• " + encontrado.nome + " [" + encontrado.tipo + "] — " + encontrado.cidade + "/" + encontrado.uf + "\n" +
                 "• Conforto Acústico: " + encontrado.decibeisMedio + " dB (" + encontrado.nivelRuido + ")\n" +
-                "• Toque em 'Rota no Maps' ou escolha a comida/bebida no cardápio abaixo!";
+                "• Cardápio Completo: " + encontrado.cardapio.size() + " itens disponíveis abaixo e na janela rápida!";
         String msgFalada = "Local para comer encontrado: " + encontrado.nome + ", categoria " + encontrado.tipo +
                 ", na cidade de " + encontrado.cidade + ", estado de " + encontrado.estado +
-                ". O cardápio de comidas e bebidas está aberto abaixo!";
+                ". O cardápio completo com " + encontrado.cardapio.size() + " itens de comidas e bebidas está aberto!";
         atualizarPainelEFalar(msgVisual, msgFalada);
+        rolarParaCardapioEAbrirJanelaCompleta();
     }
 
     private String detectarCategoriaNoTexto(String norm) {
@@ -1279,6 +1294,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Pão na Chapa / Tapioca Quentinha na Manteiga", "Padaria", 1100, "pao", "tapioca", "manteiga"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Fatia de Bolo de Rolo ou Torta Confeitada", "Confeitaria", 1500, "bolo", "torta", "doce"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Suco Natural de Laranja ou Acerola", "Bebida", 1000, "suco", "laranja", "acerola"));
+            completarCardapioDoEstabelecimento(novo);
             return novo;
         }
         if (cNorm.contains("pizzarias")) {
@@ -1287,6 +1303,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Sanduíche Bauru / Pastel Especial Recheado", "Lanchonete", 2100, "sanduiche", "pastel", "lanche"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Suco Natural ou Refrigerante Gelado", "Bebida", 950, "suco", "refrigerante", "coca"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Petit Gateau ou Brownie com Sorvete", "Sobremesa", 1800, "brownie", "sorvete", "sobremesa"));
+            completarCardapioDoEstabelecimento(novo);
             return novo;
         }
         if (cNorm.contains("churrascarias")) {
@@ -1295,6 +1312,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Espetinho Completo com Baião de Dois e Macaxeira", "Espetinho", 2600, "espetinho", "baiao", "macaxeira"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Suco Natural da Fruta Jarra / Copo", "Bebida", 1100, "suco", "jarra"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Pudim de Leite ou Cartola Tradicional", "Sobremesa", 1600, "pudim", "cartola", "sobremesa"));
+            completarCardapioDoEstabelecimento(novo);
             return novo;
         }
         if (cNorm.contains("sorveterias")) {
@@ -1303,6 +1321,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Tapioca Recheada (Coco com Queijo ou Carne de Sol)", "Tapiocaria", 1800, "tapioca", "coco", "queijo"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Doces Regionais / Bolo de Rolo com Sorvete", "Doceria", 1700, "doce", "bolo de rolo"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Água de Coco ou Água Mineral Gelada", "Bebida", 700, "agua", "coco"));
+            completarCardapioDoEstabelecimento(novo);
             return novo;
         }
         if (cNorm.contains("mercados")) {
@@ -1311,6 +1330,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_3", "Pastel Especial Quentinho com Caldo de Cana / Suco", "Lanche Tradicional", 1600, "pastel", "caldo", "suco"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_4", "Café Especial com Bolo de Rolo Pernambucano", "Cafeteria", 1500, "cafe", "bolo"));
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Água de Coco Gelada ou Suco Natural da Fruta", "Bebida", 800, "agua", "coco", "suco"));
+            completarCardapioDoEstabelecimento(novo);
             return novo;
         }
 
@@ -1376,6 +1396,7 @@ public class MainActivity extends Activity {
             novo.cardapio.add(new ItemCardapio(idPrefix + "_5", "Suco de Cupuaçu ou Açaí na Tigela", "Bebida", 1400, "cupuacu", "acai", "suco"));
         }
 
+        completarCardapioDoEstabelecimento(novo);
         return novo;
     }
 
@@ -1737,6 +1758,99 @@ public class MainActivity extends Activity {
         bododromoPetrolina.cardapio.add(new ItemCardapio("pet_baiao", "Baião de Dois Cremoso com Macaxeira e Queijo Coalho", "Acompanhamento", 2400, "baiao", "macaxeira", "queijo"));
         bododromoPetrolina.cardapio.add(new ItemCardapio("pet_uva", "Suco de Uva Integral do Vale do São Francisco", "Bebida", 1200, "suco", "uva"));
         catalogoEstabelecimentos.add(bododromoPetrolina);
+
+        // Garante que TODOS os estabelecimentos tenham cardápio completo (14 a 18 itens de todas as seções)
+        for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
+            completarCardapioDoEstabelecimento(catalogoEstabelecimentos.get(i));
+        }
+    }
+
+    /**
+     * Garante que qualquer estabelecimento tenha um Cardápio Completo (Entradas, Pratos Principais,
+     * Lanches/Porções, Bebidas sem Álcool, Cervejas/Drinks e Sobremesas/Cafeteria), evitando cardápios curtos.
+     */
+    private void completarCardapioDoEstabelecimento(Estabelecimento est) {
+        if (est == null) return;
+        String p = est.id;
+        String t = normalizarTexto(est.tipo + " " + est.nome);
+
+        if (t.contains("padaria") || t.contains("cafe") || t.contains("confeitaria")) {
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c1", "Tapioca Rendada de Queijo Coalho com Coco", "Tapiocaria", 1400, "tapioca", "queijo", "coco"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c2", "Sanduíche Misto Quente ou Queijo Quente no Pão Francês", "Lanche", 1200, "misto", "sanduiche", "queijo"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c3", "Omelete Completo com Queijo, Presunto e Tomate", "Prato Leve", 1800, "omelete", "ovos"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c4", "Coxinha de Frango com Catupiry / Empada Especial", "Salgado", 950, "coxinha", "empada", "salgado"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c5", "Pão de Queijo Mineiro Quentinho (Porção 6 unid)", "Padaria", 1300, "pao de queijo", "porcao"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c6", "Prato Executivo do Dia (Filé de Frango / Carne com Arroz e Salada)", "Almoço", 2900, "prato", "almoco", "executivo", "frango"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c7", "Cappuccino Italiano Cremoso com Canela e Chocolate", "Cafeteria", 1200, "cappuccino", "chocolate", "cafe"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c8", "Vitamina de Banana com Aveia / Mamão com Laranja (400ml)", "Bebida", 1300, "vitamina", "banana", "mamao"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c9", "Refrigerante Lata 350ml (Coca-Cola / Guaraná)", "Bebida", 750, "refrigerante", "coca", "guarana"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c10", "Água Mineral sem Gás / com Gás 500ml", "Bebida", 550, "agua", "mineral"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c11", "Torta Holandesa / Pudim de Leite Condensado (Fatia)", "Sobremesa", 1500, "torta", "pudim", "sobremesa"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c12", "Cartola Pernambucana Tradicional (Banana, Queijo e Canela)", "Sobremesa", 1700, "cartola", "banana", "sobremesa"));
+            return;
+        }
+
+        if (t.contains("pizza") || t.contains("hamburguer") || t.contains("lanchonete")) {
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c1", "Pizza Grande Portuguesa / Quatro Queijos / Frango c/ Catupiry", "Pizzaria", 5600, "pizza", "portuguesa", "queijos"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c2", "Pizza Brotinho Individual (Qualquer Sabor Tradicional)", "Pizzaria", 3100, "brotinho", "pizza individual"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c3", "Duplo Smash Burger Bacon com Queijo Prato e Maionese da Casa", "Hamburgueria", 3600, "smash", "bacon", "hamburguer"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c4", "Porção de Batata Frita Crocante com Cheddar e Bacon", "Entrada / Porção", 2600, "batata", "frita", "cheddar"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c5", "Pão de Alho Gratinado com Queijo Mussarela", "Entrada", 1600, "pao de alho", "entrada"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c6", "Beirute / Filé com Fritas no Pão Sírio Completo", "Lanche", 3400, "beirute", "file", "lanche"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c7", "Lasanha à Bolonhesa Gratinada no Forno", "Prato Principal", 3900, "lasanha", "massa"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c8", "Milkshake Cremoso de Chocolate ou Morango (400ml)", "Bebida / Doce", 1800, "milkshake", "morango", "chocolate"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c9", "Refrigerante 1 Litro / Lata Gelada (Coca-Cola / Guaraná)", "Bebida", 900, "refrigerante", "coca", "guarana"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c10", "Chope Pilsen Gelado / Cerveja Long Neck", "Bebida Alcoólica", 1200, "chope", "cerveja"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c11", "Água Mineral sem Gás / com Gás 500ml", "Bebida", 600, "agua", "mineral"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c12", "Pizza Doce de Chocolate com Morango (Brotinho)", "Sobremesa", 2800, "pizza doce", "chocolate", "sobremesa"));
+            return;
+        }
+
+        if (t.contains("sorvet") || t.contains("acai") || t.contains("tapioca")) {
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c1", "Tapioca Salgada de Frango com Catupiry e Queijo Coalho", "Tapiocaria", 1900, "tapioca", "frango", "catupiry"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c2", "Tapioca Salgada de Charque Desfiada na Nata com Queijo", "Tapiocaria", 2200, "charque", "tapioca"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c3", "Crepe Francês Recheado (Queijo e Presunto / Frango)", "Lanche", 2100, "crepe", "lanche"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c4", "Sundae Especial com Calda de Chocolate, Castanha e Cereja", "Sorveteria", 1900, "sundae", "sorvete"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c5", "Banana Split Completa (3 bolas de sorvete, frutas e chantilly)", "Sorveteria", 2600, "banana split", "sorvete"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c6", "Creme de Cupuaçu ou Graviola na Tigela (400ml)", "Açaí e Cremes", 2000, "cupuacu", "graviola"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c7", "Picolé Artesanal Regional (Cajá, Coco, Milho Verde ou Chocolate)", "Sorveteria", 800, "picole", "coco", "caja"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c8", "Empada de Camarão ou Frango + Suco Natural", "Lanche", 1600, "empada", "camarao", "suco"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c9", "Café Expresso com Fatia de Bolo de Rolo e Sorvete de Creme", "Sobremesa", 1800, "cafe", "bolo de rolo"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c10", "Suco Natural da Fruta (Laranja, Acerola ou Maracujá 400ml)", "Bebida", 1000, "suco", "laranja", "maracuja"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c11", "Refrigerante Lata 350ml (Coca-Cola / Guaraná)", "Bebida", 750, "refrigerante", "coca", "guarana"));
+            adicionarSeNaoExistir(est, new ItemCardapio(p + "_c12", "Água Mineral sem Gás / com Gás 500ml", "Bebida", 550, "agua", "mineral"));
+            return;
+        }
+
+        // Cardápio completo padrão para Restaurantes, Bares, Botecos, Churrascarias, Peixarias e Mercados Gastronômicos
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c1", "Caldinho Tradicional (Feijão ou Camarão com Azeitona e Codorna)", "Entrada", 1300, "caldinho", "feijao", "camarao"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c2", "Porção de Pastéis Artesanais (Carne, Queijo ou Camarão - 6 unid)", "Entrada", 2400, "pastel", "pasteis", "entrada"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c3", "Bolinho de Bacalhau ou Macaxeira com Charque (6 unid)", "Entrada", 2700, "bolinho", "bacalhau", "charque"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c4", "Queijo Coalho Assado na Brasa com Mel de Engenho e Orégano", "Petisco", 2100, "queijo coalho", "mel", "petisco"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c5", "Batata Frita ou Macaxeira Frita Crocante na Manteiga de Garrafa", "Petisco", 2500, "batata frita", "macaxeira", "porcao"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c6", "Isca de Frango ou Filé Trinchado Acebolado com Farofa e Vinagrete", "Petisco", 3900, "isca", "frango", "file", "trinchado"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c7", "Carne de Sol Completa com Baião de Dois, Macaxeira e Queijo Coalho", "Prato Principal", 5200, "carne de sol", "baiao", "almoco"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c8", "Filé à Parmegiana (Carne ou Frango) com Arroz e Purê / Fritas", "Prato Principal", 4600, "parmegiana", "file", "arroz"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c9", "Peixe Grelhado / Camarão ao Alho e Óleo com Arroz e Legumes", "Prato Principal", 5400, "peixe", "camarao", "grelhado"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c10", "Prato Executivo Individual do Dia (Carne, Frango ou Peixe)", "Prato Individual", 2900, "executivo", "individual", "prato feito"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c11", "Suco Natural da Fruta Copo 400ml (Laranja, Cajá, Acerola ou Limão)", "Bebida sem Álcool", 1000, "suco", "laranja", "caja", "acerola"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c12", "Refrigerante Lata 350ml (Coca-Cola, Coca Zero ou Guaraná)", "Bebida sem Álcool", 800, "refrigerante", "coca", "guarana"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c13", "Água Mineral sem Gás / com Gás ou Água de Coco Gelada", "Bebida sem Álcool", 650, "agua", "coco", "mineral"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c14", "Cerveja Gelada 600ml / Chope Pilsen na Caneca Congelada", "Bebida Alcoólica", 1250, "cerveja", "chope", "chopp"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c15", "Caipirinha de Limão ou Caipiroska de Frutas Regionais", "Drinks", 1800, "caipirinha", "caipiroska", "drink"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c16", "Sobremesa Regional: Cartola Pernambucana ou Bolo de Rolo c/ Sorvete", "Sobremesa", 1700, "cartola", "bolo de rolo", "sobremesa"));
+        adicionarSeNaoExistir(est, new ItemCardapio(p + "_c17", "Pudim de Leite Condensado + Café Expresso Quentinho", "Sobremesa / Café", 1400, "pudim", "cafe", "expresso"));
+    }
+
+    private void adicionarSeNaoExistir(Estabelecimento est, ItemCardapio novoItem) {
+        String normNovo = normalizarTexto(novoItem.nome);
+        for (int i = 0; i < est.cardapio.size(); i++) {
+            String normExistente = normalizarTexto(est.cardapio.get(i).nome);
+            if (normExistente.equals(normNovo)) {
+                return;
+            }
+        }
+        est.cardapio.add(novoItem);
     }
 
     private List<Estabelecimento> obterEstabelecimentosFiltrados() {
@@ -1831,6 +1945,7 @@ public class MainActivity extends Activity {
                 @Override
                 public void onClick(View v) {
                     selecionarEstabelecimento(est, true);
+                    rolarParaCardapioEAbrirJanelaCompleta();
                 }
             });
             linhaBar.addView(btnEst);
@@ -1862,6 +1977,9 @@ public class MainActivity extends Activity {
     }
 
     private void selecionarEstabelecimento(Estabelecimento novoEst, boolean limparComandaAnterior) {
+        if (novoEst != null && novoEst.cardapio.size() < 12) {
+            completarCardapioDoEstabelecimento(novoEst);
+        }
         if (estabelecimentoSelecionado != novoEst && limparComandaAnterior) {
             quantidadesComanda.clear();
         }
@@ -1871,32 +1989,166 @@ public class MainActivity extends Activity {
         renderizarCardapioEstabelecimento();
         recalcularComanda();
 
+        if (btnAbrirCardapioPopUp != null && novoEst != null) {
+            btnAbrirCardapioPopUp.setText("📖 Abrir Cardápio Completo em Lista Rápida (" + novoEst.cardapio.size() + " Itens)");
+            btnAbrirCardapioPopUp.setContentDescription(
+                    "Abrir janela com o cardápio completo de " + novoEst.nome + " contendo todos os " +
+                            novoEst.cardapio.size() + " itens de entradas, pratos, lanches, bebidas e sobremesas."
+            );
+        }
+
         StringBuilder resumoItens = new StringBuilder();
         for (int i = 0; i < novoEst.cardapio.size(); i++) {
             ItemCardapio it = novoEst.cardapio.get(i);
-            resumoItens.append(it.nome).append(" por ").append(it.formatarPreco());
-            if (i < novoEst.cardapio.size() - 1) resumoItens.append(", ");
+            resumoItens.append(i + 1).append(": ").append(it.nome).append(" (").append(it.categoria).append(") por ").append(it.formatarPreco());
+            if (i < novoEst.cardapio.size() - 1) resumoItens.append("; ");
         }
 
-        String msgVisual = "Cardápio aberto: " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + " — Região " + novoEst.regiao + ").\n" +
+        String msgVisual = "Cardápio Completo Aberto (" + novoEst.cardapio.size() + " itens): " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + " — Região " + novoEst.regiao + ").\n" +
                 "Conforto Acústico: " + novoEst.decibeisMedio + " dB (" + novoEst.nivelRuido + ").\n" +
-                "Toque em 📍 Maps para ver a rota ou escolha os itens no cardápio abaixo!";
-        String msgFalada = "Cardápio aberto de " + novoEst.nome + ", na cidade de " + novoEst.cidade + ", " + novoEst.estado +
-                ", ruído de " + novoEst.decibeisMedio + " decibéis. Cardápio disponível: " + resumoItens.toString() +
-                ". Toque nos itens para adicionar à comanda.";
+                "Toque em '📖 Abrir Cardápio Completo em Lista Rápida' ou nos " + novoEst.cardapio.size() + " itens abaixo!";
+        String msgFalada = "Cardápio completo aberto de " + novoEst.nome + ", na cidade de " + novoEst.cidade + ", " + novoEst.estado +
+                ", com " + novoEst.cardapio.size() + " itens disponíveis: " + resumoItens.toString() +
+                ". Toque em qualquer item para adicionar e somar na comanda.";
         atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void rolarParaCardapioEAbrirJanelaCompleta() {
+        if (scrollPrincipal != null && tvTituloCardapio != null) {
+            scrollPrincipal.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollPrincipal.smoothScrollTo(0, tvTituloCardapio.getTop());
+                    tvTituloCardapio.requestFocus();
+                    tvTituloCardapio.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+                }
+            });
+        }
+        abrirDialogoCardapioCompletoInterativo();
+    }
+
+    /**
+     * Abre uma janela modal acessível (AlertDialog) com 100% dos itens do cardápio do estabelecimento
+     * selecionado, permitindo ao usuário com TalkBack ou visão normal ouvir todos os pratos, bebidas e
+     * sobremesas imediatamente sem precisar rolar a lista de estabelecimentos.
+     */
+    private void abrirDialogoCardapioCompletoInterativo() {
+        if (estabelecimentoSelecionado == null) return;
+        if (estabelecimentoSelecionado.cardapio.size() < 12) {
+            completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
+        }
+
+        final List<ItemCardapio> itens = estabelecimentoSelecionado.cardapio;
+        final String[] opcoes = new String[itens.size()];
+
+        for (int i = 0; i < itens.size(); i++) {
+            ItemCardapio it = itens.get(i);
+            int qtd = quantidadesComanda.containsKey(it.id) ? quantidadesComanda.get(it.id) : 0;
+            String marcador = qtd > 0 ? (" ✅ [" + qtd + "x na comanda]") : "";
+            opcoes[i] = (i + 1) + ". [" + it.categoria + "] " + it.nome + " — " + it.formatarPreco() + marcador;
+        }
+
+        String titulo = "📖 Cardápio Completo: " + estabelecimentoSelecionado.nome + " (" + itens.size() + " itens)";
+        falar("Janela de cardápio completo de " + estabelecimentoSelecionado.nome + " aberta com " + itens.size() +
+                " itens de entradas, pratos principais, lanches, bebidas e sobremesas. Toque em qualquer item para somar na comanda.");
+
+        new AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ItemCardapio escolhido = itens.get(which);
+                        alterarQuantidadeItem(escolhido, 1);
+                        mostrarConfirmacaoItemNoCardapioCompleto(escolhido);
+                    }
+                })
+                .setPositiveButton("💰 Ver Soma / 10% (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        perguntarTaxaDezPorCento(false, null);
+                    }
+                })
+                .setNeutralButton("🎙️ Pedir por Voz", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        iniciarReconhecimentoVoz(
+                                REQ_VOZ_PEDIDO_CARDAPIO,
+                                "Fale os itens do cardápio de " + estabelecimentoSelecionado.nome + " para a IA somar na comanda"
+                        );
+                    }
+                })
+                .setNegativeButton("Fechar Janela", null)
+                .show();
+    }
+
+    private void mostrarConfirmacaoItemNoCardapioCompleto(final ItemCardapio recemAdicionado) {
+        int qtdAtual = quantidadesComanda.containsKey(recemAdicionado.id) ? quantidadesComanda.get(recemAdicionado.id) : 0;
+        String msg = "Adicionado: " + recemAdicionado.nome + " (" + qtdAtual + "x na comanda). " +
+                "Soma parcial: " + formatarMoedaCentavos(ultimoTotalCentavos) + ". Deseja continuar escolhendo no cardápio completo ou ir para a soma e pagamento?";
+        falar(msg);
+
+        final String[] acoes = new String[]{
+                "➕ Continuar escolhendo no Cardápio Completo (" + estabelecimentoSelecionado.cardapio.size() + " itens)",
+                "💁 Perguntar sobre os 10% e Ver Soma (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")",
+                "🏦 Ir para Pagamento Pix no App do Banco (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")",
+                "➖ Remover 1x " + recemAdicionado.nome + " da comanda"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("✅ " + recemAdicionado.nome + " adicionado!")
+                .setItems(acoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            abrirDialogoCardapioCompletoInterativo();
+                        } else if (which == 1) {
+                            perguntarTaxaDezPorCento(false, null);
+                        } else if (which == 2) {
+                            acaoPagarComandaNosBancos();
+                        } else if (which == 3) {
+                            alterarQuantidadeItem(recemAdicionado, -1);
+                            abrirDialogoCardapioCompletoInterativo();
+                        }
+                    }
+                })
+                .setNegativeButton("Voltar à Tela Principal", null)
+                .show();
     }
 
     private void renderizarCardapioEstabelecimento() {
         containerCardapio.removeAllViews();
         if (estabelecimentoSelecionado == null) return;
+        if (estabelecimentoSelecionado.cardapio.size() < 12) {
+            completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
+        }
 
-        tvTituloCardapio.setText("2. CARDÁPIO: " + estabelecimentoSelecionado.nome.toUpperCase(new Locale("pt", "BR")) +
+        tvTituloCardapio.setText("2. CARDÁPIO COMPLETO (" + estabelecimentoSelecionado.cardapio.size() + " ITENS): " +
+                estabelecimentoSelecionado.nome.toUpperCase(new Locale("pt", "BR")) +
                 " (" + estabelecimentoSelecionado.cidade + "/" + estabelecimentoSelecionado.uf + ")");
+        tvTituloCardapio.setContentDescription(
+                "Seção 2: Cardápio completo de " + estabelecimentoSelecionado.nome + " em " +
+                        estabelecimentoSelecionado.cidade + ", contendo " + estabelecimentoSelecionado.cardapio.size() + " itens."
+        );
+        if (btnAbrirCardapioPopUp != null) {
+            btnAbrirCardapioPopUp.setText("📖 Abrir Cardápio Completo em Lista Rápida (" + estabelecimentoSelecionado.cardapio.size() + " Itens)");
+        }
 
+        String categoriaAnterior = "";
         for (int i = 0; i < estabelecimentoSelecionado.cardapio.size(); i++) {
             final ItemCardapio item = estabelecimentoSelecionado.cardapio.get(i);
             final int qtdAtual = quantidadesComanda.containsKey(item.id) ? quantidadesComanda.get(item.id) : 0;
+
+            if (!item.categoria.equalsIgnoreCase(categoriaAnterior)) {
+                categoriaAnterior = item.categoria;
+                TextView tvSecaoCat = new TextView(this);
+                tvSecaoCat.setText("🍽️ " + item.categoria.toUpperCase(new Locale("pt", "BR")));
+                tvSecaoCat.setTextColor(Color.parseColor("#FDE047"));
+                tvSecaoCat.setTextSize(13.5f);
+                tvSecaoCat.setTypeface(null, Typeface.BOLD);
+                tvSecaoCat.setPadding(8, 14, 8, 6);
+                tvSecaoCat.setContentDescription("Seção do cardápio: " + item.categoria);
+                containerCardapio.addView(tvSecaoCat);
+            }
 
             LinearLayout linha = new LinearLayout(this);
             linha.setOrientation(LinearLayout.HORIZONTAL);
@@ -1917,9 +2169,10 @@ public class MainActivity extends Activity {
             btnAdd.setBackgroundColor(qtdAtual > 0 ? Color.parseColor("#047857") : Color.parseColor("#334155"));
 
             String badgeQtd = qtdAtual > 0 ? (" [" + qtdAtual + "x na comanda]") : "";
-            btnAdd.setText("➕ " + item.nome + " — " + item.formatarPreco() + "\n   Categoria: " + item.categoria + badgeQtd);
+            btnAdd.setText("➕ Item " + (i + 1) + ": " + item.nome + " — " + item.formatarPreco() + "\n   Seção: " + item.categoria + badgeQtd);
             btnAdd.setContentDescription(
-                    "Adicionar " + item.nome + ", categoria " + item.categoria + ", preço " + item.formatarPreco() +
+                    "Item " + (i + 1) + " de " + estabelecimentoSelecionado.cardapio.size() + ": Adicionar " + item.nome +
+                            ", seção " + item.categoria + ", preço " + item.formatarPreco() +
                             ". Quantidade atual na comanda: " + qtdAtual + ". Toque duas vezes para escolher e somar."
             );
 
