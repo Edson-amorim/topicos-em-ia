@@ -23,11 +23,21 @@
   1. **Leitor de Tela Nativo do Sistema Android (TalkBack):**
      - Removido qualquer sintetizador `TextToSpeech` interno separado para nunca atropelar o leitor do sistema.
      - Comunicação 100% integrada ao leitor de tela do sistema (`AccessibilityManager`, `View.announceForAccessibility(...)`, `AccessibilityEvent.TYPE_ANNOUNCEMENT`, `contentDescription` e `accessibilityLiveRegion="polite"`).
-  2. **Filtros Completos do Brasil (Região, Estado/UF e Cidade):**
+  2. **Filtros Completos do Brasil (Região, Estado/UF, Cidade com os 185 Municípios de PE e Categorias de Estabelecimento):**
      - **Filtro por Região:** Todas as 5 regiões do Brasil (`Nordeste`, `Sudeste`, `Sul`, `Centro-Oeste`, `Norte`).
      - **Filtro por Estado (UF):** Todos os 27 estados brasileiros (`AC` a `TO`).
-     - **Filtro por Cidade:** Inclui **todos os 185 municípios de Pernambuco** (`TODAS_CIDADES_PERNAMBUCO`, do Recife até Fernando de Noronha, Afrânio, Petrolina, Serra Talhada, Araripina, Salgueiro, Arcoverde, Pesqueira, Garanhuns, Caruaru, Gravatá, Vitória de Santo Antão, Goiana, Carpina, Tamandaré, etc.), além das principais cidades dos 27 estados e uma opção **"🔎 Pesquisar / Digitar Nome da Cidade..."** no topo da lista para filtrar rapidamente qualquer município sem precisar rolar toda a lista.
-     - **Localizar Qualquer Bar com Cardápio Disponível:** Busca por texto ou voz que encontra bares do catálogo ou gera automaticamente o cardápio regional completo para qualquer bar ou restaurante de qualquer cidade do Brasil.
+     - **Filtro por Cidade:** Inclui **todos os 185 municípios de Pernambuco** (`TODAS_CIDADES_PERNAMBUCO`), além das principais cidades dos 27 estados e uma opção **"🔎 Pesquisar / Digitar Nome da Cidade..."** no topo da lista.
+     - **Filtro por Categoria (`CATEGORIAS_ESTABELECIMENTO`):** Permite filtrar e encontrar qualquer estabelecimento onde o usuário possa comer e visitar:
+       1. `Todas as Categorias`
+       2. `Restaurantes e Self-Service`
+       3. `Bares, Botecos e Petiscarias`
+       4. `Padarias, Cafeterias e Confeitarias`
+       5. `Pizzarias, Hamburguerias e Lanchonetes`
+       6. `Churrascarias, Espetinhos e Peixarias`
+       7. `Sorveterias, Açaí, Docerias e Tapiocarias`
+       8. `Pontos Turísticos, Museus, Parques e Praias`
+       9. `Mercados Públicos, Feiras e Centros Culturais`
+     - **Localizar Qualquer Estabelecimento com Cardápio Disponível:** Busca por texto, voz ou compartilhamento do Google Maps que encontra ou gera automaticamente o cardápio adequado à categoria para qualquer estabelecimento de qualquer cidade do Brasil.
   3. **Integração de Mão Dupla com o Google Maps (App -> Maps e Maps -> App):**
      - **Do Comanda Falada para o Google Maps:** Botão `📍 Maps` ao lado de cada bar, botão `📍 Rota no Maps` para traçar a rota até o bar selecionado e botão `🗺️ Ver Bares da Cidade no Maps`.
      - **Do Google Maps para o Comanda Falada (Abrir Cardápio pelo Maps):**

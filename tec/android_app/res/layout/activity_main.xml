@@ -97,6 +97,18 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:backgroundTint="#047857"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnFiltroCategoria"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="🍽️ Filtrar por Categoria: Todas as Categorias"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7E22CE"
             android:layout_marginBottom="8dp" />
 
         <!-- Botões de Integração Direta com o Google Maps -->
@@ -146,20 +158,20 @@
             android:contentDescription="Abrir cardápio de qualquer bar aberto ou compartilhado pelo Google Maps"
             android:layout_marginBottom="8dp" />
 
-        <!-- Caixa de Busca para Localizar Qualquer Bar / Restaurante / Cidade -->
+        <!-- Caixa de Busca para Localizar Qualquer Estabelecimento / Cidade -->
         <EditText
             android:id="@+id/etBuscaQualquerBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="52dp"
-            android:hint="Digite o nome de qualquer bar, cidade ou estado..."
+            android:hint="Digite qualquer restaurante, padaria, pizzaria, café, museu ou cidade..."
             android:textColor="#FFFFFF"
             android:textColorHint="#94A3B8"
             android:background="#1E293B"
             android:padding="12dp"
             android:singleLine="true"
             android:inputType="text"
-            android:contentDescription="Caixa de texto para localizar qualquer bar, restaurante, bairro ou cidade com cardápio disponível"
+            android:contentDescription="Caixa de texto para localizar qualquer estabelecimento para comer ou visitar com cardápio disponível"
             android:layout_marginBottom="6dp" />
 
         <LinearLayout
@@ -174,7 +186,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:minHeight="54dp"
-                android:text="🔎 Localizar Bar / Cardápio"
+                android:text="🔎 Localizar Local / Cardápio"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
