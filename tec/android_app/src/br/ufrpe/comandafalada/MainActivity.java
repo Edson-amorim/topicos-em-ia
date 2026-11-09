@@ -229,6 +229,7 @@ public class MainActivity extends Activity {
     private Button btnFiltroCidade;
     private Button btnGoogleMapsRota;
     private Button btnGoogleMapsExplorar;
+    private Button btnImportarBarDoMaps;
     private Button btnLocalizarBarTexto;
     private Button btnFiltroAcustico;
     private Button btnFiltroTodos;
@@ -276,6 +277,7 @@ public class MainActivity extends Activity {
         btnFiltroCidade = findViewById(R.id.btnFiltroCidade);
         btnGoogleMapsRota = findViewById(R.id.btnGoogleMapsRota);
         btnGoogleMapsExplorar = findViewById(R.id.btnGoogleMapsExplorar);
+        btnImportarBarDoMaps = findViewById(R.id.btnImportarBarDoMaps);
         btnLocalizarBarTexto = findViewById(R.id.btnLocalizarBarTexto);
         btnFiltroAcustico = findViewById(R.id.btnFiltroAcustico);
         btnFiltroTodos = findViewById(R.id.btnFiltroTodos);
@@ -328,6 +330,13 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 explorarBaresDaCidadeNoGoogleMaps();
+            }
+        });
+
+        btnImportarBarDoMaps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abrirFluxoBarVindoDoGoogleMaps();
             }
         });
 
@@ -447,6 +456,16 @@ public class MainActivity extends Activity {
         renderizarCardapioEstabelecimento();
         recalcularComanda();
         renderizarBancosInstalados();
+
+        // Verifica se o aplicativo foi aberto a partir do Google Maps (Compartilhar ou Link de Mapa)
+        tratarIntentRecebidaDoGoogleMaps(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        tratarIntentRecebidaDoGoogleMaps(intent);
     }
 
     // --- SELETORES DE FILTRO POR REGIÃO, ESTADO (UF) E CIDADE ---
@@ -667,6 +686,143 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             Toast.makeText(this, "Não foi possível abrir o Google Maps.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Recebe um bar ou restaurante compartilhado ou aberto diretamente pelo Google Maps
+     * (via botão "Compartilhar" no Google Maps -> "Comanda Falada" ou link de mapa)
+     * e abre imediatamente o cardápio interativo daquele estabelecimento.
+     */
+    private void tratarIntentRecebidaDoGoogleMaps(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (action == null) return;
+
+        String textoExtraido = null;
+
+        if (Intent.ACTION_SEND.equals(action)) {
+            String subject = intent.getStringExtra(Intent.EXTRA_SUBJECT);
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            StringBuilder bruto = new StringBuilder();
+            if (subject != null && !subject.trim().isEmpty()) {
+                bruto.append(subject.trim()).append(" ");
+            }
+            if (text != null && !text.trim().isEmpty()) {
+                bruto.append(text.trim());
+            }
+            textoExtraido = extrairNomeBarDeTextoDoMaps(bruto.toString());
+        } else if (Intent.ACTION_VIEW.equals(action)) {
+            Uri data = intent.getData();
+            if (data != null) {
+                textoExtraido = extrairNomeBarDeUriDoMaps(data);
+            }
+        }
+
+        if (textoExtraido != null && !textoExtraido.trim().isEmpty()) {
+            etBuscaQualquerBar.setText(textoExtraido);
+            localizarQualquerBarComCardapio(textoExtraido);
+            String avisoMaps = "📍 Recebido do Google Maps: cardápio de " + estabelecimentoSelecionado.nome +
+                    " (" + estabelecimentoSelecionado.cidade + "/" + estabelecimentoSelecionado.uf + ") aberto automaticamente! " +
+                    "Escolha os itens abaixo para a IA somar na comanda.";
+            atualizarPainelEFalar(avisoMaps, avisoMaps);
+        }
+    }
+
+    private String extrairNomeBarDeTextoDoMaps(String bruto) {
+        if (bruto == null) return "";
+        // Remove URLs (https://maps.app.goo.gl/..., https://goo.gl/maps/..., etc.)
+        String semUrls = bruto.replaceAll("https?://\\S+", " ")
+                .replaceAll("(?i)veja este lugar no google maps:?", " ")
+                .replaceAll("(?i)compartilhado via google maps", " ")
+                .replace("\n", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (!semUrls.isEmpty()) {
+            return semUrls;
+        }
+        return "Bar do Google Maps (" + (!cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife") + ")";
+    }
+
+    private String extrairNomeBarDeUriDoMaps(Uri uri) {
+        if (uri == null) return "";
+        String q = uri.getQueryParameter("q");
+        if (q != null && !q.trim().isEmpty()) {
+            return Uri.decode(q).replace("+", " ").trim();
+        }
+        String query = uri.getQueryParameter("query");
+        if (query != null && !query.trim().isEmpty()) {
+            return Uri.decode(query).replace("+", " ").trim();
+        }
+        String path = uri.getPath();
+        if (path != null && path.contains("/place/")) {
+            int idx = path.indexOf("/place/") + 7;
+            String resto = path.substring(idx);
+            int barra = resto.indexOf('/');
+            if (barra > 0) resto = resto.substring(0, barra);
+            String decodificado = Uri.decode(resto).replace("+", " ").trim();
+            if (!decodificado.isEmpty()) return decodificado;
+        }
+        String ssp = uri.getSchemeSpecificPart();
+        if (ssp != null && ssp.contains("?q=")) {
+            int idx = ssp.indexOf("?q=") + 3;
+            String resto = Uri.decode(ssp.substring(idx)).replace("+", " ").trim();
+            if (!resto.isEmpty()) return resto;
+        }
+        return "Bar Localizado no Google Maps (" + (!cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife") + ")";
+    }
+
+    private void abrirFluxoBarVindoDoGoogleMaps() {
+        String textoClipboard = "";
+        try {
+            ClipboardManager cb = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cb != null && cb.hasPrimaryClip() && cb.getPrimaryClip() != null && cb.getPrimaryClip().getItemCount() > 0) {
+                CharSequence cs = cb.getPrimaryClip().getItemAt(0).getText();
+                if (cs != null) textoClipboard = cs.toString().trim();
+            }
+        } catch (Exception ignored) {
+        }
+
+        final String clipLimpo = extrairNomeBarDeTextoDoMaps(textoClipboard);
+        final boolean temClipUtil = !clipLimpo.isEmpty() && clipLimpo.length() >= 3 && !clipLimpo.startsWith("000201");
+
+        final List<String> opcoes = new ArrayList<String>();
+        if (temClipUtil) {
+            opcoes.add("📋 Abrir Cardápio do Local Copiado: " + clipLimpo);
+        }
+        opcoes.add("🗺️ Abrir Google Maps Agora (No Maps: toque em Compartilhar -> Comanda Falada)");
+        opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Bar Cais do Sertão (Recife - PE)");
+        opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Mirante do Alto da Sé (Olinda - PE)");
+        opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Bodega Mestre Vitalino (Caruaru - PE)");
+        opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Bar & Bistrô Esquina Paulista (São Paulo - SP)");
+
+        String explicacao = "Para abrir qualquer cardápio pelo Google Maps: dentro do Google Maps, escolha o bar, toque em Compartilhar e selecione Comanda Falada! Ou escolha uma opção abaixo:";
+        falar(explicacao);
+
+        new AlertDialog.Builder(this)
+                .setTitle("📲 Cardápio pelo Google Maps")
+                .setItems(opcoes.toArray(new String[0]), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String escolha = opcoes.get(which);
+                        if (temClipUtil && which == 0) {
+                            etBuscaQualquerBar.setText(clipLimpo);
+                            localizarQualquerBarComCardapio(clipLimpo);
+                        } else if (escolha.startsWith("🗺️")) {
+                            explorarBaresDaCidadeNoGoogleMaps();
+                        } else {
+                            int idx = escolha.indexOf(": ");
+                            String localSimulado = idx > 0 ? escolha.substring(idx + 2) : escolha;
+                            Intent intentSimulada = new Intent(Intent.ACTION_SEND);
+                            intentSimulada.setType("text/plain");
+                            intentSimulada.putExtra(Intent.EXTRA_SUBJECT, localSimulado);
+                            intentSimulada.putExtra(Intent.EXTRA_TEXT, localSimulado + " https://maps.app.goo.gl/exemplo");
+                            tratarIntentRecebidaDoGoogleMaps(intentSimulada);
+                        }
+                    }
+                })
+                .setNegativeButton("Fechar", null)
+                .show();
     }
 
     private void abrirDialogoSugestoesDeBusca() {

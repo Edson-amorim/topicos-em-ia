@@ -133,6 +133,19 @@
                 android:layout_marginStart="4dp" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/btnImportarBarDoMaps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="📲 Abrir Cardápio de Bar Vindo do Google Maps"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7C2D12"
+            android:contentDescription="Abrir cardápio de qualquer bar aberto ou compartilhado pelo Google Maps"
+            android:layout_marginBottom="8dp" />
+
         <!-- Caixa de Busca para Localizar Qualquer Bar / Restaurante / Cidade -->
         <EditText
             android:id="@+id/etBuscaQualquerBar"
