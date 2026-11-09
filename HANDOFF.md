@@ -5,23 +5,24 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v5.2 (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
+**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v6.0 com Banco de Dados SQLite (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2) ou Evoluções do App Android**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v5.2)
+## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v6.0)
 
 - **Arquivo APK Pronto para Instalação (Independente, Não Precisa da Pasta):**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~107,4 KB, assinado com V1/V2/V3).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~115,6 KB, assinado com V1/V2/V3).
 - **Ícone Oficial Personalizado (`@mipmap/ic_launcher` e `tec/icone_comanda_falada.png`):**
   - Traz o **Símbolo Universal da Acessibilidade** no topo e **duas pessoas (uma pessoa com deficiência e uma pessoa sem deficiência) segurando juntas um cardápio aberto** com prato e itens de alimentação, em alto contraste e com descrição completa para o TalkBack.
-- **Código-Fonte Android:**
+- **Código-Fonte Android e Banco de Dados SQLite:**
   - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\MainActivity.java`
+  - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\ComandaBancoDadosHelper.java`
   - `C:\topicos-em-ia\tec\android_app\res\layout\activity_main.xml`
   - `C:\topicos-em-ia\tec\android_app\AndroidManifest.xml`
   - Scripts: `C:\topicos-em-ia\tec\compilar_apk.ps1` e `C:\topicos-em-ia\tec\gerar_icone.ps1`
-- **Funcionalidades Implementadas no APK v5.0:**
+- **Funcionalidades Implementadas no APK v6.0:**
   1. **Leitor de Tela Nativo do Sistema Android (TalkBack):**
      - Removido qualquer sintetizador `TextToSpeech` interno separado para nunca atropelar o leitor do sistema.
      - Comunicação 100% integrada ao leitor de tela do sistema (`AccessibilityManager`, `View.announceForAccessibility(...)`, `AccessibilityEvent.TYPE_ANNOUNCEMENT`, `contentDescription` e `accessibilityLiveRegion="polite"`).
@@ -52,6 +53,16 @@
      - **Pergunta sobre a Taxa de 10% do Garçom (`perguntarTaxaDezPorCento`):** Na soma da comanda (ao tocar no botão `💁 Deseja adicionar os 10% na soma?`, ao ouvir a soma ou antes de copiar o Pix e abrir o banco), o app pergunta em voz alta pelo leitor de tela (TalkBack) e na tela se o usuário quer adicionar os **10% de taxa de serviço**, exibindo o **Subtotal dos itens**, o **valor exato dos 10%** e a **Soma Total com ou sem os 10%**!
      - Soma exata em centavos (`R$`), alerta de teto de gastos (`R$ 50`, `R$ 100`, `R$ 150`, `R$ 200`), senha falada de 4 dígitos e geração de **Pix Copia e Cola (BR Code BACEN com CRC16 válido)**.
      - Detecção dos **aplicativos de bancos instalados no celular** (`Nubank`, `Banco Inter`, `Itaú`, `Bradesco`, `Banco do Brasil`, `Caixa`, `Caixa Tem`, `Santander`, `PicPay`, `Mercado Pago`, `C6 Bank`, `PagBank`, `Neon`, `Next`, `Will Bank`, `Sicredi`, `Sicoob`, etc.): copia o Pix automaticamente e abre o app do banco escolhido.
+  5. **Banco de Dados Relacional Nativo `SQLite` (`ComandaBancoDadosHelper` — `comanda_falada.db`):**
+     - **5 Tabelas Relacionais Offline:**
+       1. `estabelecimentos` (armazena o catálogo nacional e qualquer local novo vindo do Google Maps ou filtro);
+       2. `cardapio_itens` (armazena todos os pratos, bebidas, preços em centavos e itens cadastrados pelo usuário);
+       3. `comanda_ativa` (salva automaticamente cada item adicionado ou removido em tempo real, evitando perda de dados ao fechar o app ou alternar para o Maps/Banco);
+       4. `configuracoes_sessao` (persiste o último estabelecimento aberto, o teto de gastos e a escolha dos 10%);
+       5. `historico_comandas` (registra data/hora, nome do local, cidade/UF, itens consumidos, subtotal, 10%, total pago e senha de entrega).
+     - **Botões Dedicados na Interface:**
+       - `➕ Cadastrar Novo Prato / Bebida no Banco de Dados (SQLite)` na Seção 2;
+       - `🗄️ Banco de Dados SQLite: Salvar / Ouvir Histórico de Comandas` na Seção 3.
 
 ---
 

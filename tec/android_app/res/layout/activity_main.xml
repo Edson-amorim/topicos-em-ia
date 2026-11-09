@@ -300,6 +300,19 @@
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:backgroundTint="#0F766E"
+            android:layout_marginBottom="6dp" />
+
+        <Button
+            android:id="@+id/btnCadastrarItemBanco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:text="➕ Cadastrar Novo Prato / Bebida no Banco de Dados (SQLite)"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7C3AED"
+            android:contentDescription="Cadastrar um novo prato, lanche ou bebida com preço no banco de dados SQLite deste estabelecimento"
             android:layout_marginBottom="8dp" />
 
         <!-- Lista dinâmica de Itens do Cardápio -->
@@ -387,6 +400,19 @@
                 android:backgroundTint="#991B1B"
                 android:layout_marginStart="4dp" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/btnHistoricoBanco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:text="🗄️ Banco de Dados SQLite: Salvar / Ouvir Histórico de Comandas"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#0369A1"
+            android:contentDescription="Abrir o Banco de Dados SQLite para salvar a comanda atual no histórico ou ouvir o histórico de todas as comandas salvas no celular"
+            android:layout_marginBottom="10dp" />
 
         <!-- SEÇÃO 4: BOTÃO PARA PAGAR NOS BANCOS INSTALADOS NO CELULAR -->
         <TextView

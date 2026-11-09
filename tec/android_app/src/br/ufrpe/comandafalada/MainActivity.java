@@ -290,16 +290,19 @@ public class MainActivity extends Activity {
     private Button btnBuscarVozLocal;
     private Button btnAbrirCardapioPopUp;
     private Button btnPedirPorVoz;
+    private Button btnCadastrarItemBanco;
     private Button btnTaxaServico;
     private Button btnOuvirComanda;
     private Button btnAlterarTeto;
     private Button btnLimparComanda;
+    private Button btnHistoricoBanco;
     private Button btnPagarBanco;
     private Button btnCaso1;
     private Button btnCaso2;
     private Button btnCaso3;
 
     private AccessibilityManager accessibilityManager;
+    private ComandaBancoDadosHelper bancoDados;
     private final List<Estabelecimento> catalogoEstabelecimentos = new ArrayList<Estabelecimento>();
     private Estabelecimento estabelecimentoSelecionado;
 
@@ -346,19 +349,21 @@ public class MainActivity extends Activity {
         btnBuscarVozLocal = findViewById(R.id.btnBuscarVozLocal);
         btnAbrirCardapioPopUp = findViewById(R.id.btnAbrirCardapioPopUp);
         btnPedirPorVoz = findViewById(R.id.btnPedirPorVoz);
+        btnCadastrarItemBanco = findViewById(R.id.btnCadastrarItemBanco);
         btnTaxaServico = findViewById(R.id.btnTaxaServico);
         btnOuvirComanda = findViewById(R.id.btnOuvirComanda);
         btnAlterarTeto = findViewById(R.id.btnAlterarTeto);
         btnLimparComanda = findViewById(R.id.btnLimparComanda);
+        btnHistoricoBanco = findViewById(R.id.btnHistoricoBanco);
         btnPagarBanco = findViewById(R.id.btnPagarBanco);
         btnCaso1 = findViewById(R.id.btnCaso1);
         btnCaso2 = findViewById(R.id.btnCaso2);
         btnCaso3 = findViewById(R.id.btnCaso3);
 
         accessibilityManager = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
+        bancoDados = new ComandaBancoDadosHelper(this);
 
-        carregarGrafoNacionalDeBares();
-        estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+        inicializarCatalogoESessaoComBancoSQLite();
 
         btnFiltroRegiao.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -477,6 +482,13 @@ public class MainActivity extends Activity {
             }
         });
 
+        btnCadastrarItemBanco.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abrirDialogoCadastrarNovoItemNoBanco();
+            }
+        });
+
         btnTaxaServico.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -502,10 +514,20 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 quantidadesComanda.clear();
+                if (bancoDados != null && estabelecimentoSelecionado != null) {
+                    bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+                }
                 renderizarCardapioEstabelecimento();
                 recalcularComanda();
-                String msg = "Comanda limpa. Escolha novos itens no cardápio de " + estabelecimentoSelecionado.nome + ".";
+                String msg = "Comanda limpa no aplicativo e no banco de dados SQLite. Escolha novos itens no cardápio de " + estabelecimentoSelecionado.nome + ".";
                 atualizarPainelEFalar(msg, msg);
+            }
+        });
+
+        btnHistoricoBanco.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abrirPainelBancoDeDadosEHistorico();
             }
         });
 
@@ -1144,6 +1166,9 @@ public class MainActivity extends Activity {
                     cidadeDetectada
             );
             catalogoEstabelecimentos.add(0, encontrado);
+            if (bancoDados != null) {
+                bancoDados.salvarOuAtualizarEstabelecimento(encontrado);
+            }
         }
 
         regiaoFiltroAtual = encontrado.regiao;
@@ -1259,6 +1284,9 @@ public class MainActivity extends Activity {
                 cidade
         );
         catalogoEstabelecimentos.add(0, novo);
+        if (bancoDados != null) {
+            bancoDados.salvarOuAtualizarEstabelecimento(novo);
+        }
     }
 
     private Estabelecimento criarEstabelecimentoPorCategoria(
@@ -1766,6 +1794,66 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Inicializa o Banco de Dados Relacional SQLite, sincroniza o catálogo base de estabelecimentos e cardápios,
+     * carrega locais personalizados já salvos no celular e restaura a comanda ativa da última sessão.
+     */
+    private void inicializarCatalogoESessaoComBancoSQLite() {
+        carregarGrafoNacionalDeBares();
+        if (bancoDados == null) {
+            estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+            return;
+        }
+
+        List<Estabelecimento> salvosNoBanco = bancoDados.carregarEstabelecimentosDoBanco();
+        if (salvosNoBanco.isEmpty()) {
+            bancoDados.sincronizarCatalogoNoBanco(catalogoEstabelecimentos);
+        } else {
+            Map<String, Estabelecimento> mapaBase = new LinkedHashMap<String, Estabelecimento>();
+            for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
+                Estabelecimento e = catalogoEstabelecimentos.get(i);
+                mapaBase.put(e.id, e);
+            }
+            for (int i = 0; i < salvosNoBanco.size(); i++) {
+                Estabelecimento estBanco = salvosNoBanco.get(i);
+                completarCardapioDoEstabelecimento(estBanco);
+                if (mapaBase.containsKey(estBanco.id)) {
+                    Estabelecimento estBase = mapaBase.get(estBanco.id);
+                    for (int k = 0; k < estBanco.cardapio.size(); k++) {
+                        adicionarSeNaoExistir(estBase, estBanco.cardapio.get(k));
+                    }
+                } else {
+                    catalogoEstabelecimentos.add(0, estBanco);
+                }
+            }
+            bancoDados.sincronizarCatalogoNoBanco(catalogoEstabelecimentos);
+        }
+
+        estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+        ComandaBancoDadosHelper.EstadoSessaoSalva sessao = bancoDados.carregarConfiguracaoSessao();
+        if (sessao != null) {
+            tetoGastosCentavos = sessao.tetoGastosCentavos;
+            adicionarTaxaDezPorCento = sessao.adicionarTaxaDezPorCento;
+            if (btnAlterarTeto != null) {
+                btnAlterarTeto.setText("🎯 Teto: R$ " + (tetoGastosCentavos / 100));
+            }
+            if (sessao.idEstabelecimentoAtual != null) {
+                for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
+                    if (catalogoEstabelecimentos.get(i).id.equals(sessao.idEstabelecimentoAtual)) {
+                        estabelecimentoSelecionado = catalogoEstabelecimentos.get(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (estabelecimentoSelecionado != null) {
+            Map<String, Integer> comandaSalva = bancoDados.carregarComandaAtivaDoBanco(estabelecimentoSelecionado.id);
+            quantidadesComanda.clear();
+            quantidadesComanda.putAll(comandaSalva);
+        }
+    }
+
+    /**
      * Garante que qualquer estabelecimento tenha um Cardápio Completo (Entradas, Pratos Principais,
      * Lanches/Porções, Bebidas sem Álcool, Cervejas/Drinks e Sobremesas/Cafeteria), evitando cardápios curtos.
      */
@@ -1980,10 +2068,20 @@ public class MainActivity extends Activity {
         if (novoEst != null && novoEst.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(novoEst);
         }
-        if (estabelecimentoSelecionado != novoEst && limparComandaAnterior) {
+        if (estabelecimentoSelecionado != novoEst) {
             quantidadesComanda.clear();
+            if (bancoDados != null && novoEst != null) {
+                Map<String, Integer> comandaSalvaDoLocal = bancoDados.carregarComandaAtivaDoBanco(novoEst.id);
+                if (!comandaSalvaDoLocal.isEmpty()) {
+                    quantidadesComanda.putAll(comandaSalvaDoLocal);
+                }
+            }
         }
         estabelecimentoSelecionado = novoEst;
+        if (bancoDados != null && novoEst != null) {
+            bancoDados.salvarOuAtualizarEstabelecimento(novoEst);
+            bancoDados.salvarConfiguracaoSessao(novoEst.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+        }
         atualizarRotulosFiltros();
         renderizarListaEstabelecimentos();
         renderizarCardapioEstabelecimento();
@@ -2228,6 +2326,9 @@ public class MainActivity extends Activity {
 
         renderizarCardapioEstabelecimento();
         recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+        }
 
         String acao = delta > 0 ? ("Adicionado " + item.nome + " (" + nova + "x).") : ("Removido 1 " + item.nome + ".");
         String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
@@ -2310,6 +2411,7 @@ public class MainActivity extends Activity {
         sb.append("🎯 Teto de Gastos (").append(formatarMoedaCentavos(tetoGastosCentavos)).append("): ")
                 .append(dentroDoTeto ? "✅ Dentro do limite" : "⚠️ ULTRAPASSOU O TETO!").append("\n");
         sb.append("🔑 Senha Falada de Entrega: ").append(senhaEntregaAtual).append("\n");
+        sb.append("🗄️ Banco SQLite: Comanda salva automaticamente no celular\n");
         sb.append("📋 Pix Copia e Cola (BR Code):\n").append(ultimoPayloadPix);
 
         tvResumoComanda.setText(sb.toString());
@@ -2354,6 +2456,9 @@ public class MainActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         adicionarTaxaDezPorCento = (which == 0);
                         recalcularComanda();
+                        if (bancoDados != null && estabelecimentoSelecionado != null) {
+                            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+                        }
 
                         String confirmacao = adicionarTaxaDezPorCento
                                 ? ("Taxa de 10% (" + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + ") adicionada! Nova soma total da comanda: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".")
@@ -2421,8 +2526,176 @@ public class MainActivity extends Activity {
         }
         btnAlterarTeto.setText("🎯 Teto: R$ " + (tetoGastosCentavos / 100));
         recalcularComanda();
-        String msg = "Teto de gastos ajustado para " + formatarMoedaCentavos(tetoGastosCentavos) + ".";
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+        }
+        String msg = "Teto de gastos ajustado e salvo no banco de dados SQLite para " + formatarMoedaCentavos(tetoGastosCentavos) + ".";
         atualizarPainelEFalar(msg, msg);
+    }
+
+    // --- BANCO DE DADOS RELACIONAL SQLITE (CADASTRO DE ITENS E HISTÓRICO DE COMANDAS) ---
+
+    private void abrirDialogoCadastrarNovoItemNoBanco() {
+        if (estabelecimentoSelecionado == null) return;
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(36, 24, 36, 16);
+
+        final EditText etNomeItem = new EditText(this);
+        etNomeItem.setHint("Nome do prato ou bebida (Ex: Parmegiana de Camarão)");
+        etNomeItem.setSingleLine(true);
+        layout.addView(etNomeItem);
+
+        final EditText etCategoriaItem = new EditText(this);
+        etCategoriaItem.setHint("Seção (Ex: Prato Principal, Entrada, Bebida, Sobremesa)");
+        etCategoriaItem.setSingleLine(true);
+        layout.addView(etCategoriaItem);
+
+        final EditText etPrecoReais = new EditText(this);
+        etPrecoReais.setHint("Preço em R$ (Ex: 35,90 ou 12)");
+        etPrecoReais.setSingleLine(true);
+        layout.addView(etPrecoReais);
+
+        falar("Cadastro no Banco de Dados SQLite para " + estabelecimentoSelecionado.nome +
+                ". Digite o nome do prato ou bebida, a seção do cardápio e o preço em reais, e toque em Salvar no Banco.");
+
+        new AlertDialog.Builder(this)
+                .setTitle("➕ Cadastrar no SQLite: " + estabelecimentoSelecionado.nome)
+                .setView(layout)
+                .setPositiveButton("💾 Salvar no Banco e Somar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String nome = etNomeItem.getText() != null ? etNomeItem.getText().toString().trim() : "";
+                        String cat = etCategoriaItem.getText() != null ? etCategoriaItem.getText().toString().trim() : "";
+                        String precoTxt = etPrecoReais.getText() != null ? etPrecoReais.getText().toString().trim() : "";
+
+                        if (nome.isEmpty()) {
+                            nome = "Prato Especial da Casa";
+                        }
+                        if (cat.isEmpty()) {
+                            cat = "Prato Principal";
+                        }
+                        int centavos = converterTextoReaisParaCentavos(precoTxt);
+                        if (centavos <= 0) {
+                            centavos = 2500; // R$ 25,00 padrão caso não digite número
+                        }
+
+                        String idNovo = estabelecimentoSelecionado.id + "_sql_" + System.currentTimeMillis();
+                        String[] palavras = normalizarTexto(nome).split("\\s+");
+                        ItemCardapio novoItem = new ItemCardapio(idNovo, nome, cat, centavos, palavras);
+                        estabelecimentoSelecionado.cardapio.add(0, novoItem);
+
+                        if (bancoDados != null) {
+                            bancoDados.salvarOuAtualizarEstabelecimento(estabelecimentoSelecionado);
+                        }
+                        alterarQuantidadeItem(novoItem, 1);
+
+                        String msg = "✅ Item \"" + nome + "\" (" + formatarMoedaCentavos(centavos) +
+                                ") salvo permanentemente no Banco de Dados SQLite de " + estabelecimentoSelecionado.nome +
+                                " e já adicionado à sua comanda!";
+                        atualizarPainelEFalar(msg, msg);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private int converterTextoReaisParaCentavos(String texto) {
+        if (texto == null) return 0;
+        String limpo = texto.replace("R$", "").replace("r$", "").replace(" ", "").replace(",", ".").trim();
+        if (limpo.isEmpty()) return 0;
+        try {
+            double valor = Double.parseDouble(limpo);
+            return (int) Math.round(valor * 100.0);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private void salvarComandaAtualNoHistoricoSQLite() {
+        if (bancoDados == null || estabelecimentoSelecionado == null || ultimoSubtotalCentavos <= 0) return;
+
+        StringBuilder resumo = new StringBuilder();
+        for (int i = 0; i < estabelecimentoSelecionado.cardapio.size(); i++) {
+            ItemCardapio it = estabelecimentoSelecionado.cardapio.get(i);
+            Integer qtd = quantidadesComanda.get(it.id);
+            if (qtd != null && qtd > 0) {
+                if (resumo.length() > 0) resumo.append(", ");
+                resumo.append(qtd).append("x ").append(it.nome);
+            }
+        }
+        if (resumo.length() == 0) return;
+
+        bancoDados.registrarComandaNoHistorico(
+                estabelecimentoSelecionado.nome,
+                estabelecimentoSelecionado.cidade + "/" + estabelecimentoSelecionado.uf,
+                resumo.toString(),
+                ultimoSubtotalCentavos,
+                adicionarTaxaDezPorCento,
+                ultimaTaxaServicoCentavos,
+                ultimoTotalCentavos,
+                senhaEntregaAtual
+        );
+    }
+
+    private void abrirPainelBancoDeDadosEHistorico() {
+        if (bancoDados == null) return;
+
+        int totalLocais = bancoDados.contarEstabelecimentosNoBanco();
+        int totalItens = bancoDados.contarItensCardapioNoBanco();
+        final List<ComandaBancoDadosHelper.RegistroHistoricoComanda> historico = bancoDados.listarHistoricoComandas();
+
+        final List<String> opcoes = new ArrayList<String>();
+        opcoes.add("📊 Status SQLite: " + totalLocais + " locais | " + totalItens + " itens de cardápio | " + historico.size() + " comandas no histórico");
+        if (ultimoSubtotalCentavos > 0) {
+            opcoes.add("💾 Salvar Comanda Atual no Histórico SQLite Agora (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")");
+        }
+        opcoes.add("➕ Cadastrar Novo Prato / Bebida no Banco de Dados deste Local");
+
+        for (int i = 0; i < historico.size(); i++) {
+            ComandaBancoDadosHelper.RegistroHistoricoComanda reg = historico.get(i);
+            String tagDez = reg.incluiuDezPorCento ? " (c/ 10%)" : " (s/ 10%)";
+            opcoes.add("🧾 [" + reg.dataHora + "] " + reg.nomeEstabelecimento + " (" + reg.cidadeUf + ") — Total: " +
+                    formatarMoedaCentavos(reg.totalCentavos) + tagDez + " | Itens: " + reg.resumoItens);
+        }
+
+        if (!historico.isEmpty()) {
+            opcoes.add("🗑️ Limpar Histórico de Comandas Salvas");
+        }
+
+        String falaInicial = "Banco de Dados Relacional SQLite ativo com " + totalLocais + " estabelecimentos, " +
+                totalItens + " itens de cardápio e " + historico.size() + " comandas salvas no histórico. Toque em uma opção para ouvir ou gerenciar.";
+        falar(falaInicial);
+
+        new AlertDialog.Builder(this)
+                .setTitle("🗄️ Banco de Dados SQLite (comanda_falada.db)")
+                .setItems(opcoes.toArray(new String[0]), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String escolha = opcoes.get(which);
+                        if (escolha.startsWith("📊")) {
+                            String msg = "Banco de Dados SQLite (comanda_falada.db): " + totalLocais + " estabelecimentos cadastrados, " +
+                                    totalItens + " pratos e bebidas sincronizados e " + historico.size() + " comandas registradas no histórico.";
+                            atualizarPainelEFalar(msg, msg);
+                        } else if (escolha.startsWith("💾")) {
+                            salvarComandaAtualNoHistoricoSQLite();
+                            String msg = "✅ Comanda atual de " + estabelecimentoSelecionado.nome + " no valor de " +
+                                    formatarMoedaCentavos(ultimoTotalCentavos) + " gravada com sucesso na tabela historico_comandas do SQLite!";
+                            atualizarPainelEFalar(msg, msg);
+                        } else if (escolha.startsWith("➕")) {
+                            abrirDialogoCadastrarNovoItemNoBanco();
+                        } else if (escolha.startsWith("🗑️")) {
+                            bancoDados.limparHistoricoComandas();
+                            String msg = "Histórico de comandas limpo no banco de dados SQLite.";
+                            atualizarPainelEFalar(msg, msg);
+                        } else if (escolha.startsWith("🧾")) {
+                            atualizarPainelEFalar(escolha, escolha);
+                        }
+                    }
+                })
+                .setNegativeButton("Fechar", null)
+                .show();
     }
 
     // --- DETECÇÃO E ABERTURA DOS APPS DE BANCOS INSTALADOS NO CELULAR ---
@@ -2561,11 +2834,12 @@ public class MainActivity extends Activity {
     }
 
     private void executarAberturaBancoComPix(BancoAppInfo banco) {
+        salvarComandaAtualNoHistoricoSQLite();
         copiarPixParaAreaDeTransferencia();
         String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
-        String msg = "Código Pix Copia e Cola de " + valorFmt + " copiado! Abrindo o aplicativo " + banco.nomeBanco + " para finalizar o pagamento.";
+        String msg = "Comanda salva no histórico do Banco de Dados SQLite e Código Pix Copia e Cola de " + valorFmt + " copiado! Abrindo o aplicativo " + banco.nomeBanco + " para finalizar o pagamento.";
         atualizarPainelEFalar(msg, msg);
-        Toast.makeText(this, "Pix (" + valorFmt + ") copiado! Abrindo " + banco.nomeBanco + "...", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Pix (" + valorFmt + ") copiado e salvo no SQLite! Abrindo " + banco.nomeBanco + "...", Toast.LENGTH_LONG).show();
 
         try {
             banco.intentAbertura.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -2585,6 +2859,7 @@ public class MainActivity extends Activity {
     }
 
     private void prosseguirPagamentoNosBancos() {
+        salvarComandaAtualNoHistoricoSQLite();
         copiarPixParaAreaDeTransferencia();
         final String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
         final List<BancoAppInfo> bancosInstalados = detectarBancosInstaladosNoCelular();
@@ -2747,6 +3022,9 @@ public class MainActivity extends Activity {
 
         renderizarCardapioEstabelecimento();
         recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+        }
 
         String msgVisual = "🎙️ Pedido por Voz: \"" + fraseFalada + "\"\n" +
                 "✅ IA identificou e somou na comanda: " + nomesAdicionados.toString() + "\n" +
