@@ -432,8 +432,13 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 filtrarApenasSilenciosos = true;
+                atualizarRotulosFiltros();
                 renderizarListaEstabelecimentos();
-                String msg = "Filtro acústico ativado: exibindo apenas bares e restaurantes com conforto acústico (até 65 decibéis).";
+                List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                if (!visiveis.isEmpty()) {
+                    selecionarEstabelecimento(visiveis.get(0), false, false);
+                }
+                String msg = "Filtro acústico ativado: " + visiveis.size() + " locais com conforto acústico (até 65 dB).";
                 atualizarPainelEFalar(msg, msg);
             }
         });
@@ -450,7 +455,11 @@ public class MainActivity extends Activity {
                 etBuscaQualquerBar.setText("");
                 atualizarRotulosFiltros();
                 renderizarListaEstabelecimentos();
-                String msg = "Todos os filtros limpos. Exibindo apenas estabelecimentos onde o usuário pode comer e consumir com cardápio disponível.";
+                List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                if (!visiveis.isEmpty()) {
+                    selecionarEstabelecimento(visiveis.get(0), false, false);
+                }
+                String msg = "Todos os filtros limpos. " + visiveis.size() + " locais disponíveis.";
                 atualizarPainelEFalar(msg, msg);
             }
         });
@@ -596,7 +605,6 @@ public class MainActivity extends Activity {
     // --- SELETORES DE FILTRO POR REGIÃO, ESTADO (UF) E CIDADE ---
 
     private void abrirDialogoFiltroRegiao() {
-        falar("Escolha a região do Brasil para filtrar os bares e restaurantes.");
         new AlertDialog.Builder(this)
                 .setTitle("🗺️ Filtrar por Região do Brasil:")
                 .setItems(REGIOES_BRASIL, new DialogInterface.OnClickListener() {
@@ -607,14 +615,16 @@ public class MainActivity extends Activity {
                         cidadeFiltroAtual = "TODAS";
                         termoBuscaAtual = "";
                         atualizarRotulosFiltros();
-                        renderizarListaEstabelecimentos();
 
                         List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
                         if (!visiveis.isEmpty()) {
-                            selecionarEstabelecimento(visiveis.get(0), true);
+                            selecionarEstabelecimento(visiveis.get(0), false, false);
+                        } else {
+                            renderizarListaEstabelecimentos();
                         }
-                        String msg = "Região selecionada: " + regiaoFiltroAtual + ". Encontrados " + visiveis.size() +
-                                " bares com cardápio. Você também pode filtrar por Estado e por Cidade.";
+
+                        String msg = "Região selecionada: " + regiaoFiltroAtual + ". " + visiveis.size() +
+                                " locais encontrados.";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -638,7 +648,6 @@ public class MainActivity extends Activity {
             opcoes[i + 1] = st.nome + " (" + st.uf + ") — Região " + st.regiao;
         }
 
-        falar("Escolha o Estado para filtrar os bares e as cidades.");
         new AlertDialog.Builder(this)
                 .setTitle("🏳️ Filtrar por Estado (UF):")
                 .setItems(opcoes, new DialogInterface.OnClickListener() {
@@ -648,8 +657,15 @@ public class MainActivity extends Activity {
                             ufFiltroAtual = "TODOS";
                             cidadeFiltroAtual = "TODAS";
                             atualizarRotulosFiltros();
-                            renderizarListaEstabelecimentos();
-                            String msg = "Exibindo bares de todos os estados em " + regiaoFiltroAtual + ".";
+
+                            List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                            if (!visiveis.isEmpty()) {
+                                selecionarEstabelecimento(visiveis.get(0), false, false);
+                            } else {
+                                renderizarListaEstabelecimentos();
+                            }
+
+                            String msg = "Exibindo locais de todos os estados em " + regiaoFiltroAtual + ". " + visiveis.size() + " encontrados.";
                             atualizarPainelEFalar(msg, msg);
                             return;
                         }
@@ -663,14 +679,15 @@ public class MainActivity extends Activity {
                         garantirBarComCardapioNaCidade(escolhido, escolhido.capital);
 
                         atualizarRotulosFiltros();
-                        renderizarListaEstabelecimentos();
 
                         List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
                         if (!visiveis.isEmpty()) {
-                            selecionarEstabelecimento(visiveis.get(0), true);
+                            selecionarEstabelecimento(visiveis.get(0), false, false);
+                        } else {
+                            renderizarListaEstabelecimentos();
                         }
-                        String msg = "Estado selecionado: " + escolhido.nome + " (" + escolhido.uf + "). Agora você pode tocar no filtro de Cidade para escolher entre " +
-                                escolhido.cidadesPrincipais.length + " cidades de " + escolhido.nome + "!";
+
+                        String msg = "Estado selecionado: " + escolhido.nome + " (" + escolhido.uf + "). " + visiveis.size() + " locais encontrados.";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -717,7 +734,6 @@ public class MainActivity extends Activity {
                 ? "🏙️ Todas as 185 Cidades de Pernambuco (" + cidadesLista.size() + "):"
                 : "🏙️ Filtrar por Cidade (" + cidadesLista.size() + " opções):";
 
-        falar("Escolha a cidade na lista de " + cidadesLista.size() + " municípios ou toque na primeira opção para pesquisar a cidade pelo nome.");
         new AlertDialog.Builder(this)
                 .setTitle(tituloDialogo)
                 .setItems(opcoes, new DialogInterface.OnClickListener() {
@@ -730,8 +746,15 @@ public class MainActivity extends Activity {
                         if (which == 1) {
                             cidadeFiltroAtual = "TODAS";
                             atualizarRotulosFiltros();
-                            renderizarListaEstabelecimentos();
-                            String msg = "Filtro de cidade limpo. Mostrando todas as cidades.";
+
+                            List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                            if (!visiveis.isEmpty()) {
+                                selecionarEstabelecimento(visiveis.get(0), false, false);
+                            } else {
+                                renderizarListaEstabelecimentos();
+                            }
+
+                            String msg = "Filtro de cidade limpo. Mostrando todas as cidades. " + visiveis.size() + " locais encontrados.";
                             atualizarPainelEFalar(msg, msg);
                             return;
                         }
@@ -749,7 +772,6 @@ public class MainActivity extends Activity {
         final EditText input = new EditText(this);
         input.setHint("Ex: Caruaru, Petrolina, Gravatá, Pesqueira...");
         input.setSingleLine(true);
-        falar("Digite o nome de qualquer cidade de Pernambuco ou do Brasil e toque em Filtrar Cidade.");
 
         new AlertDialog.Builder(this)
                 .setTitle("🔎 Digite o Nome da Cidade:")
@@ -786,20 +808,19 @@ public class MainActivity extends Activity {
         garantirBarComCardapioNaCidade(stEscolhido, cidadeEscolhida);
 
         atualizarRotulosFiltros();
-        renderizarListaEstabelecimentos();
 
         List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
         if (!visiveis.isEmpty()) {
-            selecionarEstabelecimento(visiveis.get(0), true);
+            selecionarEstabelecimento(visiveis.get(0), false, false);
+        } else {
+            renderizarListaEstabelecimentos();
         }
 
-        String msg = "Cidade selecionada: " + cidadeEscolhida + ", " + stEscolhido.nome +
-                ". Cardápio de " + estabelecimentoSelecionado.nome + " aberto! Você também pode tocar no botão do Google Maps para abrir a rota.";
+        String msg = "Cidade selecionada: " + cidadeEscolhida + " (" + stEscolhido.uf + "). " + visiveis.size() + " locais encontrados.";
         atualizarPainelEFalar(msg, msg);
     }
 
     private void abrirDialogoFiltroCategoria() {
-        falar("Escolha a categoria de estabelecimento onde você deseja comer e consumir.");
         new AlertDialog.Builder(this)
                 .setTitle("🍽️ Filtrar por Categoria (Só Locais p/ Comer):")
                 .setItems(CATEGORIAS_ESTABELECIMENTO, new DialogInterface.OnClickListener() {
@@ -817,15 +838,15 @@ public class MainActivity extends Activity {
                         }
 
                         atualizarRotulosFiltros();
-                        renderizarListaEstabelecimentos();
 
                         List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
                         if (!visiveis.isEmpty()) {
-                            selecionarEstabelecimento(visiveis.get(0), true);
+                            selecionarEstabelecimento(visiveis.get(0), false, false);
+                        } else {
+                            renderizarListaEstabelecimentos();
                         }
 
-                        String msg = "Categoria selecionada: " + categoriaFiltroAtual + " em " + cidAlvo +
-                                ". Exibindo " + visiveis.size() + " locais com alimentação e cardápio aberto!";
+                        String msg = "Categoria selecionada: " + categoriaFiltroAtual + ". " + visiveis.size() + " locais encontrados.";
                         atualizarPainelEFalar(msg, msg);
                     }
                 })
@@ -1015,9 +1036,6 @@ public class MainActivity extends Activity {
         opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Bodega Mestre Vitalino (Caruaru - PE)");
         opcoes.add("🍽️ Simular Bar Compartilhado do Maps: Bar & Bistrô Esquina Paulista (São Paulo - SP)");
 
-        String explicacao = "Para abrir qualquer cardápio pelo Google Maps: dentro do Google Maps, escolha o bar, toque em Compartilhar e selecione Comanda Falada! Ou escolha uma opção abaixo:";
-        falar(explicacao);
-
         new AlertDialog.Builder(this)
                 .setTitle("📲 Cardápio pelo Google Maps")
                 .setItems(opcoes.toArray(new String[0]), new DialogInterface.OnClickListener() {
@@ -1055,7 +1073,6 @@ public class MainActivity extends Activity {
                 "Mirante & Tapioquinha do Alto da Sé (Olinda - PE)",
                 "Bodega & Bar Mestre Vitalino (Caruaru - PE)"
         };
-        falar("Digite o nome de qualquer restaurante, padaria, pizzaria, café, museu, ponto turístico ou cidade na caixa de texto, ou escolha uma sugestão abaixo.");
         new AlertDialog.Builder(this)
                 .setTitle("🔎 Localizar Qualquer Local p/ Comer ou Visitar:")
                 .setItems(exemplos, new DialogInterface.OnClickListener() {
@@ -1195,7 +1212,7 @@ public class MainActivity extends Activity {
         filtrarApenasSilenciosos = false;
         termoBuscaAtual = "";
         atualizarRotulosFiltros();
-        selecionarEstabelecimento(encontrado, true);
+        selecionarEstabelecimento(encontrado, true, false);
 
         String msgVisual = "✅ Local p/ Comer e Consumir Localizado:\n" +
                 "• " + encontrado.nome + " [" + encontrado.tipo + "] — " + encontrado.cidade + "/" + encontrado.uf + "\n" +
@@ -2081,12 +2098,17 @@ public class MainActivity extends Activity {
     }
 
     private void selecionarEstabelecimento(Estabelecimento novoEst, boolean limparComandaAnterior) {
-        if (novoEst != null && novoEst.cardapio.size() < 12) {
+        selecionarEstabelecimento(novoEst, limparComandaAnterior, true);
+    }
+
+    private void selecionarEstabelecimento(Estabelecimento novoEst, boolean limparComandaAnterior, boolean anunciar) {
+        if (novoEst == null) return;
+        if (novoEst.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(novoEst);
         }
         if (estabelecimentoSelecionado != novoEst) {
             quantidadesComanda.clear();
-            if (bancoDados != null && novoEst != null) {
+            if (bancoDados != null) {
                 Map<String, Integer> comandaSalvaDoLocal = bancoDados.carregarComandaAtivaDoBanco(novoEst.id);
                 if (!comandaSalvaDoLocal.isEmpty()) {
                     quantidadesComanda.putAll(comandaSalvaDoLocal);
@@ -2094,16 +2116,12 @@ public class MainActivity extends Activity {
             }
         }
         estabelecimentoSelecionado = novoEst;
-        if (bancoDados != null && novoEst != null) {
-            bancoDados.salvarOuAtualizarEstabelecimento(novoEst);
-            bancoDados.salvarConfiguracaoSessao(novoEst.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
-        }
         atualizarRotulosFiltros();
         renderizarListaEstabelecimentos();
         renderizarCardapioEstabelecimento();
         recalcularComanda();
 
-        if (btnAbrirCardapioPopUp != null && novoEst != null) {
+        if (btnAbrirCardapioPopUp != null) {
             btnAbrirCardapioPopUp.setText("📖 Abrir Cardápio Completo em Lista Rápida (" + novoEst.cardapio.size() + " Itens)");
             btnAbrirCardapioPopUp.setContentDescription(
                     "Abrir janela com o cardápio completo de " + novoEst.nome + " contendo todos os " +
@@ -2111,20 +2129,12 @@ public class MainActivity extends Activity {
             );
         }
 
-        StringBuilder resumoItens = new StringBuilder();
-        for (int i = 0; i < novoEst.cardapio.size(); i++) {
-            ItemCardapio it = novoEst.cardapio.get(i);
-            resumoItens.append(i + 1).append(": ").append(it.nome).append(" (").append(it.categoria).append(") por ").append(it.formatarPreco());
-            if (i < novoEst.cardapio.size() - 1) resumoItens.append("; ");
+        if (anunciar) {
+            String msgVisual = "Cardápio Aberto: " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + ").\n" +
+                    "Ruído: " + novoEst.decibeisMedio + " dB (" + novoEst.nivelRuido + "). " + novoEst.cardapio.size() + " opções no cardápio.";
+            String msgFalada = "Cardápio aberto de " + novoEst.nome + ", em " + novoEst.cidade + ", com " + novoEst.cardapio.size() + " itens disponíveis.";
+            atualizarPainelEFalar(msgVisual, msgFalada);
         }
-
-        String msgVisual = "Cardápio Completo Aberto (" + novoEst.cardapio.size() + " itens): " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + " — Região " + novoEst.regiao + ").\n" +
-                "Conforto Acústico: " + novoEst.decibeisMedio + " dB (" + novoEst.nivelRuido + ").\n" +
-                "Toque em '📖 Abrir Cardápio Completo em Lista Rápida' ou nos " + novoEst.cardapio.size() + " itens abaixo!";
-        String msgFalada = "Cardápio completo aberto de " + novoEst.nome + ", na cidade de " + novoEst.cidade + ", " + novoEst.estado +
-                ", com " + novoEst.cardapio.size() + " itens disponíveis: " + resumoItens.toString() +
-                ". Toque em qualquer item para adicionar e somar na comanda.";
-        atualizarPainelEFalar(msgVisual, msgFalada);
     }
 
     private void rolarParaCardapioEAbrirJanelaCompleta() {
@@ -2163,8 +2173,6 @@ public class MainActivity extends Activity {
         }
 
         String titulo = "📖 Cardápio Completo: " + estabelecimentoSelecionado.nome + " (" + itens.size() + " itens)";
-        falar("Janela de cardápio completo de " + estabelecimentoSelecionado.nome + " aberta com " + itens.size() +
-                " itens de entradas, pratos principais, lanches, bebidas e sobremesas. Toque em qualquer item para somar na comanda.");
 
         new AlertDialog.Builder(this)
                 .setTitle(titulo)
@@ -2197,9 +2205,6 @@ public class MainActivity extends Activity {
 
     private void mostrarConfirmacaoItemNoCardapioCompleto(final ItemCardapio recemAdicionado) {
         int qtdAtual = quantidadesComanda.containsKey(recemAdicionado.id) ? quantidadesComanda.get(recemAdicionado.id) : 0;
-        String msg = "Adicionado: " + recemAdicionado.nome + " (" + qtdAtual + "x na comanda). " +
-                "Soma parcial: " + formatarMoedaCentavos(ultimoTotalCentavos) + ". Deseja continuar escolhendo no cardápio completo ou ir para a soma e pagamento?";
-        falar(msg);
 
         final String[] acoes = new String[]{
                 "➕ Continuar escolhendo no Cardápio Completo (" + estabelecimentoSelecionado.cardapio.size() + " itens)",
@@ -2460,11 +2465,6 @@ public class MainActivity extends Activity {
                 "❌ Não adicionar os 10% (Manter apenas o subtotal: " + formatarMoedaCentavos(subtotal) + ")"
         };
 
-        String perguntaFalada = "Deseja adicionar os dez por cento de taxa de serviço na soma da comanda? " +
-                "Com os dez por cento (" + formatarMoedaCentavos(valorDez) + "), o total fica " + formatarMoedaCentavos(totalComDez) +
-                ". Sem os dez por cento, o total fica " + formatarMoedaCentavos(subtotal) + ". Escolha Sim ou Não.";
-        falar(perguntaFalada);
-
         new AlertDialog.Builder(this)
                 .setTitle("💁 Deseja adicionar os 10% na soma?")
                 .setItems(opcoes, new DialogInterface.OnClickListener() {
@@ -2573,9 +2573,6 @@ public class MainActivity extends Activity {
         etPrecoReais.setSingleLine(true);
         layout.addView(etPrecoReais);
 
-        falar("Cadastro no Banco de Dados SQLite para " + estabelecimentoSelecionado.nome +
-                ". Digite o nome do prato ou bebida, a seção do cardápio e o preço em reais, e toque em Salvar no Banco.");
-
         new AlertDialog.Builder(this)
                 .setTitle("➕ Cadastrar no SQLite: " + estabelecimentoSelecionado.nome)
                 .setView(layout)
@@ -2679,10 +2676,6 @@ public class MainActivity extends Activity {
         if (!historico.isEmpty()) {
             opcoes.add("🗑️ Limpar Histórico de Comandas Salvas");
         }
-
-        String falaInicial = "Banco de Dados Relacional SQLite ativo com " + totalLocais + " estabelecimentos, " +
-                totalItens + " itens de cardápio e " + historico.size() + " comandas salvas no histórico. Toque em uma opção para ouvir ou gerenciar.";
-        falar(falaInicial);
 
         new AlertDialog.Builder(this)
                 .setTitle("🗄️ Banco de Dados SQLite (comanda_falada.db)")
@@ -2865,8 +2858,6 @@ public class MainActivity extends Activity {
                 nomesOpcoes[i] = "🏦 Abrir " + bancosInstalados.get(i).nomeBanco + " (Pix " + valorFmt + " já copiado)";
             }
 
-            falar("Código Pix de " + valorFmt + " copiado para a área de transferência! Escolha qual banco instalado no seu celular deseja abrir.");
-
             new AlertDialog.Builder(this)
                     .setTitle("Pix de " + valorFmt + " Copiado! Escolha seu Banco:")
                     .setItems(nomesOpcoes, new DialogInterface.OnClickListener() {
@@ -2889,7 +2880,8 @@ public class MainActivity extends Activity {
         };
 
         String msg = "Código Pix Copia e Cola no valor de " + valorFmt + " copiado para a área de transferência! Selecione o aplicativo do seu banco para colar e pagar.";
-        atualizarPainelEFalar(msg, msg);
+        tvResultado.setText("🔊 " + msg);
+        tvResultado.setContentDescription(msg);
         Toast.makeText(this, "Pix de " + valorFmt + " copiado para a área de transferência!", Toast.LENGTH_LONG).show();
 
         new AlertDialog.Builder(this)
@@ -3049,7 +3041,7 @@ public class MainActivity extends Activity {
         cidadeFiltroAtual = "Recife";
         filtrarApenasSilenciosos = true;
         atualizarRotulosFiltros();
-        selecionarEstabelecimento(catalogoEstabelecimentos.get(0), false);
+        selecionarEstabelecimento(catalogoEstabelecimentos.get(0), false, false);
         String msg = "[Caso 1 · Busca de Bar Acústico]\n\n" +
                 "Voz Reconhecida: 'Quero um bar no Recife Antigo com música baixa e espaço tranquilo para conversar.'\n\n" +
                 "Recuperação em Grafo (GraphRAG):\n" +
@@ -3195,10 +3187,16 @@ public class MainActivity extends Activity {
         return sb.toString();
     }
 
-    private void atualizarPainelEFalar(String textoVisual, String textoFalado) {
+    private void atualizarPainelEFalar(final String textoVisual, final String textoFalado) {
+        if (tvResultado == null) return;
         tvResultado.setText("🔊 " + textoVisual);
         tvResultado.setContentDescription(textoFalado);
-        falar(textoFalado);
+        tvResultado.post(new Runnable() {
+            @Override
+            public void run() {
+                falar(textoFalado);
+            }
+        });
     }
 
     /**
