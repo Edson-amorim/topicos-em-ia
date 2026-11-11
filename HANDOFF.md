@@ -25,7 +25,7 @@
 - **Funcionalidades Implementadas no APK v6.0:**
   1. **Leitor de Tela Nativo do Sistema Android (TalkBack):**
      - Removido qualquer sintetizador `TextToSpeech` interno separado para nunca atropelar o leitor do sistema.
-     - Comunicação 100% direta e imediata pelo leitor de tela nativo do sistema (`TalkBack` via `AccessibilityEvent.TYPE_VIEW_FOCUSED`, `View.announceForAccessibility(...)` e `contentDescription`, sem atrasos de fila ou `accessibilityLiveRegion="polite"`).
+     - Comunicação 100% direta e imediata pelo leitor de tela nativo do sistema (`TalkBack` via `View.announceForAccessibility(...)` post-frame e `contentDescription`, sem duplicações, sem chamadas concorrentes antes de diálogos e sem recitar itens desnecessários ao filtrar).
   2. **Filtros Completos do Brasil (Região, Estado/UF, Cidade com os 185 Municípios de PE e Categorias Exclusivas para Comer e Consumir):**
      - **Filtro por Região:** Todas as 5 regiões do Brasil (`Nordeste`, `Sudeste`, `Sul`, `Centro-Oeste`, `Norte`).
      - **Filtro por Estado (UF):** Todos os 27 estados brasileiros (`AC` a `TO`).
