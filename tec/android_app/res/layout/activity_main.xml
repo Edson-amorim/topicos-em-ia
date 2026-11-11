@@ -56,7 +56,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Painel de Voz / Status em Tempo Real -->
+        <!-- Painel de Voz / Status em Tempo Real (Leitura Nativa Imediata) -->
         <TextView
             android:id="@+id/tvResultado"
             android:layout_width="match_parent"
@@ -67,7 +67,9 @@
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#FEF08A"
-            android:accessibilityLiveRegion="polite"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:contentDescription="Comanda Falada. Filtre por Região, Estado e Cidade, abra no Google Maps ou escolha um estabelecimento abaixo."
             android:layout_marginBottom="14dp" />
 
         <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO, CIDADE E GOOGLE MAPS -->

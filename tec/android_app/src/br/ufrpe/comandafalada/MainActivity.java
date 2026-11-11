@@ -565,8 +565,25 @@ public class MainActivity extends Activity {
         recalcularComanda();
         renderizarBancosInstalados();
 
+        String saudacaoInicial = "Comanda Falada. Escolha um estabelecimento para ver o cardápio ou use os filtros por região, estado e cidade.";
+        tvResultado.setText("🔊 " + saudacaoInicial);
+        tvResultado.setContentDescription(saudacaoInicial);
+
         // Verifica se o aplicativo foi aberto a partir do Google Maps (Compartilhar ou Link de Mapa)
         tratarIntentRecebidaDoGoogleMaps(getIntent());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (tvResultado != null) {
+            tvResultado.post(new Runnable() {
+                @Override
+                public void run() {
+                    tvResultado.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);
+                }
+            });
+        }
     }
 
     @Override
@@ -1825,7 +1842,6 @@ public class MainActivity extends Activity {
                     catalogoEstabelecimentos.add(0, estBanco);
                 }
             }
-            bancoDados.sincronizarCatalogoNoBanco(catalogoEstabelecimentos);
         }
 
         estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
@@ -2729,38 +2745,12 @@ public class MainActivity extends Activity {
         for (int i = 0; i < bancosConhecidos.length; i++) {
             String nome = bancosConhecidos[i][0];
             String pkg = bancosConhecidos[i][1];
-            Intent launch = pm.getLaunchIntentForPackage(pkg);
-            if (launch != null) {
-                encontrados.add(new BancoAppInfo(nome, pkg, launch));
-                pacotesAdicionados.add(pkg);
-            }
-        }
-
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> appsLancaveis = pm.queryIntentActivities(mainIntent, 0);
-        if (appsLancaveis != null) {
-            for (int i = 0; i < appsLancaveis.size(); i++) {
-                ResolveInfo ri = appsLancaveis.get(i);
-                if (ri.activityInfo == null) continue;
-                String pkg = ri.activityInfo.packageName;
-                if (pacotesAdicionados.contains(pkg) || pkg.equals(getPackageName())) continue;
-
-                String label = ri.loadLabel(pm) != null ? ri.loadLabel(pm).toString() : pkg;
-                String textoBusca = normalizarTexto(label + " " + pkg);
-                if (textoBusca.contains("banco") || textoBusca.contains("bank") ||
-                        textoBusca.contains("nubank") || textoBusca.contains("itau") ||
-                        textoBusca.contains("bradesco") || textoBusca.contains("santander") ||
-                        textoBusca.contains("picpay") || textoBusca.contains("mercadopago") ||
-                        textoBusca.contains("caixa") || textoBusca.contains("carteira") ||
-                        textoBusca.contains("pagbank") || textoBusca.contains("sicoob") ||
-                        textoBusca.contains("sicredi")) {
-                    Intent launch = pm.getLaunchIntentForPackage(pkg);
-                    if (launch != null) {
-                        encontrados.add(new BancoAppInfo(label, pkg, launch));
-                        pacotesAdicionados.add(pkg);
-                    }
+            try {
+                Intent launch = pm.getLaunchIntentForPackage(pkg);
+                if (launch != null) {
+                    encontrados.add(new BancoAppInfo(nome, pkg, launch));
                 }
+            } catch (Exception ignored) {
             }
         }
 
@@ -3213,15 +3203,14 @@ public class MainActivity extends Activity {
 
     /**
      * Envia o anúncio diretamente para o Leitor de Tela nativo do Sistema Android (TalkBack / Assistente de Voz),
-     * sem criar um sintetizador TextToSpeech separado que atropele o leitor do sistema.
+     * sem atrasos, sem filas duplicadas e sem qualquer sintetizador que atropele o leitor do sistema.
      */
     private void falar(String texto) {
-        if (texto == null || texto.isEmpty()) return;
+        if (texto == null || texto.trim().isEmpty()) return;
         if (tvResultado != null) {
             tvResultado.setContentDescription(texto);
             tvResultado.announceForAccessibility(texto);
-        }
-        if (accessibilityManager != null && accessibilityManager.isEnabled()) {
+        } else if (accessibilityManager != null && accessibilityManager.isEnabled()) {
             try {
                 AccessibilityEvent event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_ANNOUNCEMENT);
                 event.setClassName(getClass().getName());
