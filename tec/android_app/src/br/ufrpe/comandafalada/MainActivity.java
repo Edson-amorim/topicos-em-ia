@@ -135,6 +135,20 @@ public class MainActivity extends Activity {
         }
     }
 
+    public enum ModoFiltroAcustico {
+        TODOS("🔊 Som: Todos os Ambientes", "Todos os ambientes sonoros sem restrição de som"),
+        COM_CONFORTO("🔉 Som: Com Conforto Acústico (≤ 65 dB)", "Apenas locais com conforto acústico e pouco ruído, até sessenta e cinco decibéis"),
+        COM_SOM_ANIMADO("🎉 Som: Animados / Com Som (> 65 dB)", "Apenas locais animados e com som, música ao vivo e agito, acima de sessenta e cinco decibéis");
+
+        public final String rotuloBotao;
+        public final String descricaoTalkBack;
+
+        ModoFiltroAcustico(String rotuloBotao, String descricaoTalkBack) {
+            this.rotuloBotao = rotuloBotao;
+            this.descricaoTalkBack = descricaoTalkBack;
+        }
+    }
+
     public static class BancoAppInfo {
         public final String nomeBanco;
         public final String pacote;
@@ -311,7 +325,7 @@ public class MainActivity extends Activity {
     private String cidadeFiltroAtual = "TODAS";
     private String categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
     private String termoBuscaAtual = "";
-    private boolean filtrarApenasSilenciosos = false;
+    private ModoFiltroAcustico filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
 
     private final Map<String, Integer> quantidadesComanda = new LinkedHashMap<String, Integer>();
     private int tetoGastosCentavos = 10000; // R$ 100,00 padrão
@@ -431,15 +445,7 @@ public class MainActivity extends Activity {
         btnFiltroAcustico.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filtrarApenasSilenciosos = true;
-                atualizarRotulosFiltros();
-                renderizarListaEstabelecimentos();
-                List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
-                if (!visiveis.isEmpty()) {
-                    selecionarEstabelecimento(visiveis.get(0), false, false);
-                }
-                String msg = "Filtro acústico ativado: " + visiveis.size() + " locais com conforto acústico (até 65 dB).";
-                atualizarPainelEFalar(msg, msg);
+                abrirDialogoFiltroAcustico();
             }
         });
 
@@ -451,7 +457,7 @@ public class MainActivity extends Activity {
                 cidadeFiltroAtual = "TODAS";
                 categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
                 termoBuscaAtual = "";
-                filtrarApenasSilenciosos = false;
+                filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
                 etBuscaQualquerBar.setText("");
                 atualizarRotulosFiltros();
                 renderizarListaEstabelecimentos();
@@ -854,6 +860,42 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    private void abrirDialogoFiltroAcustico() {
+        final String[] opcoesSom = new String[]{
+                "🔊 Todos os Ambientes (Qualquer nível de som)",
+                "🔉 Com Conforto Acústico / Silencioso (Até 65 dB - conversa e TalkBack)",
+                "🎉 Ambientes Animados / Com Som (Acima de 65 dB - música ao vivo e agito)"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("🔊 Perfil de Som / Conforto Acústico:")
+                .setItems(opcoesSom, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
+                        } else if (which == 1) {
+                            filtroAcusticoAtual = ModoFiltroAcustico.COM_CONFORTO;
+                        } else {
+                            filtroAcusticoAtual = ModoFiltroAcustico.COM_SOM_ANIMADO;
+                        }
+
+                        atualizarRotulosFiltros();
+                        renderizarListaEstabelecimentos();
+                        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+                        if (!visiveis.isEmpty()) {
+                            selecionarEstabelecimento(visiveis.get(0), false, false);
+                        }
+
+                        String msg = "Filtro de som atualizado: " + filtroAcusticoAtual.rotuloBotao + ". " +
+                                visiveis.size() + " estabelecimentos encontrados.";
+                        atualizarPainelEFalar(msg, msg);
+                    }
+                })
+                .setNegativeButton("Fechar", null)
+                .show();
+    }
+
     // --- INTEGRAÇÃO COM O GOOGLE MAPS (ROTA GUIADA E BUSCA DE BARES NO MAPA) ---
 
     private void abrirBarNoGoogleMaps(Estabelecimento est, boolean iniciarNavegacao) {
@@ -1109,6 +1151,14 @@ public class MainActivity extends Activity {
         btnFiltroCategoria.setText("🍽️ Categoria: " + categoriaFiltroAtual + " (Toque p/ mudar)");
         btnFiltroCategoria.setContentDescription("Filtrar por Categoria de estabelecimento para comer ou visitar. Categoria atual: " + categoriaFiltroAtual + ". Toque duas vezes para escolher.");
 
+        if (btnFiltroAcustico != null) {
+            btnFiltroAcustico.setText(filtroAcusticoAtual.rotuloBotao);
+            btnFiltroAcustico.setContentDescription(
+                    "Filtro de Som e Conforto Acústico. Situação atual: " +
+                    filtroAcusticoAtual.descricaoTalkBack + ". Toque duas vezes para escolher entre todos os ambientes, com conforto acústico ou animados com som."
+            );
+        }
+
         if (estabelecimentoSelecionado != null) {
             btnGoogleMapsRota.setText("📍 Rota no Maps: " + estabelecimentoSelecionado.nome);
             btnGoogleMapsRota.setContentDescription("Abrir localização e rota no Google Maps para " + estabelecimentoSelecionado.nome + " em " + estabelecimentoSelecionado.cidade);
@@ -1209,7 +1259,7 @@ public class MainActivity extends Activity {
         ufFiltroAtual = encontrado.uf;
         cidadeFiltroAtual = encontrado.cidade;
         categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
-        filtrarApenasSilenciosos = false;
+        filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
         termoBuscaAtual = "";
         atualizarRotulosFiltros();
         selecionarEstabelecimento(encontrado, true, false);
@@ -1821,6 +1871,74 @@ public class MainActivity extends Activity {
         bododromoPetrolina.cardapio.add(new ItemCardapio("pet_uva", "Suco de Uva Integral do Vale do São Francisco", "Bebida", 1200, "suco", "uva"));
         catalogoEstabelecimentos.add(bododromoPetrolina);
 
+        // 21. Olinda (PE) - Quatro Cantos (Animado / Com Som e Frevo)
+        Estabelecimento sambaOlinda = new Estabelecimento(
+                "bar_samba_olinda",
+                "Casa do Samba & Forró dos Quatro Cantos",
+                "Bares, Botecos e Petiscarias",
+                "Nordeste", "Pernambuco", "PE", "Olinda", "Quatro Cantos",
+                "pix@sambadosquatrocantos.com.br",
+                -8.0162, -34.8510, 78, "Alto (Animado / Música ao Vivo 🎉)",
+                "Roda de samba, frevo e forró ao vivo no casarão histórico",
+                "Salão térreo amplo, mesas no pátio e atendimento prioritário na mesa"
+        );
+        sambaOlinda.cardapio.add(new ItemCardapio("sol_coxinha", "Porção de Coxinhas Crocantes (6 unid)", "Petisco", 2600, "coxinha", "porcao"));
+        sambaOlinda.cardapio.add(new ItemCardapio("sol_chope", "Chope Artesanal Geladíssimo", "Bebida", 1200, "chope", "chopp"));
+        sambaOlinda.cardapio.add(new ItemCardapio("sol_caldinho", "Caldinho de Feijão com Torresmo", "Entrada", 1300, "caldinho", "feijao"));
+        sambaOlinda.cardapio.add(new ItemCardapio("sol_caipirinha", "Caipirinha Tradicional de Frutas da Estação", "Bebida", 1800, "caipirinha", "drink"));
+        catalogoEstabelecimentos.add(sambaOlinda);
+
+        // 22. Caruaru (PE) - Alto do Moura (Animado / Forró ao Vivo)
+        Estabelecimento forroCaruaru = new Estabelecimento(
+                "bar_forro_caruaru",
+                "Toca do Forró Tradicional do Alto do Moura",
+                "Bares, Botecos e Petiscarias",
+                "Nordeste", "Pernambuco", "PE", "Caruaru", "Alto do Moura",
+                "pix@tocadofforrocaruaru.com.br",
+                -8.2865, -36.0150, 80, "Alto (Animado / Forró Pé de Serra ao Vivo 🎉)",
+                "Trio de forró pé de serra nordestino ao vivo com sanfona, zabumba e triângulo",
+                "Acesso amplo nivelado, salão arejado e garçom atencioso"
+        );
+        forroCaruaru.cardapio.add(new ItemCardapio("fcar_carne", "Carne de Sol Acebolada com Macaxeira Frita", "Petisco", 3800, "carne de sol", "macaxeira"));
+        forroCaruaru.cardapio.add(new ItemCardapio("fcar_cerveja", "Cerveja Puro Malte Garrafa 600ml Gelada", "Bebida", 1400, "cerveja", "garrafa"));
+        forroCaruaru.cardapio.add(new ItemCardapio("fcar_baiao", "Baião de Dois do Agreste Completo", "Prato Principal", 4400, "baiao", "agreste"));
+        forroCaruaru.cardapio.add(new ItemCardapio("fcar_suco", "Suco de Cajuína Regional Gelada", "Bebida", 950, "cajuina", "suco"));
+        catalogoEstabelecimentos.add(forroCaruaru);
+
+        // 23. Recife (PE) - Rua da Moeda (Animado / Samba da Moeda)
+        Estabelecimento sambaMoeda = new Estabelecimento(
+                "bar_samba_moeda_recife",
+                "Boteco Boêmio do Samba da Moeda",
+                "Bares, Botecos e Petiscarias",
+                "Nordeste", "Pernambuco", "PE", "Recife", "Recife Antigo",
+                "pix@sambadamoeda.com.br",
+                -8.0642, -34.8725, 82, "Alto (Animado / Roda de Samba ao Vivo 🎉)",
+                "Roda de samba tradicional ao vivo com pandeiro e cavaquinho na calçada",
+                "Mesas no calçadão histórico com rampa de acesso do Recife Antigo"
+        );
+        sambaMoeda.cardapio.add(new ItemCardapio("smo_pastel", "Pastéis Sortidos de Carne Seca e Queijo (6 unid)", "Petisco", 2800, "pastel", "carne", "queijo"));
+        sambaMoeda.cardapio.add(new ItemCardapio("smo_chope", "Chope Caneca Zero Grau", "Bebida", 1100, "chope", "caneca"));
+        sambaMoeda.cardapio.add(new ItemCardapio("smo_arrumadinho", "Arrumadinho de Charque Individual", "Prato Principal", 3600, "arrumadinho", "charque"));
+        sambaMoeda.cardapio.add(new ItemCardapio("smo_suco", "Suco Natural de Maracujá", "Bebida", 1000, "suco", "maracuja"));
+        catalogoEstabelecimentos.add(sambaMoeda);
+
+        // 24. Rio de Janeiro (RJ) - Lapa (Animado / Roda de Samba Carioca)
+        Estabelecimento sambaLapa = new Estabelecimento(
+                "bar_samba_lapa_rj",
+                "Botequim Roda de Samba da Lapa Carioca",
+                "Bares, Botecos e Petiscarias",
+                "Sudeste", "Rio de Janeiro", "RJ", "Rio de Janeiro", "Lapa",
+                "pix@sambadalapa.com.br",
+                -22.9128, -43.1810, 81, "Alto (Animado / Choro e Samba ao Vivo 🎉)",
+                "Chorinho e samba de raiz ao vivo sob os Arcos da Lapa",
+                "Acesso térreo com mesas largas e atendimento na mesa"
+        );
+        sambaLapa.cardapio.add(new ItemCardapio("lapa_feijoada", "Bolinho de Feijoada Carioca Crocante", "Petisco", 3200, "bolinho", "feijoada"));
+        sambaLapa.cardapio.add(new ItemCardapio("lapa_chope", "Chope Garotinho Carioca Geladíssimo", "Bebida", 950, "chope", "garotinho"));
+        sambaLapa.cardapio.add(new ItemCardapio("lapa_file", "Filé de Costela com Batatas Rústicas", "Prato Principal", 5400, "file", "costela", "batata"));
+        sambaLapa.cardapio.add(new ItemCardapio("lapa_caipirinha", "Caipirinha Tradicional de Limão", "Bebida", 1700, "caipirinha", "limao"));
+        catalogoEstabelecimentos.add(sambaLapa);
+
         // Garante que TODOS os estabelecimentos tenham cardápio completo (14 a 18 itens de todas as seções)
         for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
             completarCardapioDoEstabelecimento(catalogoEstabelecimentos.get(i));
@@ -1993,7 +2111,10 @@ public class MainActivity extends Activity {
             if (est.cardapio == null || est.cardapio.isEmpty()) {
                 continue;
             }
-            if (filtrarApenasSilenciosos && est.decibeisMedio > 65) {
+            if (filtroAcusticoAtual == ModoFiltroAcustico.COM_CONFORTO && est.decibeisMedio > 65) {
+                continue;
+            }
+            if (filtroAcusticoAtual == ModoFiltroAcustico.COM_SOM_ANIMADO && est.decibeisMedio <= 65) {
                 continue;
             }
             if (!termoBuscaAtual.isEmpty()) {
@@ -2934,7 +3055,7 @@ public class MainActivity extends Activity {
                         }
                     })
                     .show();
-        } else {
+        } else if (requestCode == REQ_VOZ_PEDIDO_CARDAPIO) {
             final String[] frasesPedido = new String[]{
                     "Quero um caldinho de feijão e um suco de laranja natural",
                     "Me vê dois chopes gelados e uma macaxeira frita com queijo coalho",
@@ -2946,7 +3067,35 @@ public class MainActivity extends Activity {
                     .setItems(frasesPedido, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            processarPedidoVozNoCardapio(frasesPedido[which]);
+                            executarComandoVozUniversal(frasesPedido[which]);
+                        }
+                    })
+                    .show();
+        } else {
+            final String[] frasesUniversal = new String[]{
+                    "Quero duas coxinhas e uma cerveja gelada",
+                    "Tirar uma cerveja da minha comanda",
+                    "Quanto tá dando a conta com os 10%?",
+                    "Adicionar os 10% de taxa de serviço",
+                    "Tirar a taxa de 10% do garçom",
+                    "Filtrar bares com conforto acústico (silenciosos)",
+                    "Filtrar bares animados com som e música ao vivo",
+                    "Mostrar bares com todos os níveis de som",
+                    "Gerar Pix e abrir o aplicativo do Nubank",
+                    "Abrir rota no Google Maps até este restaurante",
+                    "Abrir cardápio completo deste bar",
+                    "Salvar esta comanda no histórico do SQLite",
+                    "Ouvir histórico de comandas salvas no banco",
+                    "Localizar Bar do Cuscuz em Campina Grande",
+                    "Limpar todos os itens da comanda",
+                    "Ajuda com comandos de voz"
+            };
+            new AlertDialog.Builder(this)
+                    .setTitle("🎙️ Assistente de Voz: Escolha ou Simule um Comando:")
+                    .setItems(frasesUniversal, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            executarComandoVozUniversal(frasesUniversal[which]);
                         }
                     })
                     .show();
@@ -2960,46 +3109,139 @@ public class MainActivity extends Activity {
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches != null && !matches.isEmpty()) {
                 String textoFalado = matches.get(0);
-                if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
-                    etBuscaQualquerBar.setText(textoFalado);
-                    localizarQualquerBarComCardapio(textoFalado);
-                } else if (requestCode == REQ_VOZ_PEDIDO_CARDAPIO) {
-                    processarPedidoVozNoCardapio(textoFalado);
-                }
+                executarComandoVozUniversal(textoFalado);
             }
         }
     }
 
-    private void processarPedidoVozNoCardapio(String fraseFalada) {
-        String norm = normalizarTexto(fraseFalada);
-        Estabelecimento estAlvo = estabelecimentoSelecionado;
+    /**
+     * Motor Semântico e Intent Parser de Voz On-Device (Modelo 3).
+     * Processa a fala em tempo real (0 ms de latência) e dispara a ação no aplicativo.
+     */
+    private void executarComandoVozUniversal(String fraseFalada) {
+        ProcessadorComandosVoz.ResultadoComando resultado = ProcessadorComandosVoz.processar(
+                fraseFalada,
+                estabelecimentoSelecionado,
+                ultimoTotalCentavos,
+                adicionarTaxaDezPorCento
+        );
 
-        List<ItemCardapio> itensIdentificados = encontrarItensNaFrase(norm, estAlvo);
-        if (itensIdentificados.isEmpty() && estAlvo != null && !estAlvo.cardapio.isEmpty()) {
-            for (int i = 0; i < estAlvo.cardapio.size(); i++) {
-                ItemCardapio item = estAlvo.cardapio.get(i);
-                if (norm.contains(normalizarTexto(item.categoria))) {
-                    itensIdentificados.add(item);
+        switch (resultado.acao) {
+            case ADICIONAR_ITENS:
+                executarAdicaoItensPorVoz(resultado);
+                break;
+
+            case REMOVER_ITENS:
+                executarRemocaoItensPorVoz(resultado);
+                break;
+
+            case LIMPAR_COMANDA:
+                executarLimpezaComandaPorVoz();
+                break;
+
+            case CONSULTAR_TOTAL:
+                executarConsultaTotalPorVoz();
+                break;
+
+            case TAXA_DEZ_POR_CENTO_ATIVAR:
+                executarAlteracaoTaxaPorVoz(true);
+                break;
+
+            case TAXA_DEZ_POR_CENTO_DESATIVAR:
+                executarAlteracaoTaxaPorVoz(false);
+                break;
+
+            case TAXA_DEZ_POR_CENTO_PERGUNTAR:
+                perguntarTaxaDezPorCento(true, null);
+                break;
+
+            case FILTRAR_SOM_CONFORTO:
+                aplicarFiltroSomPorVoz(ModoFiltroAcustico.COM_CONFORTO, resultado);
+                break;
+
+            case FILTRAR_SOM_ANIMADO:
+                aplicarFiltroSomPorVoz(ModoFiltroAcustico.COM_SOM_ANIMADO, resultado);
+                break;
+
+            case FILTRAR_SOM_TODOS:
+                aplicarFiltroSomPorVoz(ModoFiltroAcustico.TODOS, resultado);
+                break;
+
+            case PAGAR_PIX:
+                acaoPagarComandaNosBancos();
+                break;
+
+            case ABRIR_BANCO:
+                executarAberturaBancoPorVoz(resultado.parametroTexto);
+                break;
+
+            case ABRIR_CARDAPIO_COMPLETO:
+                abrirDialogoCardapioCompletoInterativo();
+                break;
+
+            case ABRIR_ROTA_MAPS:
+                if (estabelecimentoSelecionado != null) {
+                    abrirBarNoGoogleMaps(estabelecimentoSelecionado, true);
+                } else {
+                    atualizarPainelEFalar("Nenhum estabelecimento selecionado para traçar rota.", "Nenhum bar selecionado.");
                 }
-            }
+                break;
+
+            case VER_BARES_MAPS:
+                explorarBaresDaCidadeNoGoogleMaps();
+                break;
+
+            case SALVAR_HISTORICO_BANCO:
+                salvarComandaAtualNoHistoricoSQLite();
+                break;
+
+            case OUVIR_HISTORICO_BANCO:
+                abrirPainelBancoDeDadosEHistorico();
+                break;
+
+            case CADASTRAR_PRATO_BANCO:
+                abrirDialogoCadastrarNovoItemNoBanco();
+                break;
+
+            case FILTRAR_OU_BUSCAR_LOCAL:
+                etBuscaQualquerBar.setText(resultado.parametroTexto);
+                localizarQualquerBarComCardapio(resultado.parametroTexto);
+                break;
+
+            case AJUDA_VOZ:
+                exibirDialogoAjudaVoz(resultado.mensagemTalkBack);
+                break;
+
+            case COMANDO_NAO_RECONHECIDO:
+            default:
+                atualizarPainelEFalar(resultado.mensagemVisual, resultado.mensagemTalkBack);
+                break;
         }
+    }
 
-        if (itensIdentificados.isEmpty()) {
-            String msgErro = "🎙️ Você disse: \"" + fraseFalada + "\". Não encontrei esse item no cardápio de " + estAlvo.nome + ". Toque diretamente nos botões do cardápio abaixo.";
-            atualizarPainelEFalar(msgErro, msgErro);
-            return;
+    private void aplicarFiltroSomPorVoz(ModoFiltroAcustico novoModo, ProcessadorComandosVoz.ResultadoComando resultado) {
+        filtroAcusticoAtual = novoModo;
+        atualizarRotulosFiltros();
+        renderizarListaEstabelecimentos();
+        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+        if (!visiveis.isEmpty()) {
+            selecionarEstabelecimento(visiveis.get(0), false, false);
         }
+        String msgVisual = "🔊 Filtro de Som por Voz: \"" + resultado.fraseOriginal + "\"\n" +
+                "• Situação Atual: " + novoModo.rotuloBotao + "\n" +
+                "• " + visiveis.size() + " estabelecimentos disponíveis.";
+        String msgFalada = resultado.mensagemTalkBack + " " + visiveis.size() + " locais encontrados.";
+        atualizarPainelEFalar(msgVisual, msgFalada);
+    }
 
-        int qtdPadrao = (norm.contains("dois ") || norm.contains("duas ") || norm.contains("2 ")) ? 2 : 1;
-        StringBuilder nomesAdicionados = new StringBuilder();
-
-        for (int i = 0; i < itensIdentificados.size(); i++) {
-            ItemCardapio it = itensIdentificados.get(i);
-            int qtdItem = (i == 0) ? qtdPadrao : 1;
-            int atual = quantidadesComanda.containsKey(it.id) ? quantidadesComanda.get(it.id) : 0;
-            quantidadesComanda.put(it.id, atual + qtdItem);
-            nomesAdicionados.append(qtdItem).append("x ").append(it.nome);
-            if (i < itensIdentificados.size() - 1) nomesAdicionados.append(", ");
+    private void executarAdicaoItensPorVoz(ProcessadorComandosVoz.ResultadoComando resultado) {
+        StringBuilder nomes = new StringBuilder();
+        for (int i = 0; i < resultado.itensModificados.size(); i++) {
+            ProcessadorComandosVoz.ItemQtd iq = resultado.itensModificados.get(i);
+            int atual = quantidadesComanda.containsKey(iq.item.id) ? quantidadesComanda.get(iq.item.id) : 0;
+            quantidadesComanda.put(iq.item.id, atual + iq.quantidade);
+            nomes.append(iq.quantidade).append("x ").append(iq.item.nome);
+            if (i < resultado.itensModificados.size() - 1) nomes.append(", ");
         }
 
         renderizarCardapioEstabelecimento();
@@ -3008,14 +3250,151 @@ public class MainActivity extends Activity {
             bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
         }
 
-        String msgVisual = "🎙️ Pedido por Voz: \"" + fraseFalada + "\"\n" +
-                "✅ IA identificou e somou na comanda: " + nomesAdicionados.toString() + "\n" +
-                "💰 Nova Soma Total: " + formatarMoedaCentavos(ultimoTotalCentavos) + " (Senha: " + senhaEntregaAtual + ")";
-        String msgFalada = "Pedido adicionado: " + nomesAdicionados.toString() +
-                ". Soma total da comanda: " + formatarMoedaCentavos(ultimoTotalCentavos) +
-                ". Senha de entrega: " + senhaEntregaAtual +
-                ". Toque no botão verde abaixo para copiar o Pix e abrir o aplicativo do seu banco.";
+        String msgVisual = "🎙️ Pedido por Voz: \"" + resultado.fraseOriginal + "\"\n" +
+                "✅ Adicionado à comanda: " + nomes.toString() + "\n" +
+                "💰 Total Atual: " + formatarMoedaCentavos(ultimoTotalCentavos) + " (Senha: " + senhaEntregaAtual + ")";
+        String msgFalada = "Adicionado à sua conta: " + nomes.toString() +
+                ". Total da comanda: " + formatarMoedaCentavos(ultimoTotalCentavos) +
+                ". Senha: " + senhaEntregaAtual + ".";
         atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void executarRemocaoItensPorVoz(ProcessadorComandosVoz.ResultadoComando resultado) {
+        StringBuilder nomes = new StringBuilder();
+        for (int i = 0; i < resultado.itensModificados.size(); i++) {
+            ProcessadorComandosVoz.ItemQtd iq = resultado.itensModificados.get(i);
+            int atual = quantidadesComanda.containsKey(iq.item.id) ? quantidadesComanda.get(iq.item.id) : 0;
+            int novo = Math.max(0, atual - iq.quantidade);
+            if (novo > 0) {
+                quantidadesComanda.put(iq.item.id, novo);
+            } else {
+                quantidadesComanda.remove(iq.item.id);
+            }
+            nomes.append(iq.quantidade).append("x ").append(iq.item.nome);
+            if (i < resultado.itensModificados.size() - 1) nomes.append(", ");
+        }
+
+        renderizarCardapioEstabelecimento();
+        recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+        }
+
+        String msgVisual = "🎙️ Comando por Voz: \"" + resultado.fraseOriginal + "\"\n" +
+                "➖ Removido da comanda: " + nomes.toString() + "\n" +
+                "💰 Novo Total: " + formatarMoedaCentavos(ultimoTotalCentavos);
+        String msgFalada = "Removido da comanda: " + nomes.toString() +
+                ". Novo total: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".";
+        atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void executarLimpezaComandaPorVoz() {
+        quantidadesComanda.clear();
+        renderizarCardapioEstabelecimento();
+        recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+        }
+        String msgVisual = "🗑️ Comanda Zerada por Voz com Sucesso!\nTodos os pratos e bebidas foram cancelados.";
+        String msgFalada = "Todos os itens da sua comanda foram cancelados e a conta foi zerada com sucesso.";
+        atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void executarConsultaTotalPorVoz() {
+        int totalItens = 0;
+        for (int q : quantidadesComanda.values()) totalItens += q;
+
+        String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "Estabelecimento";
+        String subtotalFmt = formatarMoedaCentavos(ultimoSubtotalCentavos);
+        String taxaFmt = formatarMoedaCentavos(ultimaTaxaServicoCentavos);
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+
+        String msgVisual = "💰 Resumo da Comanda (" + estNome + "):\n" +
+                "• Itens pedidos: " + totalItens + "\n" +
+                "• Subtotal: " + subtotalFmt + "\n" +
+                "• Taxa de 10%: " + (adicionarTaxaDezPorCento ? taxaFmt + " (Inclusa)" : "Desativada") + "\n" +
+                "• TOTAL A PAGAR: " + totalFmt + "\n" +
+                "• Senha de Atendimento: " + senhaEntregaAtual;
+
+        String msgFalada = "Sua conta em " + estNome + " tem " + totalItens + " itens. " +
+                "Subtotal: " + subtotalFmt + ". " +
+                (adicionarTaxaDezPorCento ? "Com a taxa de dez por cento de " + taxaFmt + ", o " : "") +
+                "Total final a pagar é " + totalFmt + ". Sua senha de atendimento é " + senhaEntregaAtual + ".";
+
+        atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void executarAlteracaoTaxaPorVoz(boolean ativar) {
+        adicionarTaxaDezPorCento = ativar;
+        recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+        }
+        String taxaFmt = formatarMoedaCentavos(ultimaTaxaServicoCentavos);
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+
+        String msgVisual = ativar
+                ? "💁 Taxa de 10% do Garçom ADICIONADA por voz (" + taxaFmt + ")!\nNovo Total da Conta: " + totalFmt
+                : "💁 Taxa de 10% do Garçom REMOVIDA por voz!\nNovo Total da Conta: " + totalFmt;
+        String msgFalada = ativar
+                ? "Taxa de dez por cento de " + taxaFmt + " adicionada à sua conta. O novo total a pagar é " + totalFmt + "."
+                : "Taxa de dez por cento removida da conta. O novo total a pagar é " + totalFmt + ".";
+
+        atualizarPainelEFalar(msgVisual, msgFalada);
+    }
+
+    private void executarAberturaBancoPorVoz(String nomeBanco) {
+        if (ultimoSubtotalCentavos <= 0) {
+            String msg = "Sua comanda ainda está vazia. Escolha itens no cardápio antes de abrir o aplicativo do " + nomeBanco + "!";
+            atualizarPainelEFalar(msg, msg);
+            return;
+        }
+
+        List<BancoAppInfo> bancosInstalados = detectarBancosInstaladosNoCelular();
+        BancoAppInfo bancoAlvo = null;
+        for (BancoAppInfo b : bancosInstalados) {
+            if (b.nomeBanco.equalsIgnoreCase(nomeBanco) || b.nomeBanco.toLowerCase(Locale.ROOT).contains(nomeBanco.toLowerCase(Locale.ROOT))) {
+                bancoAlvo = b;
+                break;
+            }
+        }
+
+        if (bancoAlvo != null) {
+            executarAberturaBancoComPix(bancoAlvo);
+        } else {
+            salvarComandaAtualNoHistoricoSQLite();
+            copiarPixParaAreaDeTransferencia();
+            String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+            String msg = "O aplicativo do " + nomeBanco + " não está instalado neste celular. " +
+                    "O código Pix de " + valorFmt + " foi copiado para a sua área de transferência. " +
+                    "Escolha um dos bancos instalados abaixo para concluir:";
+            atualizarPainelEFalar(msg, msg);
+            prosseguirPagamentoNosBancos();
+        }
+    }
+
+    private void exibirDialogoAjudaVoz(String textoAjuda) {
+        final String[] comandosExemplos = new String[]{
+                "1. Adicionar: 'Quero duas coxinhas e uma cerveja'",
+                "2. Remover: 'Tirar uma cerveja da comanda'",
+                "3. Consultar: 'Quanto tá dando a conta com os 10%?'",
+                "4. Taxa de 10%: 'Adicionar os 10%' ou 'Tirar os 10%'",
+                "5. Filtro de Som: 'Filtrar bares com conforto acústico' ou 'Filtrar bares animados'",
+                "6. Pagar: 'Gerar Pix' ou 'Abrir Nubank' / 'Abrir Inter'",
+                "7. Navegação: 'Abrir rota no Google Maps até o bar'",
+                "8. Cardápio: 'Abrir cardápio completo deste bar'",
+                "9. Histórico: 'Salvar no SQLite' ou 'Ouvir histórico'",
+                "10. Filtros: 'Filtrar Pernambuco' ou 'Buscar Bar do Cuscuz'",
+                "11. Limpar: 'Limpar todos os itens da comanda'"
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle("🎙️ Comandos de Voz Suportados pela IA:")
+                .setItems(comandosExemplos, null)
+                .setPositiveButton("Entendido", null)
+                .show();
+
+        atualizarPainelEFalar("🎙️ Comandos de voz disponíveis exibidos na tela.", textoAjuda);
     }
 
     private List<ItemCardapio> encontrarItensNaFrase(String fraseNormalizada, Estabelecimento est) {
@@ -3039,7 +3418,7 @@ public class MainActivity extends Activity {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
         cidadeFiltroAtual = "Recife";
-        filtrarApenasSilenciosos = true;
+        filtroAcusticoAtual = ModoFiltroAcustico.COM_CONFORTO;
         atualizarRotulosFiltros();
         selecionarEstabelecimento(catalogoEstabelecimentos.get(0), false, false);
         String msg = "[Caso 1 · Busca de Bar Acústico]\n\n" +
@@ -3056,7 +3435,7 @@ public class MainActivity extends Activity {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
         cidadeFiltroAtual = "Recife";
-        filtrarApenasSilenciosos = false;
+        filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
         atualizarRotulosFiltros();
         Estabelecimento cais = catalogoEstabelecimentos.get(0);
         estabelecimentoSelecionado = cais;
@@ -3081,7 +3460,7 @@ public class MainActivity extends Activity {
         regiaoFiltroAtual = "Nordeste";
         ufFiltroAtual = "PE";
         cidadeFiltroAtual = "Recife";
-        filtrarApenasSilenciosos = false;
+        filtroAcusticoAtual = ModoFiltroAcustico.COM_SOM_ANIMADO;
         atualizarRotulosFiltros();
         Estabelecimento cais = catalogoEstabelecimentos.get(0);
         estabelecimentoSelecionado = cais;

@@ -70,6 +70,20 @@
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:contentDescription="Comanda Falada. Filtre por Região, Estado e Cidade, abra no Google Maps ou escolha um estabelecimento abaixo."
+            android:layout_marginBottom="10dp" />
+
+        <!-- BOTÃO MESTRE DE CONTROLE TOTAL POR VOZ (MODELO 3 - INTENT PARSER ON-DEVICE) -->
+        <Button
+            android:id="@+id/btnComandoVozGeral"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="60dp"
+            android:text="🎙️ Assistente de Voz: Fale Qualquer Comando para a IA"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7C3AED"
+            android:contentDescription="Botão Falar Qualquer Comando para a IA. Toque duas vezes para falar o que deseja fazer no app: pedir ou retirar pratos, ver o total da conta, calcular taxa de dez por cento, traçar rota no Maps, gerar Pix, abrir banco ou pesquisar novos bares e cidades."
             android:layout_marginBottom="14dp" />
 
         <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO, CIDADE E GOOGLE MAPS -->

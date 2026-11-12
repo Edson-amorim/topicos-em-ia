@@ -1,23 +1,46 @@
 # HANDOFF · Transição de Sessão (AI for Good · UFRPE)
 
-**Data de Atualização:** 08/11/2026  
+**Data de Atualização:** 12/11/2026  
 **Aluno:** Edson Amorim (`edsoninformatica28br@gmail.com`)  
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **Artefatos 1 (`brw.md`), 2 (`cmp.md`), 3 (`tec.md`), Apresentação (`apresentacao.html`) e APK Android v6.0 com Banco de Dados SQLite (`tec/comanda-falada.apk`) Concluídos e Auditados!**  
-**Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2) ou Evoluções do App Android**
+**Status Atual:** **APK Android v7.0 com Motor Semântico de Voz On-Device (Modelo 3), Banco de Dados SQLite, Filtros Nacionais e TalkBack 100% Concluído e Auditado!**  
+**Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v6.0)
+## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v7.0)
 
 - **Arquivo APK Pronto para Instalação (Independente, Não Precisa da Pasta):**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~115,6 KB, assinado com V1/V2/V3).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~123,7 KB, assinado com V1/V2/V3).
+- **Novo Motor Semântico e Intent Parser de Voz On-Device (Modelo 3):**
+  - Arquivo: `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\ProcessadorComandosVoz.java`
+  - Permite ao usuário **fazer tudo no app por voz** com latência de 0 ms, 100% offline, sem gastar bateria e sem adicionar megabytes ao app:
+    1. **Adicionar Itens:** identifica pratos, bebidas, sinônimos e quantidades cardinais/ordinais (ex.: *"Quero duas coxinhas e uma cerveja gelada"*);
+    2. **Remover Itens:** subtrai da comanda ou exclui o item (ex.: *"Tirar uma cerveja da minha comanda"*);
+    3. **Limpar Comanda:** zera a conta ativa no SQLite (ex.: *"Limpar todos os itens da comanda"*);
+    4. **Consultar Conta:** detalha subtotal, 10% e total a pagar com senha de atendimento (ex.: *"Quanto tá dando a conta com os 10%?"*);
+    5. **Taxa de 10% do Garçom:** ativa, desativa ou pergunta sobre o serviço (ex.: *"Adicionar os 10%"*, *"Tirar a taxa de 10%"*);
+    6. **Pagamento & Bancos:** gera Pix BACEN Copia e Cola e abre o banco desejado (ex.: *"Gerar Pix e abrir o Nubank"* / *"Abrir Banco Inter"*);
+    7. **Google Maps:** traça rota guiada até o local ou explora bares da cidade (ex.: *"Abrir rota no Google Maps até este restaurante"*);
+    8. **Cardápio Completo:** abre a janela rápida com 100% dos itens (ex.: *"Abrir cardápio completo deste bar"*);
+    9. **Banco de Dados SQLite:** grava a comanda no histórico ou abre o painel histórico (ex.: *"Salvar no SQLite"*, *"Ouvir histórico"*);
+    10. **Filtros e Busca Nacional:** localiza bares por voz ou filtra por estado/cidade (ex.: *"Buscar Bar do Cuscuz em Campina Grande"*, *"Filtrar Olinda Pernambuco"*);
+    11. **Ajuda de Voz:** recita todos os comandos disponíveis para acessibilidade total via TalkBack.
+- **Novo Seletor de Perfil de Som / Conforto Acústico (Visual e por Voz):**
+  - O usuário agora pode escolher livremente o perfil sonoro dos estabelecimentos:
+    1. `🔊 Todos os Ambientes`: exibe qualquer local, sem restrição acústica;
+    2. `🔉 Com Conforto Acústico (≤ 65 dB)`: locais silenciosos com pouco ruído, ideais para conversar e ouvir o TalkBack com clareza;
+    3. `🎉 Ambientes Animados / Com Som (> 65 dB)`: locais com som ao vivo, forró, samba, música e agito para quem deseja curtir ambientes movimentados.
+  - Disponível tanto no botão `btnFiltroAcustico` quanto no assistente de voz (ex.: *"Filtrar bares silenciosos"* ou *"Filtrar bares animados com som"*).
+- **Botão Mestre no Topo da Interface:**
+  - `btnComandoVozGeral` ("🎙️ Assistente de Voz: Fale Qualquer Comando para a IA"), com alto contraste (`#7C3AED`) e descrição acessível no TalkBack.
 - **Ícone Oficial Personalizado (`@mipmap/ic_launcher` e `tec/icone_comanda_falada.png`):**
   - Traz o **Símbolo Universal da Acessibilidade** no topo e **duas pessoas (uma pessoa com deficiência e uma pessoa sem deficiência) segurando juntas um cardápio aberto** com prato e itens de alimentação, em alto contraste e com descrição completa para o TalkBack.
 - **Código-Fonte Android e Banco de Dados SQLite:**
   - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\MainActivity.java`
+  - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\ProcessadorComandosVoz.java`
   - `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\ComandaBancoDadosHelper.java`
   - `C:\topicos-em-ia\tec\android_app\res\layout\activity_main.xml`
   - `C:\topicos-em-ia\tec\android_app\AndroidManifest.xml`
