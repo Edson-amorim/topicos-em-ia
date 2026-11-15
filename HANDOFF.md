@@ -5,12 +5,27 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.8: Fim Definitivo da Espera de 14 Segundos para Abrir o Microfone da Luna (Abertura Ágil em ~1.8s a 2.5s), Acessibilidade 100% Preservada com Textos e Prompts Ricos, e Suíte de Testes Unitários com 29/29 Asserções Aprovadas!**  
+**Status Atual:** **APK Android v8.9: Bateria Geral de Testes Automatizados com 100% de Aprovação (38/38 Testes Aprovados, 0 Bugs Detectados em Cardápios, Tempos de Fala da Luna, Acessibilidade TalkBack, NLP e Cálculos), APK Recompilado e Sincronizado no Google Drive (`G:\Meu Drive\comanda-falada.apk`)!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.8)
+## 1. Bateria Geral de Testes Automatizados (v8.9 - 100% de Aprovação e 0 Bugs)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (148 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+- **Suíte de Testes Gerais Automatizados:**
+  - Arquivo: `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\TesteGeralCompleto.java`.
+  - Resultado: **38/38 testes aprovados com sucesso (0 falhas e 0 bugs detectados)**:
+    1. **Integridade de Cardápios:** Todos os estabelecimentos cadastrados (Bar Cais do Sertão, Bar Olinda, Bar Caruaru) com 17 itens completos, confirmando que nenhum bar está limitado a 5 itens.
+    2. **Tempos de Fala e Salvaguarda da Luna:** Todas as falas prioritárias liberam o microfone em tempo estritamente inferior a 3.6s (médias entre 2,3s e 3,0s), extinguindo os antigos 14s.
+    3. **Cálculos Financeiros e Taxa de 10%:** Validados subtotais, cálculo exato da taxa de serviço de 10% e disparos de alerta de teto de gastos.
+    4. **Processador NLP de Voz:** Reconhecimento perfeito de cardápio, troca de bar, ativação/desativação de 10%, consulta de total, pedidos por nome, pedidos por 'opção 7', remoção de itens e identificação de 8 bancos para Pix (Nubank, Inter, Caixa, Itaú, Bradesco, BB, PicPay, Santander).
+    5. **Confirmação Prévia do Último Bar:** Fluxos de confirmação ("sim, continuar nele") e rejeição ("não, escolher outro") testados e validados.
+
+---
+
+## 2. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.8)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
