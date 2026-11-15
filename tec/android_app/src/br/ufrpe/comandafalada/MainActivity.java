@@ -46,6 +46,7 @@ public class MainActivity extends Activity {
     private static final int REQ_VOZ_PERGUNTAR_QUER_PAGAR = 106;
     private static final int REQ_VOZ_PERGUNTAR_TAXA_DEZ = 107;
     private static final int REQ_VOZ_ESCOLHER_BANCO = 108;
+    private static final int REQ_VOZ_CONFIRMAR_ULTIMO_BAR = 109;
 
     // Coordenadas de referência (Marco Zero / Recife Antigo)
     private static final double LAT_USUARIO = -8.0628;
@@ -336,6 +337,8 @@ public class MainActivity extends Activity {
     private final List<Estabelecimento> catalogoEstabelecimentos = new ArrayList<Estabelecimento>();
     private Estabelecimento estabelecimentoSelecionado;
     private boolean barEscolhidoPeloUsuario = false;
+    private Estabelecimento ultimoBarSalvoSessao = null;
+    private boolean usuarioDecidiuSobreUltimoBar = false;
 
     private String regiaoFiltroAtual = "Todas as Regiões";
     private String ufFiltroAtual = "TODOS";
@@ -2132,6 +2135,9 @@ public class MainActivity extends Activity {
         }
 
         estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+        ultimoBarSalvoSessao = null;
+        usuarioDecidiuSobreUltimoBar = false;
+
         ComandaBancoDadosHelper.EstadoSessaoSalva sessao = bancoDados.carregarConfiguracaoSessao();
         if (sessao != null) {
             tetoGastosCentavos = sessao.tetoGastosCentavos;
@@ -2142,20 +2148,25 @@ public class MainActivity extends Activity {
             if (sessao.idEstabelecimentoAtual != null) {
                 for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
                     if (catalogoEstabelecimentos.get(i).id.equals(sessao.idEstabelecimentoAtual)) {
-                        estabelecimentoSelecionado = catalogoEstabelecimentos.get(i);
+                        ultimoBarSalvoSessao = catalogoEstabelecimentos.get(i);
                         break;
                     }
                 }
             }
         }
 
-        if (estabelecimentoSelecionado != null) {
-            Map<String, Integer> comandaSalva = bancoDados.carregarComandaAtivaDoBanco(estabelecimentoSelecionado.id);
-            quantidadesComanda.clear();
-            quantidadesComanda.putAll(comandaSalva);
-            // O bar só é considerado previamente escolhido se o usuário já tiver itens em sua comanda
-            barEscolhidoPeloUsuario = !quantidadesComanda.isEmpty();
+        // Garante que TODOS os estabelecimentos do catálogo fiquem com cardápio completo (12 a 17 itens)
+        for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
+            Estabelecimento est = catalogoEstabelecimentos.get(i);
+            if (est.cardapio.size() < 12) {
+                completarCardapioDoEstabelecimento(est);
+                bancoDados.atualizarCardapioEstabelecimentoNoBanco(est);
+            }
         }
+
+        // A Luna NUNCA abre no último bar direto: ela sempre pergunta antes ao usuário!
+        barEscolhidoPeloUsuario = false;
+        quantidadesComanda.clear();
     }
 
     /**
@@ -2379,6 +2390,9 @@ public class MainActivity extends Activity {
         if (novoEst == null) return;
         if (novoEst.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(novoEst);
+            if (bancoDados != null) {
+                bancoDados.atualizarCardapioEstabelecimentoNoBanco(novoEst);
+            }
         }
         if (estabelecimentoSelecionado != novoEst) {
             quantidadesComanda.clear();
@@ -3113,17 +3127,23 @@ public class MainActivity extends Activity {
 
     /**
      * Aciona a assistente Luna de forma direta, acolhedora e conversacional.
-     * Se o usuário ainda não escolheu um bar, ela ajuda a escolher listando as opções disponíveis.
+     * Se houver um último bar salvo na sessão anterior, ela PERGUNTA ANTES ao usuário
+     * se deseja continuar nele ou escolher outro bar, sem abrir direto no último bar!
      */
     private void acionarAjudaLunaConversacional() {
         if (!barEscolhidoPeloUsuario) {
+            if (ultimoBarSalvoSessao != null && !usuarioDecidiuSobreUltimoBar) {
+                // Bug 3 corrigido: pergunta antes e nunca abre direto no último bar!
+                perguntarSeContinuaNoUltimoBarLuna();
+                return;
+            }
             // O usuário ainda não escolheu seu bar: Luna acolhe e lista os estabelecimentos disponíveis para escolha imediata
             listarEstabelecimentosEPerguntarLuna();
             return;
         }
 
         String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
-        String fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Você está no " + estNome + ". O que você deseja fazer? Você pode pedir pratos, consultar a conta, pagar com Pix ou dizer 'listar bares' para trocar de bar.";
+        String fala = "Luna a postos no " + estNome + "! O que você deseja pedir? Você também pode consultar a conta, pagar com Pix ou trocar de bar.";
         String visual = "🌙 Luna a postos em " + estNome + "!\n" +
                 "• Peça pratos ou bebidas (ex: \"Quero 2 coxinhas e 1 refrigerante\")\n" +
                 "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
@@ -3132,6 +3152,88 @@ public class MainActivity extends Activity {
                 "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
 
         lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
+    }
+
+    /**
+     * Pergunta por voz e tela se o usuário deseja continuar no último estabelecimento registrado ou escolher outro bar.
+     */
+    private void perguntarSeContinuaNoUltimoBarLuna() {
+        if (ultimoBarSalvoSessao == null) {
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
+
+        String estNome = ultimoBarSalvoSessao.nome;
+        String fala = "Olá! Sou a Luna. Identifiquei que seu último local foi " + estNome +
+                ". Você deseja continuar nele ou escolher outro bar? Diga 'Continuar' ou diga 'Outro bar'.";
+
+        String visual = "🌙 Luna: Identifiquei seu último local salvo:\n" +
+                "📍 " + estNome + " (" + ultimoBarSalvoSessao.cidade + "/" + ultimoBarSalvoSessao.uf + ")\n\n" +
+                "• Diga \"Sim\" ou \"Continuar\" para reabrir este bar.\n" +
+                "• Ou diga \"Outro bar\" para ver a lista de bares disponíveis.";
+
+        lunaFalarEChamarReconhecimentoVoz(
+                visual,
+                fala,
+                REQ_VOZ_CONFIRMAR_ULTIMO_BAR,
+                "Luna ouvindo: continuar no último bar ou escolher outro bar?"
+        );
+    }
+
+    /**
+     * Trata a resposta por voz do usuário para a confirmação do último estabelecimento salvo.
+     */
+    private void tratarRespostaConfirmarUltimoBarLuna(String fraseFalada) {
+        if (fraseFalada == null || fraseFalada.trim().isEmpty()) {
+            perguntarSeContinuaNoUltimoBarLuna();
+            return;
+        }
+
+        String norm = normalizarTexto(fraseFalada);
+        usuarioDecidiuSobreUltimoBar = true;
+
+        // Se o usuário confirmou continuar no último bar:
+        if (norm.contains("sim") || norm.contains("continuar") || norm.contains("nele") ||
+                norm.contains("mesmo") || norm.contains("manter") || norm.contains("abrir") ||
+                norm.contains("quero") || norm.contains("ficar") ||
+                (ultimoBarSalvoSessao != null && norm.contains(normalizarTexto(ultimoBarSalvoSessao.nome)))) {
+
+            barEscolhidoPeloUsuario = true;
+            if (ultimoBarSalvoSessao != null) {
+                selecionarEstabelecimento(ultimoBarSalvoSessao, false, false);
+                if (bancoDados != null) {
+                    Map<String, Integer> comandaSalva = bancoDados.carregarComandaAtivaDoBanco(ultimoBarSalvoSessao.id);
+                    quantidadesComanda.clear();
+                    quantidadesComanda.putAll(comandaSalva);
+                    recalcularComanda();
+                }
+            }
+            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+            String fala = "Perfeito! Continuando no " + estNome + ". O que você deseja pedir? Diga o prato ou 'ver cardápio'.";
+            String visual = "✅ Continuando no " + estNome + "!\n" +
+                    "• Diga o que deseja pedir (ex: \"Quero 1 caldinho e 1 suco\")\n" +
+                    "• Ou diga \"Ver cardápio\" para ouvir todas as opções.";
+            lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
+            return;
+        }
+
+        // Se o usuário respondeu negativamente ou pediu para mudar de bar:
+        if (norm.contains("nao") || norm.contains("outro") || norm.contains("mudar") ||
+                norm.contains("trocar") || norm.contains("listar") || norm.contains("ver bares") ||
+                norm.contains("escolher outro") || norm.contains("diferente")) {
+
+            barEscolhidoPeloUsuario = false;
+            ultimoBarSalvoSessao = null;
+            quantidadesComanda.clear();
+            recalcularComanda();
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
+
+        // Se o usuário já falou o nome ou número de outro bar diretamente:
+        barEscolhidoPeloUsuario = false;
+        ultimoBarSalvoSessao = null;
+        tratarEscolhaEstabelecimentoPorTextoOuVoz(fraseFalada);
     }
 
     /**
@@ -3192,6 +3294,9 @@ public class MainActivity extends Activity {
 
         if (est.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(est);
+            if (bancoDados != null) {
+                bancoDados.atualizarCardapioEstabelecimentoNoBanco(est);
+            }
         }
 
         // Monta TODOS os itens do cardápio completo com preços numerados para a Luna falar:
@@ -3568,6 +3673,14 @@ public class MainActivity extends Activity {
      * sem abrir janelas extras nem recitar listas de bares.
      */
     private void confirmarBarAntesDePedirPorVoz() {
+        if (!barEscolhidoPeloUsuario) {
+            if (ultimoBarSalvoSessao != null && !usuarioDecidiuSobreUltimoBar) {
+                perguntarSeContinuaNoUltimoBarLuna();
+                return;
+            }
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
         if (estabelecimentoSelecionado == null && !catalogoEstabelecimentos.isEmpty()) {
             estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
         }
@@ -3903,7 +4016,23 @@ public class MainActivity extends Activity {
     }
 
     private void mostrarDialogoSimulacaoVoz(final int requestCode) {
-        if (requestCode == REQ_VOZ_ESCOLHER_ESTABELECIMENTO) {
+        if (requestCode == REQ_VOZ_CONFIRMAR_ULTIMO_BAR) {
+            final String nomeUltimo = ultimoBarSalvoSessao != null ? ultimoBarSalvoSessao.nome : "último local";
+            final String[] opcoes = new String[]{
+                    "✅ Sim, continuar no " + nomeUltimo,
+                    "🔄 Escolher outro bar da lista"
+            };
+            new AlertDialog.Builder(this)
+                    .setTitle("🌙 Luna: Continuar no Último Estabelecimento?")
+                    .setItems(opcoes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            tratarRespostaConfirmarUltimoBarLuna(which == 0 ? "sim" : "outro");
+                        }
+                    })
+                    .setCancelable(true)
+                    .show();
+        } else if (requestCode == REQ_VOZ_ESCOLHER_ESTABELECIMENTO) {
             final List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados().isEmpty()
                     ? catalogoEstabelecimentos
                     : obterEstabelecimentosFiltrados();
@@ -4052,7 +4181,9 @@ public class MainActivity extends Activity {
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches != null && !matches.isEmpty()) {
                 String textoFalado = matches.get(0);
-                if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
+                if (requestCode == REQ_VOZ_CONFIRMAR_ULTIMO_BAR) {
+                    tratarRespostaConfirmarUltimoBarLuna(textoFalado);
+                } else if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
                     etBuscaQualquerBar.setText(textoFalado);
                     localizarQualquerBarComCardapio(textoFalado);
                 } else if (requestCode == REQ_VOZ_ESCOLHER_ESTABELECIMENTO) {
@@ -4300,6 +4431,9 @@ public class MainActivity extends Activity {
         barEscolhidoPeloUsuario = true;
         if (estabelecimentoSelecionado.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
+            if (bancoDados != null) {
+                bancoDados.atualizarCardapioEstabelecimentoNoBanco(estabelecimentoSelecionado);
+            }
         }
 
         // Rola suavemente até o cardápio na tela principal sem abrir diálogo modal bloqueante
@@ -4643,6 +4777,7 @@ public class MainActivity extends Activity {
                             if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
                                 ttsLuna.setLanguage(Locale.getDefault());
                             }
+                            ttsLuna.setSpeechRate(1.18f); // Fala ágil, dinâmica e sem lentidão
                             ttsLunaPronto = true;
                         } catch (Exception e) {
                             ttsLunaPronto = false;
@@ -4715,6 +4850,10 @@ public class MainActivity extends Activity {
 
         if (ttsLunaPronto && ttsLuna != null) {
             final String utteranceId = "LUNA_FALA_" + requestCodeVoz + "_" + System.currentTimeMillis();
+            try {
+                ttsLuna.setSpeechRate(1.18f);
+            } catch (Exception ignored) {
+            }
 
             ttsLuna.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                 @Override
@@ -4734,9 +4873,9 @@ public class MainActivity extends Activity {
                 }
             });
 
-            // Timeout de salvaguarda caso o motor TTS demore ou perca o callback (máx 85s para cardápios completos)
-            long delayEstimado = Math.max(4500L, (long) len * 80L + 3000L);
-            delayEstimado = Math.min(85000L, delayEstimado);
+            // Timeout de salvaguarda ágil (taxa de fala 1.18x com ~48ms por caractere, máximo 42s)
+            long delayEstimado = Math.max(2200L, (long) len * 48L + 1500L);
+            delayEstimado = Math.min(42000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
@@ -4753,8 +4892,8 @@ public class MainActivity extends Activity {
             if (tvResultado != null) {
                 tvResultado.announceForAccessibility(textoParaFalar);
             }
-            long delayEstimado = Math.max(3000L, (long) len * 65L + 1500L);
-            delayEstimado = Math.min(60000L, delayEstimado);
+            long delayEstimado = Math.max(1800L, (long) len * 45L + 1200L);
+            delayEstimado = Math.min(30000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {

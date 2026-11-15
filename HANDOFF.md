@@ -1,16 +1,50 @@
 # HANDOFF · Transição de Sessão (AI for Good · UFRPE)
 
-**Data de Atualização:** 14/11/2026  
+**Data de Atualização:** 15/11/2026  
 **Aluno:** Edson Amorim (`edsoninformatica28br@gmail.com`)  
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.6: Cardápio 100% Completo Lido (Todos os 12 Itens sem Corte), Sincronização Instantânea via onDone do TTS, Reconhecimento Imediato de Bancos no Pagamento e Fim Definitivo de Diálogos Bloqueantes!**  
+**Status Atual:** **APK Android v8.7: Fim da Lentidão na Luna (TTS Ágil a 1.18x e Falas Diretas), Cardápios Completos Persistidos no SQLite v2 (Todos os Itens) e Luna Pergunta Antes de Abrir o Último Bar!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.6)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.7)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Bug 1: Eliminação da Lentidão na Luna ("Lentidão na Luna"):**
+  - **Diagnóstico:** O sintetizador nativo do Android (`ttsLuna`) operava na taxa padrão 1.0x (arrastada e monótona em português), com timeouts de salvaguarda de até 85 segundos e discursos introdutórios prolixos de até 230 caracteres que prendiam o usuário por 15 segundos antes de abrir o microfone.
+  - **Soluções implementadas:**
+    1. **Taxa de Fala Acelerada e Dinâmica (`speechRate = 1.18f`):** Síntese 18% a 20% mais rápida e natural, tornando as falas expressivas, dinâmicas e fluidas.
+    2. **Falas Concisas e Objetivas:** Reduzidas introduções repetitivas. Luna agora vai direto ao ponto (*"Luna a postos no [Bar]! O que você deseja pedir? Você também pode consultar a conta, pagar com Pix ou trocar de bar."*).
+    3. **Timeouts Recalculados:** Tempo de contingência reduzido pela metade (~48ms por char, teto em 42s em vez de 85s).
+    4. **Interrupção Imediata (Barge-in):** Toques na tela ou no microfone cancelam a fala da Luna instantaneamente (`ttsLuna.stop()`) e ativam a escuta imediata.
+
+- **Bug 2: Cardápio com Todos os Itens (Fim da Limitação de 5 Itens):**
+  - **Diagnóstico:** Diversos bares do catálogo base (`barOlinda`, `barCaruaru`, `barIgarassu`, etc.) tinham apenas 5 itens hardcoded, e a versão 1 do banco de dados SQLite (`comanda_falada.db`) havia persistido tabelas com apenas 5 itens sem atualizar no celular.
+  - **Soluções implementadas:**
+    1. **Migração do Banco de Dados para Versão 2 (`VERSAO_BANCO = 2`):** `onUpgrade` limpa a tabela `cardapio_itens` obsoleta e força a sincronização integral dos novos cardápios completos.
+    2. **Persistência Imediata de Cardápios Enriquecidos (`atualizarCardapioEstabelecimentoNoBanco`):** Todos os bares do catálogo base e bancos locais agora passam por `completarCardapioDoEstabelecimento`, garantindo entre 12 e 17 itens completos por estabelecimento (entradas, petiscos, pratos principais, individuais, bebidas sem álcool, drinks, cervejas e sobremesas).
+    3. **Recitação Completa e Sem Cortes:** `falarCardapioCompletoEPerguntarPedido()` recita numeradamente todos os itens sem limite artificial.
+
+- **Bug 3: Luna Pergunta Antes de Abrir no Último Bar:**
+  - **Diagnóstico:** Ao abrir o app com sessão anterior salva no SQLite, `barEscolhidoPeloUsuario` era marcado automaticamente ou o app assumia o último bar silenciosamente, fazendo a Luna acolher já dentro do último bar sem dar opção prévia ao usuário.
+  - **Soluções implementadas:**
+    1. **Novo Estado de Confirmação Prévia (`ultimoBarSalvoSessao` e `REQ_VOZ_CONFIRMAR_ULTIMO_BAR`):** Na inicialização, `barEscolhidoPeloUsuario` inicia sempre como `false`.
+    2. **Pergunta Acolhedora Antes de Abrir:** Ao solicitar ajuda da Luna, se houver um último bar salvo, a Luna pergunta:
+       *"Olá! Sou a Luna. Identifiquei que seu último local foi [Nome do Bar]. Você deseja continuar nele ou escolher outro bar? Diga 'Continuar' ou diga 'Outro bar'."*
+    3. **Tratamento por Voz Inteligente (`tratarRespostaConfirmarUltimoBarLuna`):**
+       - Dizer *"sim"*, *"continuar"*, *"nele"*, *"mesmo"*, *"abrir"*: confirma o bar anterior, restaura a comanda e abre para pedidos.
+       - Dizer *"não"*, *"outro bar"*, *"mudar"*, *"trocar"*, *"listar bares"*: limpa a seleção e lista os estabelecimentos disponíveis para nova escolha.
+       - Falar o nome de outro bar: seleciona o bar mencionado imediatamente.
+    4. **Diálogo de Fallback Acessível:** `mostrarDialogoSimulacaoVoz` com botões claros "Continuar no [Nome]" e "Escolher outro bar da lista".
+
+---
+
+## 2. Histórico de Versões Anteriores (v8.6, v8.5, v8.4, v8.3, v8.2 e v8.1)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

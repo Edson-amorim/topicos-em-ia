@@ -25,7 +25,7 @@ import java.util.Map;
 public class ComandaBancoDadosHelper extends SQLiteOpenHelper {
 
     public static final String NOME_BANCO = "comanda_falada.db";
-    public static final int VERSAO_BANCO = 1;
+    public static final int VERSAO_BANCO = 2;
 
     public static class RegistroHistoricoComanda {
         public final long id;
@@ -150,7 +150,41 @@ public class ComandaBancoDadosHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            try {
+                // Atualiza a tabela de cardápios para recarregar todos os itens completos sem limitação
+                db.delete("cardapio_itens", null, null);
+            } catch (Exception ignored) {
+            }
+        }
         onCreate(db);
+    }
+
+    /**
+     * Atualiza e persiste todos os itens do cardápio completo de um estabelecimento no SQLite.
+     */
+    public void atualizarCardapioEstabelecimentoNoBanco(MainActivity.Estabelecimento est) {
+        if (est == null || est.cardapio == null) return;
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.delete("cardapio_itens", "estabelecimento_id = ?", new String[]{est.id});
+            for (int i = 0; i < est.cardapio.size(); i++) {
+                MainActivity.ItemCardapio it = est.cardapio.get(i);
+                ContentValues cvItem = new ContentValues();
+                cvItem.put("id", it.id);
+                cvItem.put("estabelecimento_id", est.id);
+                cvItem.put("ordem", i);
+                cvItem.put("nome", it.nome);
+                cvItem.put("categoria", it.categoria);
+                cvItem.put("preco_centavos", it.precoCentavos);
+                cvItem.put("palavras_chave", juntarPalavrasChave(it.palavrasChave));
+                db.insertWithOnConflict("cardapio_itens", null, cvItem, SQLiteDatabase.CONFLICT_REPLACE);
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     /**
