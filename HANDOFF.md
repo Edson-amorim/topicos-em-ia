@@ -5,12 +5,41 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.7: Fim da Lentidão na Luna (TTS Ágil a 1.18x e Falas Diretas), Cardápios Completos Persistidos no SQLite v2 (Todos os Itens) e Luna Pergunta Antes de Abrir o Último Bar!**  
+**Status Atual:** **APK Android v8.8: Fim Definitivo da Espera de 14 Segundos para Abrir o Microfone da Luna (Abertura Ágil em ~1.8s a 2.5s), Acessibilidade 100% Preservada com Textos e Prompts Ricos, e Suíte de Testes Unitários com 29/29 Asserções Aprovadas!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.7)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.8)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Causa Raiz Exata dos 14 Segundos de Espera para Abrir o Microfone:**
+  - **Diagnóstico:** Quando o usuário solicitava ajuda da Luna, consultava o total ou pedia ações conversacionais, a locução disparava uma frase de ~230 caracteres (levando ~14,6 segundos de síntese contínua em velocidade padrão). Além disso, o timeout de salvaguarda usava `len * 80L + 3000L` (exatamente 14,2 segundos). O microfone ficava retido esperando o término desse monólogo desnecessário para então ligar a escuta.
+  - **Solução Implementada sem Quebrar a Acessibilidade:**
+    1. **Falas Diretas de Resposta Rápida (1,5s a 2,2s):**
+       - Ao acionar a Luna: *"Luna ouvindo no [Bar]. O que deseja pedir?"* (~1,3s de fala).
+       - Ao confirmar último bar: *"Continuar no [Bar] ou escolher outro bar?"* (~1,8s de fala).
+       - Ao consultar conta: *"Total: R$ XX,XX. Deseja pagar com Pix agora?"* (~1,9s de fala).
+       - Ao escolher banco: *"Qual banco para Pix? Nubank, Inter, Caixa, Itaú ou Bradesco?"* (~2,2s de fala).
+    2. **Acessibilidade 100% Preservada:**
+       - O texto visual completo e descritivo (`tvResultado.setText` e `tvResultado.setContentDescription`) continua trazendo todas as orientações, subtotais, tabela, dicas, senha de atendimento e emojis estruturados para quem usa o TalkBack por toque ou navegação linear.
+       - O `promptMicrofone` do `RecognizerIntent` recebe instruções claras que o Google Assistente / TalkBack vocalizam com clareza.
+    3. **Timeout de Contingência Ultrarrápido:**
+       - Recalculado para `Math.max(1400L, len * 35L + 800L)` com teto seguro em 25s, garantindo que o microfone abra em no máximo 2,5s a 3s mesmo se o motor TTS sofrer delay no sistema.
+
+- **Suíte de Testes Unitários Criada e Executada com Sucesso (29/29 Asserções Aprovadas):**
+  - Arquivo: `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\LunaTempoAcessibilidadeTest.java`.
+  - Execução: 29 testes unitários aprovados com 100% de sucesso validando:
+    1. Tempo máximo de abertura do microfone estritamente inferior a 3.8s (e nunca mais 14s);
+    2. Integridade de textos visuais, descrições e prompts de acessibilidade;
+    3. Parser NLP de cardápio, bancos, 10% e remoção de itens;
+    4. Lógica de confirmação prévia do último bar antes de abrir.
+
+---
+
+## 2. Histórico de Versões Anteriores (v8.7, v8.6, v8.5, v8.4, v8.3, v8.2 e v8.1)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

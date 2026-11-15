@@ -3143,7 +3143,7 @@ public class MainActivity extends Activity {
         }
 
         String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
-        String fala = "Luna a postos no " + estNome + "! O que você deseja pedir? Você também pode consultar a conta, pagar com Pix ou trocar de bar.";
+        String fala = "Luna ouvindo no " + estNome + ". O que deseja pedir?";
         String visual = "🌙 Luna a postos em " + estNome + "!\n" +
                 "• Peça pratos ou bebidas (ex: \"Quero 2 coxinhas e 1 refrigerante\")\n" +
                 "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
@@ -3164,8 +3164,7 @@ public class MainActivity extends Activity {
         }
 
         String estNome = ultimoBarSalvoSessao.nome;
-        String fala = "Olá! Sou a Luna. Identifiquei que seu último local foi " + estNome +
-                ". Você deseja continuar nele ou escolher outro bar? Diga 'Continuar' ou diga 'Outro bar'.";
+        String fala = "Continuar no " + estNome + " ou escolher outro bar?";
 
         String visual = "🌙 Luna: Identifiquei seu último local salvo:\n" +
                 "📍 " + estNome + " (" + ultimoBarSalvoSessao.cidade + "/" + ultimoBarSalvoSessao.uf + ")\n\n" +
@@ -3391,10 +3390,7 @@ public class MainActivity extends Activity {
         String subtotalFmt = formatarMoedaCentavos(subtotal);
         String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
 
-        String fala = "Adicionei " + nomes.toString() + " à sua comanda. " +
-                "Total a pagar: " + totalFmt + ". " +
-                (adicionarTaxaDezPorCento ? "Taxa de 10% incluída. " : "Para incluir 10%, diga com 10 por cento. ") +
-                "O que mais você deseja pedir?";
+        String fala = "Adicionado " + nomes.toString() + ". Total: " + totalFmt + ". O que mais deseja pedir?";
 
         String visual = "✅ Adicionado: " + nomes.toString() + "\n" +
                 "• Subtotal: " + subtotalFmt + "\n" +
@@ -3495,8 +3491,7 @@ public class MainActivity extends Activity {
                 "• TOTAL A PAGAR: " + totalFmt + "\n\n" +
                 "🎙️ Luna ouvindo: Diga Nubank, Inter, Caixa, Itaú ou Bradesco (ou diga 'com 10%' / 'sem 10%').";
 
-        String msgFalada = "Total a pagar: " + totalFmt + (adicionarTaxaDezPorCento ? " com dez por cento." : " sem taxa.") +
-                " Diga o seu banco: Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga com 10% ou sem 10%.";
+        String msgFalada = "Total a pagar: " + totalFmt + ". Qual banco para Pix? Nubank, Inter, Caixa, Itaú ou Bradesco?";
 
         lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
     }
@@ -3506,7 +3501,7 @@ public class MainActivity extends Activity {
      */
     private void tratarEscolhaBancoPorVozLuna(String resposta) {
         if (resposta == null || resposta.trim().isEmpty()) {
-            String msg = "Não ouvi a resposta. Diga o nome do seu banco, como Nubank, Inter ou Caixa, ou diga com 10% ou sem 10%.";
+            String msg = "Qual o seu banco para Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco.";
             lunaFalarEChamarReconhecimentoVoz(msg, msg, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: diga o seu banco...");
             return;
         }
@@ -4480,20 +4475,13 @@ public class MainActivity extends Activity {
                 "• TOTAL A PAGAR: " + totalFmt + "\n" +
                 "• Senha de Atendimento: " + senhaEntregaAtual;
 
-        String msgFalada = "Sua conta em " + estNome + " tem " + totalItens + " itens. " +
-                "Subtotal: " + subtotalFmt + ". " +
-                (adicionarTaxaDezPorCento ? "Com a taxa de dez por cento de " + taxaFmt + ", o " : "") +
-                "Total final a pagar é " + totalFmt + ". Senha: " + senhaEntregaAtual + ".";
-
         if (totalItens > 0) {
-            String pergunta = " Deseja pagar com Pix agora? Diga sim para gerar o Pix, ou continue pedindo.";
-            msgFalada += pergunta;
+            String msgFaladaCurta = "Total: " + totalFmt + ". Deseja pagar com Pix agora?";
             msgVisual += "\n\n💡 Dica da Luna: Diga \"Sim\" para pagar com Pix, ou faça mais pedidos.";
-            lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PERGUNTAR_QUER_PAGAR, "Luna ouvindo: quer pagar com Pix agora?");
+            lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFaladaCurta, REQ_VOZ_PERGUNTAR_QUER_PAGAR, "Luna ouvindo: quer pagar com Pix agora?");
         } else {
-            String vazia = " Sua comanda está vazia. Diga 'ver cardápio' ou fale o que deseja pedir.";
-            msgFalada += vazia;
-            lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: o que deseja pedir?");
+            String vazia = "Comanda vazia. Diga o que deseja pedir ou 'ver cardápio'.";
+            lunaFalarEChamarReconhecimentoVoz(msgVisual, vazia, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: o que deseja pedir?");
         }
     }
 
@@ -4873,9 +4861,10 @@ public class MainActivity extends Activity {
                 }
             });
 
-            // Timeout de salvaguarda ágil (taxa de fala 1.18x com ~48ms por caractere, máximo 42s)
-            long delayEstimado = Math.max(2200L, (long) len * 48L + 1500L);
-            delayEstimado = Math.min(42000L, delayEstimado);
+            // Timeout de salvaguarda ultrarrápido (taxa de fala 1.20x com ~35ms por caractere + 800ms)
+            // Para comandos interativos da Luna (25 a 50 chars), o microfone abre entre 1.4s e 2.5s (nunca 14s!)
+            long delayEstimado = Math.max(1400L, (long) len * 35L + 800L);
+            delayEstimado = Math.min(25000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
@@ -4892,8 +4881,8 @@ public class MainActivity extends Activity {
             if (tvResultado != null) {
                 tvResultado.announceForAccessibility(textoParaFalar);
             }
-            long delayEstimado = Math.max(1800L, (long) len * 45L + 1200L);
-            delayEstimado = Math.min(30000L, delayEstimado);
+            long delayEstimado = Math.max(1200L, (long) len * 30L + 600L);
+            delayEstimado = Math.min(18000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
