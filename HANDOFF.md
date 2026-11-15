@@ -5,34 +5,30 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.5: Fim da Interrupção Prematura do Leitor no Cardápio (TalkBack & TTS com Tempo Dinâmico de até 60s), Sem Bloqueio de Microfone, Leitura Serena e Completa de Pratos e Preços!**  
+**Status Atual:** **APK Android v8.6: Cardápio 100% Completo Lido (Todos os 12 Itens sem Corte), Sincronização Instantânea via onDone do TTS, Reconhecimento Imediato de Bancos no Pagamento e Fim Definitivo de Diálogos Bloqueantes!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.5)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.6)
 
 - **Arquivo APK Atualizado e Sincronizado:**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
 
-- **Fim da Interrupção Prematura na Leitura do Cardápio (Passo 4 - Ouvir o Cardápio):**
-  - **Diagnóstico do problema:** Quando o usuário solicitava ajuda da Luna, falava o bar, escolhia o bar e passava para a etapa de ouvir o cardápio, o leitor começava a leitura da primeira opção e, em exatamente 3,2 segundos, o microfone do Google SpeechRecognizer abria, roubava o `AudioFocus` do sistema operacional e cortava a leitura no meio!
-    - **Causa raiz encontrada:** No método `lunaFalarEChamarReconhecimentoVoz`, havia um limitador rígido `Math.min(3200L, ...)` para o ramo do TalkBack e `Math.min(4500L, ...)` para o TTS interno. Como um cardápio completo possui entre 340 e 450 caracteres (levando cerca de 25 a 32 segundos para ser lido), o temporizador de 3,2s vencia antes do fim da leitura e forçava a abertura imediata do microfone. Além disso, havia chamadas sequenciais de `atualizarPainelEFalar` e `lunaFalarEChamarReconhecimentoVoz` disparando anúncios concorrentes no TalkBack.
+- **Cardápio Lido 100% na Íntegra (Todos os Itens do Estabelecimento):**
+  - **Diagnóstico:** O código anterior possuía `Math.min(5, est.cardapio.size())`, cortando a leitura arbitrariamente no 5º item.
+  - **Solução implementada:** Removido o limite forçado. A Luna agora recita **todos os itens** do cardápio completo (todas as entradas, pratos principais, lanches, bebidas e sobremesas) de forma numerada com preços, sem omitir opções.
+
+- **Fim do Travamento no Pagamento (Sincronização Exata via `onDone`):**
+  - **Diagnóstico:** A locução dependia exclusivamente de um delay estimado por contagem de caracteres (`postDelayed`), que para o pagamento calculava até 18 segundos. O usuário ouvia a pergunta em 6 segundos e o aplicativo ficava em silêncio por mais 12 segundos antes de abrir o microfone, aparentando estar congelado. Além disso, se o usuário falasse o nome do banco diretamente ("Nubank", "Inter"), o validador caía em negação e fechava o fluxo.
   - **Solução implementada:**
-    1. **Cálculo de tempo dinâmico proporcional à fala em português:**
-       - Taxa ajustada para `85 ms por caractere` + margem confortável de `3,5 segundos` para pausas, números e pontuações:  
-         `delayEstimadoTalkBack = Math.min(60000L, Math.max(4000L, len * 85L + 3500L));`
-       - Para um cardápio com 340 caracteres, o TalkBack agora recebe **32,4 segundos** (e até 60 segundos), permitindo que todas as opções, itens, valores e a pergunta final sejam lidos com total clareza antes do microfone abrir.
-    2. **Sincronização limpa sem concorrência de áudio:**
-       - Criada sobrecarga limpa `lunaFalarEChamarReconhecimentoVoz(textoVisual, textoParaFalar, requestCode, prompt)` que atualiza o painel visual com emojis e quebras de linha e emite **um único anúncio de acessibilidade** (`announceForAccessibility`), eliminando mensagens sobrepostas.
-    3. **Remoção de diálogos modais (`AlertDialog`) que roubavam o foco do leitor:**
-       - Eliminado diálogo modal intrusivo que surgia em `listarEstabelecimentosEPerguntarLuna`, mantendo o fluxo suave por rolagem de tela e leitura contínua.
-    4. **Cancelamento seguro de temporizadores:**
-       - No método `iniciarReconhecimentoVoz`, qualquer callback pendente no `handlerLuna` é limpo imediatamente se o usuário preferir tocar no botão do microfone antes de o tempo terminar.
+    1. **Sincronização por Callback Real de Áudio (`onDone`):** O sintetizador de voz nativo do Android (`ttsLuna`) agora dispara o microfone imediatamente no milissegundo em que a voz termina de soar no alto-falante, eliminando qualquer espera ou silêncio artificial.
+    2. **Reconhecimento Autônomo de Bancos no Pagamento:** Em `tratarRespostaQuerPagarLuna`, a Luna detecta imediatamente se o usuário já mencionou o banco desejado (*"no nubank"*, *"banco inter"*, *"caixa"*, etc.) e já copia o Pix de R$ XX,XX e direciona para o aplicativo bancário sem perguntas repetidas.
+    3. **Eliminação de Diálogos Modais Bloqueantes no Pagamento:** O botão de pagar e a ação por voz utilizam `prosseguirPagamentoNosBancosConversacional()`, copiando o código Pix no valor exato e abrindo diretamente o app do banco ou o seletor do sistema, sem janelas `AlertDialog` que prendam o foco de acessibilidade.
 
 ---
 
-## 2. Histórico de Versões Anteriores (v8.4, v8.3, v8.2 e v8.1)
+## 2. Histórico de Versões Anteriores (v8.5, v8.4, v8.3, v8.2 e v8.1)
 
 - **Versão v8.4:**
   - Integração nativa com TalkBack para fluxo de pagamento Pix (`isTalkBackAtivo`).

@@ -3098,70 +3098,15 @@ public class MainActivity extends Activity {
 
     private void acaoPagarComandaNosBancos() {
         if (ultimoSubtotalCentavos <= 0) {
-            String msg = "Sua comanda está vazia. Escolha os pratos ou bebidas no cardápio acima para a IA somar antes de abrir o aplicativo do banco!";
-            atualizarPainelEFalar(msg, msg);
+            String msg = "Sua comanda está vazia. Escolha os pratos ou bebidas no cardápio antes de abrir o aplicativo do banco!";
+            lunaFalarEChamarReconhecimentoVoz(msg, msg, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
             return;
         }
-        prosseguirPagamentoNosBancos();
+        prosseguirPagamentoNosBancosConversacional();
     }
 
     private void prosseguirPagamentoNosBancos() {
-        salvarComandaAtualNoHistoricoSQLite();
-        copiarPixParaAreaDeTransferencia();
-        final String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
-        final List<BancoAppInfo> bancosInstalados = detectarBancosInstaladosNoCelular();
-
-        if (bancosInstalados.size() == 1) {
-            executarAberturaBancoComPix(bancosInstalados.get(0));
-            return;
-        }
-
-        if (!bancosInstalados.isEmpty()) {
-            String[] nomesOpcoes = new String[bancosInstalados.size()];
-            for (int i = 0; i < bancosInstalados.size(); i++) {
-                nomesOpcoes[i] = "🏦 Abrir " + bancosInstalados.get(i).nomeBanco + " (Pix " + valorFmt + " já copiado)";
-            }
-
-            new AlertDialog.Builder(this)
-                    .setTitle("Pix de " + valorFmt + " Copiado! Escolha seu Banco:")
-                    .setItems(nomesOpcoes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            executarAberturaBancoComPix(bancosInstalados.get(which));
-                        }
-                    })
-                    .setNegativeButton("Fechar", null)
-                    .show();
-            return;
-        }
-
-        final String[] opcoesFallback = new String[]{
-                "📲 Compartilhar / Abrir Código Pix com Apps do Celular",
-                "💜 Nubank (Pix Copia e Cola já na área de transferência)",
-                "🧡 Banco Inter (Pix Copia e Cola já na área de transferência)",
-                "🧡 Itaú / Bradesco / Santander / Banco do Brasil / Caixa",
-                "💚 PicPay / Mercado Pago"
-        };
-
-        String msg = "Código Pix Copia e Cola no valor de " + valorFmt + " copiado para a área de transferência! Selecione o aplicativo do seu banco para colar e pagar.";
-        tvResultado.setText("🔊 " + msg);
-        tvResultado.setContentDescription(msg);
-        Toast.makeText(this, "Pix de " + valorFmt + " copiado para a área de transferência!", Toast.LENGTH_LONG).show();
-
-        new AlertDialog.Builder(this)
-                .setTitle("Pix Copiado (" + valorFmt + ") — Abrir Banco")
-                .setItems(opcoesFallback, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-                        sendIntent.setType("text/plain");
-                        sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Pagamento Pix Comanda Falada - " + valorFmt);
-                        sendIntent.putExtra(Intent.EXTRA_TEXT, ultimoPayloadPix);
-                        startActivity(Intent.createChooser(sendIntent, "Abrir Pix de " + valorFmt + " com:"));
-                    }
-                })
-                .setNegativeButton("Voltar", null)
-                .show();
+        prosseguirPagamentoNosBancosConversacional();
     }
 
     // --- RECONHECIMENTO DE VOZ, LUNA E PROCESSAMENTO NLP DA IA ---
@@ -3249,19 +3194,19 @@ public class MainActivity extends Activity {
             completarCardapioDoEstabelecimento(est);
         }
 
-        // Monta os principais itens do cardápio com preços numerados para a Luna falar:
+        // Monta TODOS os itens do cardápio completo com preços numerados para a Luna falar:
         StringBuilder sbItens = new StringBuilder();
-        int max = Math.min(5, est.cardapio.size());
-        for (int i = 0; i < max; i++) {
+        int totalItens = est.cardapio.size();
+        for (int i = 0; i < totalItens; i++) {
             ItemCardapio it = est.cardapio.get(i);
             sbItens.append("Opção ").append(i + 1).append(": ").append(it.nome).append(" por ").append(it.formatarPreco());
-            if (i < max - 1) sbItens.append("; ");
+            if (i < totalItens - 1) sbItens.append("; ");
         }
 
-        String fala = "Você escolheu o " + est.nome + "! No cardápio temos: " + sbItens.toString() +
+        String fala = "Cardápio completo de " + est.nome + " com todos os " + totalItens + " itens: " + sbItens.toString() +
                 ". O que você deseja pedir? Diga o número da opção ou o nome do prato.";
 
-        String visual = "🌙 Luna falando: Cardápio de " + est.nome + "\n" +
+        String visual = "🌙 Luna falando: Cardápio Completo de " + est.nome + " (" + totalItens + " itens)\n" +
                 "• " + sbItens.toString().replace("; ", "\n• ") +
                 "\n\nOuvindo o seu pedido no microfone da Luna (diga o número ou o prato)...";
 
@@ -3383,17 +3328,43 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Se o usuário responder Sim para pagar, inicia o fluxo conversacional autônomo da Luna
-     * para perguntar em qual banco ele quer pagar e gerenciar os 10% da taxa de serviço.
+     * Trata a resposta sobre querer pagar com Pix agora, com autonomia para entender
+     * diretamente o nome do banco, confirmações ("sim", "pagar", "pix") ou ajustes de taxa.
      */
     private void tratarRespostaQuerPagarLuna(String resposta) {
-        if (ehAfirmacao(resposta)) {
+        if (resposta == null || resposta.trim().isEmpty()) {
             iniciarFluxoPagamentoPixLuna();
-        } else {
+            return;
+        }
+
+        String norm = normalizarTexto(resposta);
+        String normEspaco = " " + norm + " ";
+
+        // 1. Se o usuário já falou o banco direto (ex: "nubank", "no inter", "quero pagar no bradesco"):
+        String bancoFalado = ProcessadorComandosVoz.identificarBanco(normEspaco);
+        if (bancoFalado != null) {
+            verificarAjusteTaxaDezPorFrase(resposta);
+            executarAberturaBancoPorVoz(bancoFalado);
+            return;
+        }
+
+        // 2. Se for afirmação de pagamento (ex: "sim", "quero", "pagar", "pix", "com certeza", "bora"):
+        if (ehAfirmacao(resposta) || normEspaco.contains(" pagar ") || normEspaco.contains(" pix ") || normEspaco.contains(" conta ")) {
+            iniciarFluxoPagamentoPixLuna();
+            return;
+        }
+
+        // 3. Se for negação (ex: "não", "agora não", "depois"):
+        if (ehNegacao(resposta)) {
             String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "estabelecimento";
             String msg = "Comanda mantida aberta em " + estNome + ". Quando quiser fechar a conta, é só chamar a Luna!";
-            atualizarPainelEFalar(msg, msg);
+            lunaFalarEChamarReconhecimentoVoz(msg, msg, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
+            return;
         }
+
+        // 4. Se falou qualquer outra coisa (ex: "com 10%", "sem taxa"):
+        verificarAjusteTaxaDezPorFrase(resposta);
+        iniciarFluxoPagamentoPixLuna();
     }
 
     /**
@@ -3417,12 +3388,12 @@ public class MainActivity extends Activity {
                 "• Subtotal: " + subtotalFmt + "\n" +
                 "• Taxa 10% Garçom: " + (adicionarTaxaDezPorCento ? taxaFmt + " (Inclusa)" : "Desativada") + "\n" +
                 "• TOTAL A PAGAR: " + totalFmt + "\n\n" +
-                "🎙️ Luna pronta: fale o nome do seu banco (ex: Nubank, Inter, Caixa, Itaú, Bradesco) ou diga 'com 10%' / 'sem 10%'.";
+                "🎙️ Luna ouvindo: Diga Nubank, Inter, Caixa, Itaú ou Bradesco (ou diga 'com 10%' / 'sem 10%').";
 
         String msgFalada = "Total a pagar: " + totalFmt + (adicionarTaxaDezPorCento ? " com dez por cento." : " sem taxa.") +
-                " Em qual banco deseja pagar com Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga 'com 10%' ou 'sem 10%'.";
+                " Diga o seu banco: Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga com 10% ou sem 10%.";
 
-        lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco ou com/sem 10%...");
+        lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
     }
 
     /**
@@ -3479,9 +3450,9 @@ public class MainActivity extends Activity {
         if (alterouTaxa) {
             String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
             String fala = (adicionarTaxaDezPorCento
-                    ? "Taxa de dez por cento do garçom incluída! O novo total é " + totalFmt
-                    : "Taxa de dez por cento removida! O novo total é " + totalFmt) +
-                    ". Agora, em qual banco você deseja pagar? Diga Nubank, Banco Inter, Caixa, Itaú ou Bradesco.";
+                    ? "Taxa de dez por cento do garçom incluída! Novo total: " + totalFmt
+                    : "Taxa de dez por cento removida! Novo total: " + totalFmt) +
+                    ". Em qual banco deseja pagar? Diga Nubank, Inter, Caixa, Itaú ou Bradesco.";
             lunaFalarEChamarReconhecimentoVoz(fala, fala, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: qual o banco para pagamento?");
             return;
         }
@@ -3490,7 +3461,7 @@ public class MainActivity extends Activity {
         if (ehNegacao(resposta)) {
             String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
             String msg = "Tudo bem! Comanda mantida aberta em " + estNome + ". Quando quiser fechar a conta ou pedir mais itens, é só chamar a Luna!";
-            atualizarPainelEFalar(msg, msg);
+            lunaFalarEChamarReconhecimentoVoz(msg, msg, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
             return;
         }
 
@@ -3502,8 +3473,8 @@ public class MainActivity extends Activity {
 
         // 5. Fallback para banco não reconhecido
         String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
-        String falaNaoEntendeu = "Não identifiquei o banco \"" + resposta + "\". O total da conta é " + totalFmt +
-                ". Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil, ou diga 'com 10%' ou 'sem 10%'.";
+        String falaNaoEntendeu = "Total da conta: " + totalFmt +
+                ". Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga 'com 10%' ou 'sem 10%'.";
         lunaFalarEChamarReconhecimentoVoz("🎙️ Luna aguardando: Diga Nubank, Inter, Caixa, Itaú ou Bradesco.", falaNaoEntendeu, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
     }
 
@@ -4342,17 +4313,17 @@ public class MainActivity extends Activity {
         }
 
         StringBuilder sbItens = new StringBuilder();
-        int max = Math.min(5, estabelecimentoSelecionado.cardapio.size());
-        for (int i = 0; i < max; i++) {
+        int totalItens = estabelecimentoSelecionado.cardapio.size();
+        for (int i = 0; i < totalItens; i++) {
             ItemCardapio it = estabelecimentoSelecionado.cardapio.get(i);
             sbItens.append("Opção ").append(i + 1).append(": ").append(it.nome).append(" por ").append(it.formatarPreco());
-            if (i < max - 1) sbItens.append("; ");
+            if (i < totalItens - 1) sbItens.append("; ");
         }
 
-        String fala = "Cardápio de " + estabelecimentoSelecionado.nome + ": " + sbItens.toString() +
+        String fala = "Cardápio completo de " + estabelecimentoSelecionado.nome + " com todos os " + totalItens + " itens: " + sbItens.toString() +
                 ". O que você deseja pedir? Diga o número da opção ou o nome do prato.";
 
-        String visual = "📖 Cardápio de " + estabelecimentoSelecionado.nome + ":\n" +
+        String visual = "📖 Cardápio Completo de " + estabelecimentoSelecionado.nome + " (" + totalItens + " itens):\n" +
                 "• " + sbItens.toString().replace("; ", "\n• ") +
                 "\n\nOuvindo seu pedido no microfone da Luna (diga o número ou o prato)...";
 
@@ -4742,26 +4713,6 @@ public class MainActivity extends Activity {
 
         final int len = (textoParaFalar != null) ? textoParaFalar.length() : 20;
 
-        // Se o leitor de tela nativo (TalkBack) estiver ativo, ele assume a locução do sistema.
-        // A velocidade de leitura em português (~13-15 chars/segundo) consome ~75 a 85 ms por caractere.
-        // Adicionamos uma margem de conforto para pontuação e respiro antes de ligar o microfone.
-        // O tempo nunca é cortado prematuramente em 3.2s, suportando até 60s para cardápios completos.
-        if (isTalkBackAtivo()) {
-            if (tvResultado != null) {
-                tvResultado.announceForAccessibility(textoParaFalar);
-            }
-            long delayEstimadoTalkBack = Math.max(4000L, (long) len * 85L + 3500L);
-            delayEstimadoTalkBack = Math.min(60000L, delayEstimadoTalkBack);
-            runnableTimeoutLuna = new Runnable() {
-                @Override
-                public void run() {
-                    acaoAbrirVoz.run();
-                }
-            };
-            handlerLuna.postDelayed(runnableTimeoutLuna, delayEstimadoTalkBack);
-            return;
-        }
-
         if (ttsLunaPronto && ttsLuna != null) {
             final String utteranceId = "LUNA_FALA_" + requestCodeVoz + "_" + System.currentTimeMillis();
 
@@ -4783,9 +4734,9 @@ public class MainActivity extends Activity {
                 }
             });
 
-            // Timeout de salvaguarda caso o motor TTS falhe silenciosamente (máx 60s)
-            long delayEstimado = Math.max(5000L, (long) len * 95L + 4000L);
-            delayEstimado = Math.min(60000L, delayEstimado);
+            // Timeout de salvaguarda caso o motor TTS demore ou perca o callback (máx 85s para cardápios completos)
+            long delayEstimado = Math.max(4500L, (long) len * 80L + 3000L);
+            delayEstimado = Math.min(85000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
@@ -4798,7 +4749,19 @@ public class MainActivity extends Activity {
             params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
             ttsLuna.speak(textoParaFalar, TextToSpeech.QUEUE_FLUSH, params, utteranceId);
         } else {
-            acaoAbrirVoz.run();
+            // Se o motor TTS não estiver pronto, utiliza anúncio nativo de acessibilidade com tempo ágil
+            if (tvResultado != null) {
+                tvResultado.announceForAccessibility(textoParaFalar);
+            }
+            long delayEstimado = Math.max(3000L, (long) len * 65L + 1500L);
+            delayEstimado = Math.min(60000L, delayEstimado);
+            runnableTimeoutLuna = new Runnable() {
+                @Override
+                public void run() {
+                    acaoAbrirVoz.run();
+                }
+            };
+            handlerLuna.postDelayed(runnableTimeoutLuna, delayEstimado);
         }
     }
 
