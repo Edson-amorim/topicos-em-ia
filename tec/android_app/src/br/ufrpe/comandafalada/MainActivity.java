@@ -3186,8 +3186,7 @@ public class MainActivity extends Activity {
                 "• Pague com Pix (ex: \"Pagar com Pix\")\n" +
                 "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
 
-        atualizarPainelEFalar(visual, fala);
-        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
+        lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
     }
 
     /**
@@ -3217,44 +3216,19 @@ public class MainActivity extends Activity {
                 nomesFalados.toString().replace("; ", "\n• ").replace("Número ", "• ") +
                 "\n\nOuvindo sua escolha no microfone da Luna (diga o número ou o nome)...";
 
-        // Monta as opções do diálogo: responder por voz, digitação e os estabelecimentos numerados
-        final String[] opcoes = new String[listaEst.size() + 2];
-        opcoes[0] = "🎤 Responder por Voz (Microfone da Luna)";
-        opcoes[1] = "⌨️ Digitar o Nome do Bar";
-
-        for (int i = 0; i < listaEst.size(); i++) {
-            Estabelecimento e = listaEst.get(i);
-            opcoes[i + 2] = (i + 1) + ". " + e.nome + " (" + e.cidade + "/" + e.uf + ") — " + e.tipo;
+        // Rola suavemente até a lista de estabelecimentos sem abrir janelas modais bloqueantes
+        if (scrollPrincipal != null && containerEstabelecimentos != null) {
+            scrollPrincipal.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollPrincipal.smoothScrollTo(0, containerEstabelecimentos.getTop());
+                }
+            });
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("🌙 Luna: Em Qual Bar Você Está?")
-                .setMessage("A Luna está falando os bares pelo alto-falante e ouvindo sua resposta:")
-                .setItems(opcoes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            iniciarReconhecimentoVoz(
-                                    REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
-                                    "Luna ouvindo: diga o número ou nome do bar..."
-                            );
-                        } else if (which == 1) {
-                            abrirDialogoDigitarNomeBarLuna();
-                        } else {
-                            int indiceEst = which - 2;
-                            if (indiceEst >= 0 && indiceEst < listaEst.size()) {
-                                mostrarConfirmacaoBarSelecionado(listaEst.get(indiceEst));
-                            }
-                        }
-                    }
-                })
-                .setNegativeButton("Voltar", null)
-                .show();
-
-        atualizarPainelEFalar(resumoVisual, perguntaFalada);
-
-        // Faz a Luna falar os bares e, ao terminar a fala, abre o microfone para o usuário responder:
+        // Faz a Luna falar os bares e, ao terminar a fala completa, abre o microfone para o usuário responder:
         lunaFalarEChamarReconhecimentoVoz(
+                resumoVisual,
                 perguntaFalada,
                 REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
                 "Luna ouvindo: diga o número ou nome do bar..."
@@ -3301,10 +3275,8 @@ public class MainActivity extends Activity {
             });
         }
 
-        atualizarPainelEFalar(visual, fala);
-
-        // Faz a Luna falar o cardápio e abrir o microfone para o usuário fazer o pedido:
-        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: fale o que deseja pedir...");
+        // Faz a Luna falar o cardápio completo e abrir o microfone após a leitura:
+        lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido (número ou prato)...");
     }
 
     /**
@@ -3332,8 +3304,7 @@ public class MainActivity extends Activity {
             String falaAviso = "Não reconheci esse item no cardápio de " + estNome + ". Diga o número da opção ou o nome do prato que você deseja pedir.";
             String visualAviso = "❓ Item não reconhecido: \"" + fraseFalada + "\"\n\n" +
                     "Diga o número da opção (ex: \"Opção 1\") ou o nome do prato (ex: \"Caldinho de Feijão\").";
-            atualizarPainelEFalar(visualAviso, falaAviso);
-            lunaFalarEChamarReconhecimentoVoz(falaAviso, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: diga o número ou prato...");
+            lunaFalarEChamarReconhecimentoVoz(visualAviso, falaAviso, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: diga o número ou prato...");
         }
     }
 
@@ -3381,10 +3352,8 @@ public class MainActivity extends Activity {
                 "💰 Total da Comanda: " + totalFmt + "\n\n" +
                 "💡 Dica da Luna: Pode continuar pedindo por voz, ou dizer 'com 10%' / 'sem 10%'.";
 
-        atualizarPainelEFalar(visual, fala);
-
         // Deixa a Luna pronta para continuar ouvindo por voz sem nenhum AlertDialog bloqueando a tela
-        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
+        lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
     }
 
     /**
@@ -3434,8 +3403,7 @@ public class MainActivity extends Activity {
     private void iniciarFluxoPagamentoPixLuna() {
         if (ultimoSubtotalCentavos <= 0) {
             String vazia = "Sua comanda ainda está vazia! Escolha pratos ou bebidas no cardápio antes de fechar a conta.";
-            atualizarPainelEFalar(vazia, vazia);
-            lunaFalarEChamarReconhecimentoVoz(vazia, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
+            lunaFalarEChamarReconhecimentoVoz(vazia, vazia, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
             return;
         }
 
@@ -3454,8 +3422,7 @@ public class MainActivity extends Activity {
         String msgFalada = "Total a pagar: " + totalFmt + (adicionarTaxaDezPorCento ? " com dez por cento." : " sem taxa.") +
                 " Em qual banco deseja pagar com Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga 'com 10%' ou 'sem 10%'.";
 
-        atualizarPainelEFalar(msgVisual, msgFalada);
-        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco ou com/sem 10%...");
+        lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco ou com/sem 10%...");
     }
 
     /**
@@ -3464,8 +3431,7 @@ public class MainActivity extends Activity {
     private void tratarEscolhaBancoPorVozLuna(String resposta) {
         if (resposta == null || resposta.trim().isEmpty()) {
             String msg = "Não ouvi a resposta. Diga o nome do seu banco, como Nubank, Inter ou Caixa, ou diga com 10% ou sem 10%.";
-            atualizarPainelEFalar(msg, msg);
-            lunaFalarEChamarReconhecimentoVoz(msg, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: diga o seu banco...");
+            lunaFalarEChamarReconhecimentoVoz(msg, msg, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: diga o seu banco...");
             return;
         }
 
@@ -3516,8 +3482,7 @@ public class MainActivity extends Activity {
                     ? "Taxa de dez por cento do garçom incluída! O novo total é " + totalFmt
                     : "Taxa de dez por cento removida! O novo total é " + totalFmt) +
                     ". Agora, em qual banco você deseja pagar? Diga Nubank, Banco Inter, Caixa, Itaú ou Bradesco.";
-            atualizarPainelEFalar(fala, fala);
-            lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: qual o banco para pagamento?");
+            lunaFalarEChamarReconhecimentoVoz(fala, fala, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: qual o banco para pagamento?");
             return;
         }
 
@@ -3539,8 +3504,7 @@ public class MainActivity extends Activity {
         String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
         String falaNaoEntendeu = "Não identifiquei o banco \"" + resposta + "\". O total da conta é " + totalFmt +
                 ". Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil, ou diga 'com 10%' ou 'sem 10%'.";
-        atualizarPainelEFalar("🎙️ Luna aguardando: Diga Nubank, Inter, Caixa, Itaú ou Bradesco.", falaNaoEntendeu);
-        lunaFalarEChamarReconhecimentoVoz(falaNaoEntendeu, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
+        lunaFalarEChamarReconhecimentoVoz("🎙️ Luna aguardando: Diga Nubank, Inter, Caixa, Itaú ou Bradesco.", falaNaoEntendeu, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
     }
 
     /**
@@ -3799,7 +3763,6 @@ public class MainActivity extends Activity {
             opcoes[i + 2] = (i + 1) + ". " + e.nome + " (" + e.cidade + "/" + e.uf + ") — " + e.tipo;
         }
 
-        atualizarPainelEFalar(resumoVisual, perguntaFalada);
         if (scrollPrincipal != null && containerEstabelecimentos != null) {
             scrollPrincipal.post(new Runnable() {
                 @Override
@@ -3810,6 +3773,7 @@ public class MainActivity extends Activity {
         }
 
         lunaFalarEChamarReconhecimentoVoz(
+                resumoVisual,
                 perguntaFalada,
                 REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
                 "Luna ouvindo: diga o nome ou número do bar em " + cidade + "..."
@@ -3937,9 +3901,8 @@ public class MainActivity extends Activity {
                 "Bares disponíveis em " + cid + ":\n" + sbNomes.toString().replace(", ", "\n• ").replace("Número ", "• ") + "\n\n" +
                 "Ouvindo seu comando no microfone da Luna (diga o número ou o nome)...";
 
-        atualizarPainelEFalar(visualAviso, falaAviso);
-
         lunaFalarEChamarReconhecimentoVoz(
+                visualAviso,
                 falaAviso,
                 REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
                 "Luna ouvindo: diga o número ou nome de um bar em " + cid + "..."
@@ -3947,6 +3910,10 @@ public class MainActivity extends Activity {
     }
 
     private void iniciarReconhecimentoVoz(final int requestCode, String promptFalado) {
+        if (runnableTimeoutLuna != null) {
+            handlerLuna.removeCallbacks(runnableTimeoutLuna);
+            runnableTimeoutLuna = null;
+        }
         if (ttsLuna != null) {
             try {
                 ttsLuna.stop();
@@ -4258,8 +4225,8 @@ public class MainActivity extends Activity {
                 if (avisoFalado == null || avisoFalado.trim().isEmpty()) {
                     avisoFalado = "Não entendi esse comando. Você pode me pedir para listar os bares, escolher um prato, consultar a comanda ou pagar com Pix. Diga o que deseja fazer.";
                 }
-                atualizarPainelEFalar(resultado.mensagemVisual, avisoFalado);
                 lunaFalarEChamarReconhecimentoVoz(
+                        resultado.mensagemVisual,
                         avisoFalado,
                         REQ_VOZ_UNIVERSAL,
                         "Luna ouvindo seu comando..."
@@ -4337,8 +4304,7 @@ public class MainActivity extends Activity {
                 "💰 Novo Total: " + totalFmt + "\n\n" +
                 "💡 Dica da Luna: Pode continuar pedindo por voz, tirar mais itens ou pedir a conta.";
 
-        atualizarPainelEFalar(msgVisual, msgFalada);
-        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
+        lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
     }
 
     private void executarLimpezaComandaPorVoz() {
@@ -4351,8 +4317,7 @@ public class MainActivity extends Activity {
         }
         String msgVisual = "🗑️ Comanda Zerada por Voz com Sucesso!\nTodos os pratos e bebidas foram cancelados.";
         String msgFalada = "Todos os itens da sua comanda foram cancelados e a conta foi zerada com sucesso. O que você deseja pedir agora?";
-        atualizarPainelEFalar(msgVisual, msgFalada);
-        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo novos pedidos...");
+        lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo novos pedidos...");
     }
 
     private void falarCardapioCompletoEPerguntarPedido() {
@@ -4391,8 +4356,7 @@ public class MainActivity extends Activity {
                 "• " + sbItens.toString().replace("; ", "\n• ") +
                 "\n\nOuvindo seu pedido no microfone da Luna (diga o número ou o prato)...";
 
-        atualizarPainelEFalar(visual, fala);
-        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
+        lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
     }
 
     private void executarConsultaTotalPorVoz() {
@@ -4420,13 +4384,11 @@ public class MainActivity extends Activity {
             String pergunta = " Deseja pagar com Pix agora? Diga sim para gerar o Pix, ou continue pedindo.";
             msgFalada += pergunta;
             msgVisual += "\n\n💡 Dica da Luna: Diga \"Sim\" para pagar com Pix, ou faça mais pedidos.";
-            atualizarPainelEFalar(msgVisual, msgFalada);
-            lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PERGUNTAR_QUER_PAGAR, "Luna ouvindo: quer pagar com Pix agora?");
+            lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PERGUNTAR_QUER_PAGAR, "Luna ouvindo: quer pagar com Pix agora?");
         } else {
             String vazia = " Sua comanda está vazia. Diga 'ver cardápio' ou fale o que deseja pedir.";
             msgFalada += vazia;
-            atualizarPainelEFalar(msgVisual, msgFalada);
-            lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: o que deseja pedir?");
+            lunaFalarEChamarReconhecimentoVoz(msgVisual, msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: o que deseja pedir?");
         }
     }
 
@@ -4739,15 +4701,23 @@ public class MainActivity extends Activity {
 
     /**
      * Faz a Luna falar e aciona o microfone para ouvir a resposta do usuário.
-     * Quando o leitor de tela nativo do sistema (TalkBack) está ativo, utiliza o mecanismo
-     * nativo de acessibilidade do Android sem competir por AudioFocus com o TTS próprio,
-     * eliminando qualquer possibilidade de congelamento no pagamento ou na navegação.
      */
     private void lunaFalarEChamarReconhecimentoVoz(final String textoParaFalar, final int requestCodeVoz, final String promptMicrofone) {
+        lunaFalarEChamarReconhecimentoVoz(null, textoParaFalar, requestCodeVoz, promptMicrofone);
+    }
+
+    /**
+     * Faz a Luna falar (ou anunciar via leitor nativo TalkBack) e, ao concluir a leitura completa,
+     * abre o microfone para ouvir o usuário, SEM corte prematuro de áudio nem conflito de AudioFocus.
+     */
+    private void lunaFalarEChamarReconhecimentoVoz(final String textoVisual, final String textoParaFalar, final int requestCodeVoz, final String promptMicrofone) {
         if (tvResultado != null) {
-            tvResultado.setText("🔊 " + textoParaFalar);
+            if (textoVisual != null && !textoVisual.trim().isEmpty()) {
+                tvResultado.setText(textoVisual.startsWith("🔊") || textoVisual.startsWith("🌙") || textoVisual.startsWith("📖") || textoVisual.startsWith("💳") || textoVisual.startsWith("🗑️") || textoVisual.startsWith("➖") ? textoVisual : "🔊 " + textoVisual);
+            } else {
+                tvResultado.setText("🔊 " + textoParaFalar);
+            }
             tvResultado.setContentDescription(textoParaFalar);
-            tvResultado.announceForAccessibility(textoParaFalar);
         }
 
         if (runnableTimeoutLuna != null) {
@@ -4770,10 +4740,18 @@ public class MainActivity extends Activity {
             }
         };
 
+        final int len = (textoParaFalar != null) ? textoParaFalar.length() : 20;
+
         // Se o leitor de tela nativo (TalkBack) estiver ativo, ele assume a locução do sistema.
-        // Não prendemos o microfone no listener de TTS interno para evitar conflito de AudioFocus!
+        // A velocidade de leitura em português (~13-15 chars/segundo) consome ~75 a 85 ms por caractere.
+        // Adicionamos uma margem de conforto para pontuação e respiro antes de ligar o microfone.
+        // O tempo nunca é cortado prematuramente em 3.2s, suportando até 60s para cardápios completos.
         if (isTalkBackAtivo()) {
-            long delayEstimadoTalkBack = Math.min(3200L, Math.max(1200L, (textoParaFalar != null ? textoParaFalar.length() : 10) * 35L));
+            if (tvResultado != null) {
+                tvResultado.announceForAccessibility(textoParaFalar);
+            }
+            long delayEstimadoTalkBack = Math.max(4000L, (long) len * 85L + 3500L);
+            delayEstimadoTalkBack = Math.min(60000L, delayEstimadoTalkBack);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
@@ -4805,8 +4783,9 @@ public class MainActivity extends Activity {
                 }
             });
 
-            // Timeout de segurança rápido (máx 4.5s) caso o motor TTS perca o callback
-            long delayEstimado = Math.min(4500L, Math.max(1800L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 40L + 800L));
+            // Timeout de salvaguarda caso o motor TTS falhe silenciosamente (máx 60s)
+            long delayEstimado = Math.max(5000L, (long) len * 95L + 4000L);
+            delayEstimado = Math.min(60000L, delayEstimado);
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {

@@ -5,42 +5,39 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.4: Integração com Leitor de Tela Nativo do Sistema (TalkBack sem conflito de AudioFocus), Fim do Travamento no Pagamento, Bares Próprios em Igarassu, Camaragibe e São Lourenço da Mata e Busca por Voz no Google Maps ("no maps" / "nomeps")!**  
+**Status Atual:** **APK Android v8.5: Fim da Interrupção Prematura do Leitor no Cardápio (TalkBack & TTS com Tempo Dinâmico de até 60s), Sem Bloqueio de Microfone, Leitura Serena e Completa de Pratos e Preços!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.4)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.5)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
 
-- **Integração com o Leitor de Tela Nativo do Sistema (Fim do Travamento no Pagamento):**
-  - **Diagnóstico do problema:** O aplicativo utilizava simultaneamente o `announceForAccessibility` do TalkBack e o sintetizador de voz próprio (`ttsLuna`) com listener bloqueante (`UtteranceProgressListener`). Quando o TalkBack assumia a locução pelo sistema operacional, ele tomava o `AudioFocus`, pausando o TTS próprio. Como o callback `onDone` nunca disparava, a Luna ficava congelada esperando timeout na hora do valor do pagamento!
-  - **Solução implementada (`isTalkBackAtivo`):**
-    - Quando o TalkBack / serviço nativo de acessibilidade está ativo no aparelho, o aplicativo entrega os anúncios diretamente ao leitor de tela nativo do sistema via `announceForAccessibility`, sem chamar o TTS interno duplicado.
-    - O microfone é acionado com intervalo suave e dinâmico, sem prender a thread em listeners de áudio cancelados pelo sistema.
-    - Locução da cobrança de Pix encurtada e objetiva: *"Total a pagar: R$ XX,XX com 10%. Em qual banco deseja pagar com Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga com 10% ou sem 10%."*
-
-- **Bares Específicos em Igarassu, Camaragibe e São Lourenço da Mata:**
-  - **Diagnóstico do problema:** O catálogo não possuía bares pré-cadastrados para Igarassu, Camaragibe e São Lourenço da Mata, e variações fonéticas como *"camaragibi"*, *"são lorensso"* e *"ba"* faziam a busca cair no fallback padrão de Recife, trazendo sempre o mesmo bar repetido.
+- **Fim da Interrupção Prematura na Leitura do Cardápio (Passo 4 - Ouvir o Cardápio):**
+  - **Diagnóstico do problema:** Quando o usuário solicitava ajuda da Luna, falava o bar, escolhia o bar e passava para a etapa de ouvir o cardápio, o leitor começava a leitura da primeira opção e, em exatamente 3,2 segundos, o microfone do Google SpeechRecognizer abria, roubava o `AudioFocus` do sistema operacional e cortava a leitura no meio!
+    - **Causa raiz encontrada:** No método `lunaFalarEChamarReconhecimentoVoz`, havia um limitador rígido `Math.min(3200L, ...)` para o ramo do TalkBack e `Math.min(4500L, ...)` para o TTS interno. Como um cardápio completo possui entre 340 e 450 caracteres (levando cerca de 25 a 32 segundos para ser lido), o temporizador de 3,2s vencia antes do fim da leitura e forçava a abertura imediata do microfone. Além disso, havia chamadas sequenciais de `atualizarPainelEFalar` e `lunaFalarEChamarReconhecimentoVoz` disparando anúncios concorrentes no TalkBack.
   - **Solução implementada:**
-    1. Cadastrados estabelecimentos completos com dados de conforto acústico e cardápios autênticos:
-       - **Igarassu:** *Bar & Restaurante Histórico do Sítio dos Marcos* (56 dB, caldinho, peixada pernambucana com pirão, chope artesanal);
-       - **Camaragibe:** *Bar & Espetaria Aldeia Camaragibe* (52 dB, espetinho gourmet de picanha, macaxeira crocante, chope IPA);
-       - **São Lourenço da Mata:** *Boteco & Restaurante Arena Grill* (58 dB, picanha na chapa com queijo coalho, caldinho com ovo de codorna, chope pilsen).
-    2. Motor semântico atualizado em `detectarCidadeNoTexto` para mapear variações fonéticas e coloquiais: *"camaragibi"*, *"camaragibe"*, *"são lorensso"*, *"lorensso da mata"*, *"são lourenço"*, *"igarassu"*, *"igaraçu"*, *"ba em..."*.
-
-- **Capacidade de Buscar Bares no Google Maps ("no maps" / "nomeps"):**
-  - A Luna agora compreende intenções de buscar e explorar bares no Google Maps por comando de voz:
-    - *"buscar no maps"*, *"ver no maps"*, *"abrir no maps"*, *"nomeps"*, *"no maps"*, *"google maps"*, *"bares em camaragibe no maps"*, *"bar em igarassu no google maps"*.
-  - Dispara a Intent nativa `geo:0,0?q=...` focada no Google Maps com fallback web automático.
-  - Se um estabelecimento pesquisado não estiver no catálogo local, a Luna avisa e permite abrir a pesquisa diretamente no Maps.
-  - Eliminado o `AlertDialog` modal remanescente em `buscarEListarBaresLuna`, garantindo que a tela role suavemente e a Luna recite os bares sem interrupções.
+    1. **Cálculo de tempo dinâmico proporcional à fala em português:**
+       - Taxa ajustada para `85 ms por caractere` + margem confortável de `3,5 segundos` para pausas, números e pontuações:  
+         `delayEstimadoTalkBack = Math.min(60000L, Math.max(4000L, len * 85L + 3500L));`
+       - Para um cardápio com 340 caracteres, o TalkBack agora recebe **32,4 segundos** (e até 60 segundos), permitindo que todas as opções, itens, valores e a pergunta final sejam lidos com total clareza antes do microfone abrir.
+    2. **Sincronização limpa sem concorrência de áudio:**
+       - Criada sobrecarga limpa `lunaFalarEChamarReconhecimentoVoz(textoVisual, textoParaFalar, requestCode, prompt)` que atualiza o painel visual com emojis e quebras de linha e emite **um único anúncio de acessibilidade** (`announceForAccessibility`), eliminando mensagens sobrepostas.
+    3. **Remoção de diálogos modais (`AlertDialog`) que roubavam o foco do leitor:**
+       - Eliminado diálogo modal intrusivo que surgia em `listarEstabelecimentosEPerguntarLuna`, mantendo o fluxo suave por rolagem de tela e leitura contínua.
+    4. **Cancelamento seguro de temporizadores:**
+       - No método `iniciarReconhecimentoVoz`, qualquer callback pendente no `handlerLuna` é limpo imediatamente se o usuário preferir tocar no botão do microfone antes de o tempo terminar.
 
 ---
 
-## 2. Histórico de Versões Anteriores (v8.3, v8.2 e v8.1)
+## 2. Histórico de Versões Anteriores (v8.4, v8.3, v8.2 e v8.1)
+
+- **Versão v8.4:**
+  - Integração nativa com TalkBack para fluxo de pagamento Pix (`isTalkBackAtivo`).
+  - Bares específicos e cardápios autênticos para Igarassu, Camaragibe e São Lourenço da Mata.
+  - Reconhecimento fonético aprimorado e busca por voz no Google Maps ("no maps", "nomeps").
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
