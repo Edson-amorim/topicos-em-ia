@@ -44,6 +44,7 @@ public class MainActivity extends Activity {
     private static final int REQ_VOZ_PERGUNTAR_SABER_VALOR = 105;
     private static final int REQ_VOZ_PERGUNTAR_QUER_PAGAR = 106;
     private static final int REQ_VOZ_PERGUNTAR_TAXA_DEZ = 107;
+    private static final int REQ_VOZ_ESCOLHER_BANCO = 108;
 
     // Coordenadas de referência (Marco Zero / Recife Antigo)
     private static final double LAT_USUARIO = -8.0628;
@@ -3283,21 +3284,200 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Se o usuário responder Sim para pagar, gera o código Pix e abre as opções de banco.
+     * Se o usuário responder Sim para pagar, inicia o fluxo conversacional autônomo da Luna
+     * para perguntar em qual banco ele quer pagar e gerenciar os 10% da taxa de serviço.
      */
     private void tratarRespostaQuerPagarLuna(String resposta) {
         if (ehAfirmacao(resposta)) {
-            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "estabelecimento";
-            String msgVisual = "📲 Gerando Pix e preparando bancos...\n" +
-                    "Total: " + formatarMoedaCentavos(ultimoTotalCentavos) + " em " + estNome;
-            String msgFalada = "Gerando código Pix para pagamento! Escolha o aplicativo do seu banco para pagar.";
-            atualizarPainelEFalar(msgVisual, msgFalada);
-
-            acaoPagarComandaNosBancos();
+            iniciarFluxoPagamentoPixLuna();
         } else {
             String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "estabelecimento";
             String msg = "Comanda mantida aberta em " + estNome + ". Quando quiser fechar a conta, é só chamar a Luna!";
             atualizarPainelEFalar(msg, msg);
+        }
+    }
+
+    /**
+     * Fluxo conversacional autônomo da Luna para fechamento de conta e escolha de banco:
+     * Informa subtotal, taxa de 10% e total a pagar, e pergunta por voz qual banco o usuário deseja usar.
+     */
+    private void iniciarFluxoPagamentoPixLuna() {
+        if (ultimoSubtotalCentavos <= 0) {
+            String vazia = "Sua comanda ainda está vazia! Escolha pratos ou bebidas no cardápio antes de fechar a conta.";
+            atualizarPainelEFalar(vazia, vazia);
+            lunaFalarEChamarReconhecimentoVoz(vazia, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
+            return;
+        }
+
+        recalcularComanda();
+        String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+        String subtotalFmt = formatarMoedaCentavos(ultimoSubtotalCentavos);
+        String taxaFmt = formatarMoedaCentavos(ultimaTaxaServicoCentavos);
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+
+        String msgVisual = "💳 Fechamento da Comanda (" + estNome + "):\n" +
+                "• Subtotal: " + subtotalFmt + "\n" +
+                "• Taxa 10% Garçom: " + (adicionarTaxaDezPorCento ? taxaFmt + " (Inclusa)" : "Desativada") + "\n" +
+                "• TOTAL A PAGAR: " + totalFmt + "\n\n" +
+                "🎙️ Luna pronta: fale o nome do seu banco (ex: Nubank, Inter, Caixa, Itaú, Bradesco) ou diga 'com 10%' / 'sem 10%'.";
+
+        String msgFalada = "Sua conta em " + estNome + " deu " + totalFmt +
+                (adicionarTaxaDezPorCento ? ", incluindo a taxa de dez por cento do garçom." : ", sem a taxa de serviço.") +
+                " Em qual banco você deseja pagar com Pix? Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil. Você também pode dizer com dez por cento ou sem dez por cento.";
+
+        atualizarPainelEFalar(msgVisual, msgFalada);
+        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco ou com/sem 10%...");
+    }
+
+    /**
+     * Processa a resposta falada pelo usuário ao escolher o banco ou alterar os 10% de taxa.
+     */
+    private void tratarEscolhaBancoPorVozLuna(String resposta) {
+        if (resposta == null || resposta.trim().isEmpty()) {
+            String msg = "Não ouvi a resposta. Diga o nome do seu banco, como Nubank, Inter ou Caixa, ou diga com 10% ou sem 10%.";
+            atualizarPainelEFalar(msg, msg);
+            lunaFalarEChamarReconhecimentoVoz(msg, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: diga o seu banco...");
+            return;
+        }
+
+        String norm = normalizarTexto(resposta);
+        String normEspaco = " " + norm + " ";
+
+        // 1. Ajuste autônomo da taxa de 10% de serviço
+        boolean alterouTaxa = false;
+        if (normEspaco.contains(" com 10 ") || normEspaco.contains(" com dez ") ||
+            normEspaco.contains(" adicionar 10 ") || normEspaco.contains(" adicionar dez ") ||
+            normEspaco.contains(" botar 10 ") || normEspaco.contains(" botar dez ") ||
+            normEspaco.contains(" incluir 10 ") || normEspaco.contains(" com taxa ") ||
+            norm.equals("com 10") || norm.equals("com dez")) {
+            if (!adicionarTaxaDezPorCento) {
+                adicionarTaxaDezPorCento = true;
+                alterouTaxa = true;
+                recalcularComanda();
+                if (bancoDados != null && estabelecimentoSelecionado != null) {
+                    bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+                }
+            }
+        } else if (normEspaco.contains(" sem 10 ") || normEspaco.contains(" sem dez ") ||
+                   normEspaco.contains(" tirar 10 ") || normEspaco.contains(" tirar dez ") ||
+                   normEspaco.contains(" remover 10 ") || normEspaco.contains(" remover dez ") ||
+                   normEspaco.contains(" sem taxa ") || normEspaco.contains(" cancelar 10 ") ||
+                   norm.equals("sem 10") || norm.equals("sem dez")) {
+            if (adicionarTaxaDezPorCento) {
+                adicionarTaxaDezPorCento = false;
+                alterouTaxa = true;
+                recalcularComanda();
+                if (bancoDados != null && estabelecimentoSelecionado != null) {
+                    bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+                }
+            }
+        }
+
+        // 2. Identificação do banco falado pelo usuário
+        String bancoAlvo = ProcessadorComandosVoz.identificarBanco(normEspaco);
+        if (bancoAlvo != null) {
+            executarAberturaBancoPorVoz(bancoAlvo);
+            return;
+        }
+
+        // Se alterou a taxa e ainda não especificou o banco, anuncia o novo valor e reabre o microfone
+        if (alterouTaxa) {
+            String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+            String fala = (adicionarTaxaDezPorCento
+                    ? "Taxa de dez por cento do garçom incluída! O novo total é " + totalFmt
+                    : "Taxa de dez por cento removida! O novo total é " + totalFmt) +
+                    ". Agora, em qual banco você deseja pagar? Diga Nubank, Banco Inter, Caixa, Itaú ou Bradesco.";
+            atualizarPainelEFalar(fala, fala);
+            lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: qual o banco para pagamento?");
+            return;
+        }
+
+        // 3. Negação / Desistir do pagamento
+        if (ehNegacao(resposta)) {
+            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+            String msg = "Tudo bem! Comanda mantida aberta em " + estNome + ". Quando quiser fechar a conta ou pedir mais itens, é só chamar a Luna!";
+            atualizarPainelEFalar(msg, msg);
+            return;
+        }
+
+        // 4. Afirmação genérica (ex: "sim", "pagar", "abrir qualquer um", "pix")
+        if (ehAfirmacao(resposta) || normEspaco.contains(" qualquer ") || normEspaco.contains(" qualquer um ")) {
+            prosseguirPagamentoNosBancosConversacional();
+            return;
+        }
+
+        // 5. Fallback para banco não reconhecido
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+        String falaNaoEntendeu = "Não identifiquei o banco \"" + resposta + "\". O total da conta é " + totalFmt +
+                ". Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil, ou diga 'com 10%' ou 'sem 10%'.";
+        atualizarPainelEFalar("🎙️ Luna aguardando: Diga Nubank, Inter, Caixa, Itaú ou Bradesco.", falaNaoEntendeu);
+        lunaFalarEChamarReconhecimentoVoz(falaNaoEntendeu, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco...");
+    }
+
+    /**
+     * Verifica e aplica autonomamente o ajuste da taxa de 10% a partir da frase falada pelo usuário.
+     */
+    private void verificarAjusteTaxaDezPorFrase(String frase) {
+        if (frase == null || frase.trim().isEmpty()) return;
+        String norm = normalizarTexto(frase);
+        String normEspaco = " " + norm + " ";
+
+        if (normEspaco.contains(" com 10 ") || normEspaco.contains(" com dez ") ||
+            normEspaco.contains(" adicionar 10 ") || normEspaco.contains(" botar 10 ") ||
+            normEspaco.contains(" incluir 10 ") || normEspaco.contains(" com taxa ")) {
+            if (!adicionarTaxaDezPorCento) {
+                adicionarTaxaDezPorCento = true;
+                recalcularComanda();
+                if (bancoDados != null && estabelecimentoSelecionado != null) {
+                    bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+                }
+            }
+        } else if (normEspaco.contains(" sem 10 ") || normEspaco.contains(" sem dez ") ||
+                   normEspaco.contains(" tirar 10 ") || normEspaco.contains(" remover 10 ") ||
+                   normEspaco.contains(" sem taxa ")) {
+            if (adicionarTaxaDezPorCento) {
+                adicionarTaxaDezPorCento = false;
+                recalcularComanda();
+                if (bancoDados != null && estabelecimentoSelecionado != null) {
+                    bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+                }
+            }
+        }
+    }
+
+    /**
+     * Prossegue com a abertura do banco ou seletor de compartilhamento sem exibir diálogos modais bloqueantes.
+     */
+    private void prosseguirPagamentoNosBancosConversacional() {
+        salvarComandaAtualNoHistoricoSQLite();
+        copiarPixParaAreaDeTransferencia();
+        final String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+        final List<BancoAppInfo> bancosInstalados = detectarBancosInstaladosNoCelular();
+
+        if (!bancosInstalados.isEmpty()) {
+            BancoAppInfo b = bancosInstalados.get(0);
+            String msg = "Código Pix de " + valorFmt + " copiado para a área de transferência! Abrindo o aplicativo " + b.nomeBanco + " para finalizar o pagamento.";
+            atualizarPainelEFalar(msg, msg);
+            executarAberturaBancoComPix(b);
+        } else {
+            String msg = "Código Pix de " + valorFmt + " copiado para a área de transferência! Abrindo as opções do celular para colar e pagar.";
+            atualizarPainelEFalar(msg, msg);
+            abrirSeletorCompartilhamentoPix(valorFmt);
+        }
+    }
+
+    /**
+     * Abre o compartilhamento do sistema Android com o código Pix copia e cola.
+     */
+    private void abrirSeletorCompartilhamentoPix(String valorFmt) {
+        try {
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, "Pagamento Pix Comanda Falada - " + valorFmt);
+            sendIntent.putExtra(Intent.EXTRA_TEXT, ultimoPayloadPix);
+            startActivity(Intent.createChooser(sendIntent, "Abrir Pix de " + valorFmt + " com:"));
+        } catch (Exception e) {
+            Toast.makeText(this, "Pix copiado: " + valorFmt, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -3713,6 +3893,39 @@ public class MainActivity extends Activity {
                         }
                     })
                     .show();
+        } else if (requestCode == REQ_VOZ_ESCOLHER_BANCO) {
+            final String[] opcoesBanco = new String[]{
+                    "💜 Nubank (com 10%)",
+                    "🧡 Banco Inter (sem 10%)",
+                    "💙 Caixa Econômica / Caixa Tem",
+                    "🧡 Itaú",
+                    "❤️ Bradesco",
+                    "💛 Banco do Brasil",
+                    "💚 PicPay / Mercado Pago",
+                    "💁 Adicionar 10% do garçom",
+                    "🙅 Tirar 10% do garçom",
+                    "⏳ Cancelar e pagar depois"
+            };
+            new AlertDialog.Builder(this)
+                    .setTitle("🏦 Luna: Escolha ou Simule o Banco para Pix:")
+                    .setItems(opcoesBanco, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case 0: tratarEscolhaBancoPorVozLuna("nubank com 10%"); break;
+                                case 1: tratarEscolhaBancoPorVozLuna("banco inter sem 10%"); break;
+                                case 2: tratarEscolhaBancoPorVozLuna("caixa"); break;
+                                case 3: tratarEscolhaBancoPorVozLuna("itau"); break;
+                                case 4: tratarEscolhaBancoPorVozLuna("bradesco"); break;
+                                case 5: tratarEscolhaBancoPorVozLuna("banco do brasil"); break;
+                                case 6: tratarEscolhaBancoPorVozLuna("picpay"); break;
+                                case 7: tratarEscolhaBancoPorVozLuna("com 10%"); break;
+                                case 8: tratarEscolhaBancoPorVozLuna("sem 10%"); break;
+                                default: tratarEscolhaBancoPorVozLuna("depois"); break;
+                            }
+                        }
+                    })
+                    .show();
         } else if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
             final String[] frasesBusca = new String[]{
                     "Quero um bar no Recife Antigo em Pernambuco com música baixa",
@@ -3799,6 +4012,8 @@ public class MainActivity extends Activity {
                     tratarRespostaTaxaDezLuna(textoFalado);
                 } else if (requestCode == REQ_VOZ_PERGUNTAR_QUER_PAGAR) {
                     tratarRespostaQuerPagarLuna(textoFalado);
+                } else if (requestCode == REQ_VOZ_ESCOLHER_BANCO) {
+                    tratarEscolhaBancoPorVozLuna(textoFalado);
                 } else {
                     executarComandoVozUniversal(textoFalado);
                 }
@@ -3865,10 +4080,11 @@ public class MainActivity extends Activity {
                 break;
 
             case PAGAR_PIX:
-                acaoPagarComandaNosBancos();
+                iniciarFluxoPagamentoPixLuna();
                 break;
 
             case ABRIR_BANCO:
+                verificarAjusteTaxaDezPorFrase(resultado.fraseOriginal);
                 executarAberturaBancoPorVoz(resultado.parametroTexto);
                 break;
 
@@ -4140,11 +4356,21 @@ public class MainActivity extends Activity {
             salvarComandaAtualNoHistoricoSQLite();
             copiarPixParaAreaDeTransferencia();
             String valorFmt = formatarMoedaCentavos(ultimoTotalCentavos);
-            String msg = "O aplicativo do " + nomeBanco + " não está instalado neste celular. " +
-                    "O código Pix de " + valorFmt + " foi copiado para a sua área de transferência. " +
-                    "Escolha um dos bancos instalados abaixo para concluir:";
-            atualizarPainelEFalar(msg, msg);
-            prosseguirPagamentoNosBancos();
+
+            if (!bancosInstalados.isEmpty()) {
+                BancoAppInfo primeiro = bancosInstalados.get(0);
+                String msg = "O aplicativo do " + nomeBanco + " não está instalado neste celular. " +
+                        "Mas encontrei o " + primeiro.nomeBanco + "! O código Pix de " + valorFmt +
+                        " foi copiado. Abrindo o " + primeiro.nomeBanco + " para finalizar o pagamento.";
+                atualizarPainelEFalar(msg, msg);
+                executarAberturaBancoComPix(primeiro);
+            } else {
+                String msg = "O aplicativo do " + nomeBanco + " não está instalado neste celular. " +
+                        "O código Pix de " + valorFmt + " foi copiado para a sua área de transferência. " +
+                        "Abrindo o seletor do sistema para você colar e pagar!";
+                atualizarPainelEFalar(msg, msg);
+                abrirSeletorCompartilhamentoPix(valorFmt);
+            }
         }
     }
 

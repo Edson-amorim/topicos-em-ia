@@ -5,12 +5,46 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.2: Correção Total de Remoção de Itens por Voz (Tira/Tirar/Remover), Correção de Quantidade em Opções Numeradas (Opção 5 adiciona/remove exatamente 1 unidade) e Fim do Congelamento no Cardápio (Eliminação de Diálogos Modais Bloqueantes e Timeout Ágil de 10s no TTS)!**  
+**Status Atual:** **APK Android v8.3: Escolha do Banco por Voz para Pagamento Pix (Nubank, Inter, Caixa, Itaú, Bradesco, Banco do Brasil, PicPay, etc.) e Autonomia Conversacional da Luna na Taxa de 10% do Garçom!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.2)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.3)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Escolha do Banco por Voz para Pagamento Pix:**
+  - O usuário agora pode dizer em qual banco deseja efetuar o pagamento via Pix.
+  - Suporte completo a nomes e apelidos dos principais bancos brasileiros em `ProcessadorComandosVoz.java`:
+    - **Nubank:** *"nubank"*, *"nu"*, *"roxinho"*;
+    - **Banco Inter:** *"banco inter"*, *"inter"*, *"laranjinha"*;
+    - **Caixa Econômica:** *"caixa"*, *"caixa economica"*, *"caixa tem"*, *"caixa federal"*;
+    - **Itaú:** *"itau"*, *"itaucard"*;
+    - **Bradesco:** *"bradesco"*;
+    - **Banco do Brasil:** *"banco do brasil"*, *"bb"*, *"brasil"*;
+    - **Outros:** *"santander"*, *"picpay"*, *"mercado pago"*, *"c6 bank"*, *"pagbank"*, *"neon"*, *"next"*, *"will bank"*, *"sicredi"*, *"sicoob"*.
+  - Ao falar o banco, a Luna:
+    1. Salva a comanda no histórico do SQLite;
+    2. Copia o código Pix copia e cola no valor exato para o clipboard do celular;
+    3. Anuncia por voz via TTS a confirmação;
+    4. Abre imediatamente o aplicativo do banco selecionado (ou o seletor do sistema Android caso não esteja instalado), sem janelas bloqueantes.
+
+- **Luna com Autonomia Conversacional Completa na Taxa de 10%:**
+  - Ao fechar a conta ou consultar o total (*"quanto tá dando a conta"*, *"fechar a conta"*, *"quero pagar"*), a Luna assume o fluxo conversacional autônomo:
+    - Informa o subtotal, se a taxa de 10% do garçom está inclusa e o valor total final a pagar.
+    - Pergunta por voz: *"Em qual banco você deseja pagar com Pix? Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil. Você também pode dizer 'com 10%' ou 'sem 10%'."*
+    - Abre o microfone automaticamente (`REQ_VOZ_ESCOLHER_BANCO`).
+  - Suporte a comandos combinados diretos:
+    - *"pagar no nubank com 10%"* -> ativa os 10%, recalcula o total, salva no SQLite e abre o Nubank com o Pix atualizado!
+    - *"abrir banco inter sem os 10%"* -> desativa os 10%, recalcula e abre o Inter!
+  - Se o usuário disser apenas *"com 10%"* ou *"sem 10%"*, a Luna ajusta autonomamente a taxa, atualiza o painel, recalcula a conta e pergunta em qual banco ele quer pagar, reabrindo a escuta.
+  - Eliminação de qualquer `AlertDialog` impeditivo que roube o foco de áudio do TTS ou trave o TalkBack durante o pagamento.
+
+---
+
+## 2. Histórico de Versões Anteriores (v8.2 e v8.1)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

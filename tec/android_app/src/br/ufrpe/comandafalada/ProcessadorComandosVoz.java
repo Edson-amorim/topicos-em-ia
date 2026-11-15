@@ -448,7 +448,6 @@ public class ProcessadorComandosVoz {
             normEspaco.contains(" quanto e ") || normEspaco.contains(" quanto deu a conta ") ||
             normEspaco.contains(" quanto ta a conta ") || normEspaco.contains(" quanto deu a comanda ") ||
             normEspaco.contains(" quanto ta a comanda ") || normEspaco.contains(" quanto custa ") ||
-            normEspaco.contains(" fechar conta ") || normEspaco.contains(" fechar a conta ") ||
             normEspaco.contains(" pedir a conta ") || normEspaco.contains(" ver conta ") ||
             normEspaco.contains(" valor da conta ") || normEspaco.contains(" valor da comanda ") ||
             normEspaco.contains(" saldo ") || normEspaco.contains(" total da comanda ") ||
@@ -480,7 +479,20 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 5. TAXA DE 10% DO GARÇOM / RESPOSTAS RÁPIDAS
+        // 5. BANCO ESPECÍFICO (NUBANK, INTER, CAIXA, ITAÚ, BRADESCO, BB, ETC.)
+        String bancoAlvo = identificarBanco(normEspaco);
+        if (bancoAlvo != null) {
+            return new ResultadoComando(
+                    TipoAcao.ABRIR_BANCO,
+                    original,
+                    null,
+                    bancoAlvo,
+                    "📲 Copiando Pix e abrindo o banco " + bancoAlvo + "...",
+                    "Código Pix copiado para a área de transferência. Abrindo aplicativo do " + bancoAlvo + "."
+            );
+        }
+
+        // 6. TAXA DE 10% DO GARÇOM / RESPOSTAS RÁPIDAS
         if (norm.equals("sim") || norm.equals("quero") || norm.equals("pode ser") ||
             norm.equals("com certeza") || norm.equals("claro") || norm.equals("positivo") ||
             norm.equals("adicionar 10") || norm.equals("com 10") || norm.equals("colocar 10")) {
@@ -544,7 +556,7 @@ public class ProcessadorComandosVoz {
             }
         }
 
-        // 5.1 TETO DE GASTOS / ALTERAR LIMITE
+        // 6.1 TETO DE GASTOS / ALTERAR LIMITE
         if (normEspaco.contains(" teto ") || normEspaco.contains(" teto de gastos ") ||
             normEspaco.contains(" alterar teto ") || normEspaco.contains(" mudar teto ") ||
             normEspaco.contains(" limite de gastos ") || normEspaco.contains(" limite ") ||
@@ -559,23 +571,14 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 6. PAGAMENTO POR PIX OU ABRIR BANCO
-        String bancoAlvo = identificarBanco(normEspaco);
-        if (bancoAlvo != null) {
-            return new ResultadoComando(
-                    TipoAcao.ABRIR_BANCO,
-                    original,
-                    null,
-                    bancoAlvo,
-                    "📲 Copiando Pix e abrindo o banco " + bancoAlvo + "...",
-                    "Código Pix copiado para a área de transferência. Abrindo aplicativo do " + bancoAlvo + "."
-            );
-        }
-
+        // 7. PAGAMENTO POR PIX / FECHAR A CONTA
         if (normEspaco.contains(" pix ") || normEspaco.contains(" pagar com pix ") ||
             normEspaco.contains(" gerar pix ") || normEspaco.contains(" copiar pix ") ||
             normEspaco.contains(" codigo pix ") || normEspaco.contains(" pagar a conta ") ||
-            normEspaco.contains(" efetuar pagamento ")) {
+            normEspaco.contains(" pagar conta ") || normEspaco.contains(" fechar a conta ") ||
+            normEspaco.contains(" fechar conta ") || normEspaco.contains(" fechar minha conta ") ||
+            normEspaco.contains(" quero pagar ") || normEspaco.contains(" vamos pagar ") ||
+            normEspaco.contains(" encerrar conta ") || normEspaco.contains(" efetuar pagamento ")) {
             return new ResultadoComando(
                     TipoAcao.PAGAR_PIX,
                     original,
@@ -586,7 +589,7 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 7. GOOGLE MAPS & ROTAS
+        // 8. GOOGLE MAPS & ROTAS
         if (normEspaco.contains(" rota ") || normEspaco.contains(" como chegar ") ||
             normEspaco.contains(" tracar rota ") || normEspaco.contains(" ir ate o bar ") ||
             normEspaco.contains(" ir para o bar ") || normEspaco.contains(" abrir maps ") ||
@@ -735,18 +738,19 @@ public class ProcessadorComandosVoz {
         );
     }
 
-    private static String identificarBanco(String normEspaco) {
-        if (normEspaco.contains(" nubank ") || normEspaco.contains(" roxinho ")) return "Nubank";
-        if (normEspaco.contains(" banco inter ") || normEspaco.contains(" inter ")) return "Banco Inter";
-        if (normEspaco.contains(" itau ")) return "Itaú";
+    public static String identificarBanco(String normEspaco) {
+        if (normEspaco == null) return null;
+        if (normEspaco.contains(" nubank ") || normEspaco.contains(" nu ") || normEspaco.contains(" roxinho ")) return "Nubank";
+        if (normEspaco.contains(" banco inter ") || normEspaco.contains(" inter ") || normEspaco.contains(" laranjinha ") || normEspaco.contains(" intermedium ")) return "Banco Inter";
+        if (normEspaco.contains(" itau ") || normEspaco.contains(" itaucard ") || normEspaco.contains(" itau unibanco ")) return "Itaú";
         if (normEspaco.contains(" bradesco ")) return "Bradesco";
-        if (normEspaco.contains(" banco do brasil ") || normEspaco.contains(" bb ")) return "Banco do Brasil";
-        if (normEspaco.contains(" caixa ") || normEspaco.contains(" caixa tem ") || normEspaco.contains(" caixa economica ")) return "Caixa";
+        if (normEspaco.contains(" banco do brasil ") || normEspaco.contains(" bb ") || normEspaco.contains(" brasil ")) return "Banco do Brasil";
+        if (normEspaco.contains(" caixa ") || normEspaco.contains(" caixa tem ") || normEspaco.contains(" caixa economica ") || normEspaco.contains(" caixa federal ")) return "Caixa";
         if (normEspaco.contains(" santander ")) return "Santander";
-        if (normEspaco.contains(" picpay ")) return "PicPay";
-        if (normEspaco.contains(" mercado pago ")) return "Mercado Pago";
+        if (normEspaco.contains(" picpay ") || normEspaco.contains(" pic pay ")) return "PicPay";
+        if (normEspaco.contains(" mercado pago ") || normEspaco.contains(" mercadopago ")) return "Mercado Pago";
         if (normEspaco.contains(" c6 ") || normEspaco.contains(" c6 bank ")) return "C6 Bank";
-        if (normEspaco.contains(" pagbank ") || normEspaco.contains(" pagseguro ")) return "PagBank";
+        if (normEspaco.contains(" pagbank ") || normEspaco.contains(" pagseguro ") || normEspaco.contains(" pag bank ")) return "PagBank";
         if (normEspaco.contains(" neon ")) return "Neon";
         if (normEspaco.contains(" next ")) return "Next";
         if (normEspaco.contains(" will bank ") || normEspaco.contains(" will ")) return "Will Bank";
@@ -850,8 +854,8 @@ public class ProcessadorComandosVoz {
         if (it.palavrasChave != null) {
             for (String pc : it.palavrasChave) {
                 String pcNorm = normalizar(pc);
-                if (trecho.contains(pcNorm)) {
-                    score += 4;
+                if (pcNorm.length() > 2 && trecho.contains(pcNorm)) {
+                    score += 6;
                 }
             }
         }
