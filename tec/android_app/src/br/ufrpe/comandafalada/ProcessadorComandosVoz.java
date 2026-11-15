@@ -604,15 +604,22 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        if (normEspaco.contains(" bares no maps ") || normEspaco.contains(" bares no mapa ") ||
-            normEspaco.contains(" ver no mapa ") || normEspaco.contains(" mostrar no mapa ")) {
+        // 8. GOOGLE MAPS (BUSCA DE BARES NO MAPA / NOMEPS)
+        if (normEspaco.contains(" maps ") || normEspaco.contains(" no maps ") ||
+            normEspaco.contains(" nomeps ") || normEspaco.contains(" no meps ") ||
+            normEspaco.contains(" google maps ") || normEspaco.contains(" no mapa ") ||
+            normEspaco.contains(" ver no mapa ") || normEspaco.contains(" buscar no mapa ") ||
+            normEspaco.contains(" procurar no maps ") || normEspaco.contains(" buscar no maps ") ||
+            normEspaco.contains(" abrir maps ") || normEspaco.contains(" bares no maps ")) {
+
+            String consultaMaps = extrairConsultaMaps(original, norm);
             return new ResultadoComando(
                     TipoAcao.VER_BARES_MAPS,
                     original,
                     null,
-                    "",
-                    "🗺️ Abrindo bares da cidade no Google Maps...",
-                    "Abrindo bares e restaurantes desta cidade no Google Maps."
+                    consultaMaps,
+                    "🗺️ Abrindo busca de bares no Google Maps: \"" + (consultaMaps.isEmpty() ? "Bares da cidade" : consultaMaps) + "\"...",
+                    "Abrindo o Google Maps para buscar bares " + (consultaMaps.isEmpty() ? "nesta cidade" : "em " + consultaMaps) + "."
             );
         }
 
@@ -709,11 +716,16 @@ public class ProcessadorComandosVoz {
         // 11. FILTRO OU BUSCA DE ESTABELECIMENTO / CIDADE / ESTADO
         if (normEspaco.contains(" buscar ") || normEspaco.contains(" procurar ") ||
             normEspaco.contains(" localizar ") || normEspaco.contains(" ir para ") ||
-            normEspaco.contains(" filtrar ") || normEspaco.contains(" bar ") ||
-            normEspaco.contains(" restaurante ") || normEspaco.contains(" cidade ") ||
+            normEspaco.contains(" filtrar ") || normEspaco.contains(" bar ") || normEspaco.contains(" ba ") ||
+            normEspaco.contains(" bares ") || normEspaco.contains(" bas ") ||
+            normEspaco.contains(" boteco ") || normEspaco.contains(" botecos ") ||
+            normEspaco.contains(" restaurante ") || normEspaco.contains(" restaurantes ") || normEspaco.contains(" cidade ") ||
             normEspaco.contains(" estado ") || normEspaco.contains(" pernambuco ") ||
             normEspaco.contains(" recife ") || normEspaco.contains(" olinda ") ||
             normEspaco.contains(" caruaru ") || normEspaco.contains(" campina grande ") ||
+            normEspaco.contains(" igarassu ") || normEspaco.contains(" camaragibe ") ||
+            normEspaco.contains(" camaragibi ") || normEspaco.contains(" sao lourenco ") ||
+            normEspaco.contains(" sao lorensso ") || normEspaco.contains(" lorensso ") ||
             normEspaco.contains(" sao paulo ")) {
 
             String termoBusca = extrairTermoBusca(original, norm);
@@ -775,6 +787,20 @@ public class ProcessadorComandosVoz {
             }
         }
         return t.trim();
+    }
+
+    private static String extrairConsultaMaps(String original, String norm) {
+        String resultado = norm;
+        String[] descartar = new String[]{
+                "buscar no maps", "procurar no maps", "abrir no maps", "ver no maps",
+                "bares no maps", "bar no maps", "ba no maps", "no maps", "nomeps", "no meps",
+                "google maps", "buscar no mapa", "ver no mapa", "no mapa", "abrir maps", "maps", "mapa",
+                "bares em", "bar em", "ba em", "restaurantes em", "procurar", "buscar", "pesquisar"
+        };
+        for (String d : descartar) {
+            resultado = resultado.replaceAll("\\b" + java.util.regex.Pattern.quote(d) + "\\b", " ");
+        }
+        return resultado.replaceAll("\\s+", " ").trim();
     }
 
     private static List<ItemQtd> identificarItensComQuantidade(String normFrase, MainActivity.Estabelecimento est) {

@@ -5,12 +5,42 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.3: Escolha do Banco por Voz para Pagamento Pix (Nubank, Inter, Caixa, Itaú, Bradesco, Banco do Brasil, PicPay, etc.) e Autonomia Conversacional da Luna na Taxa de 10% do Garçom!**  
+**Status Atual:** **APK Android v8.4: Integração com Leitor de Tela Nativo do Sistema (TalkBack sem conflito de AudioFocus), Fim do Travamento no Pagamento, Bares Próprios em Igarassu, Camaragibe e São Lourenço da Mata e Busca por Voz no Google Maps ("no maps" / "nomeps")!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.3)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.4)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~144 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Integração com o Leitor de Tela Nativo do Sistema (Fim do Travamento no Pagamento):**
+  - **Diagnóstico do problema:** O aplicativo utilizava simultaneamente o `announceForAccessibility` do TalkBack e o sintetizador de voz próprio (`ttsLuna`) com listener bloqueante (`UtteranceProgressListener`). Quando o TalkBack assumia a locução pelo sistema operacional, ele tomava o `AudioFocus`, pausando o TTS próprio. Como o callback `onDone` nunca disparava, a Luna ficava congelada esperando timeout na hora do valor do pagamento!
+  - **Solução implementada (`isTalkBackAtivo`):**
+    - Quando o TalkBack / serviço nativo de acessibilidade está ativo no aparelho, o aplicativo entrega os anúncios diretamente ao leitor de tela nativo do sistema via `announceForAccessibility`, sem chamar o TTS interno duplicado.
+    - O microfone é acionado com intervalo suave e dinâmico, sem prender a thread em listeners de áudio cancelados pelo sistema.
+    - Locução da cobrança de Pix encurtada e objetiva: *"Total a pagar: R$ XX,XX com 10%. Em qual banco deseja pagar com Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga com 10% ou sem 10%."*
+
+- **Bares Específicos em Igarassu, Camaragibe e São Lourenço da Mata:**
+  - **Diagnóstico do problema:** O catálogo não possuía bares pré-cadastrados para Igarassu, Camaragibe e São Lourenço da Mata, e variações fonéticas como *"camaragibi"*, *"são lorensso"* e *"ba"* faziam a busca cair no fallback padrão de Recife, trazendo sempre o mesmo bar repetido.
+  - **Solução implementada:**
+    1. Cadastrados estabelecimentos completos com dados de conforto acústico e cardápios autênticos:
+       - **Igarassu:** *Bar & Restaurante Histórico do Sítio dos Marcos* (56 dB, caldinho, peixada pernambucana com pirão, chope artesanal);
+       - **Camaragibe:** *Bar & Espetaria Aldeia Camaragibe* (52 dB, espetinho gourmet de picanha, macaxeira crocante, chope IPA);
+       - **São Lourenço da Mata:** *Boteco & Restaurante Arena Grill* (58 dB, picanha na chapa com queijo coalho, caldinho com ovo de codorna, chope pilsen).
+    2. Motor semântico atualizado em `detectarCidadeNoTexto` para mapear variações fonéticas e coloquiais: *"camaragibi"*, *"camaragibe"*, *"são lorensso"*, *"lorensso da mata"*, *"são lourenço"*, *"igarassu"*, *"igaraçu"*, *"ba em..."*.
+
+- **Capacidade de Buscar Bares no Google Maps ("no maps" / "nomeps"):**
+  - A Luna agora compreende intenções de buscar e explorar bares no Google Maps por comando de voz:
+    - *"buscar no maps"*, *"ver no maps"*, *"abrir no maps"*, *"nomeps"*, *"no maps"*, *"google maps"*, *"bares em camaragibe no maps"*, *"bar em igarassu no google maps"*.
+  - Dispara a Intent nativa `geo:0,0?q=...` focada no Google Maps com fallback web automático.
+  - Se um estabelecimento pesquisado não estiver no catálogo local, a Luna avisa e permite abrir a pesquisa diretamente no Maps.
+  - Eliminado o `AlertDialog` modal remanescente em `buscarEListarBaresLuna`, garantindo que a tela role suavemente e a Luna recite os bares sem interrupções.
+
+---
+
+## 2. Histórico de Versões Anteriores (v8.3, v8.2 e v8.1)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

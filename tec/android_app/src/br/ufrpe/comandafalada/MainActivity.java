@@ -1,5 +1,6 @@
 package br.ufrpe.comandafalada;
 
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -950,24 +951,33 @@ public class MainActivity extends Activity {
     }
 
     private void explorarBaresDaCidadeNoGoogleMaps() {
-        String localAlvo;
-        if (!cidadeFiltroAtual.equals("TODAS")) {
-            localAlvo = cidadeFiltroAtual + " - " + ufFiltroAtual;
-        } else if (!ufFiltroAtual.equals("TODOS")) {
-            EstadoInfo st = buscarEstadoPorUf(ufFiltroAtual);
-            localAlvo = st != null ? (st.capital + " - " + st.uf) : ufFiltroAtual;
+        explorarBaresNoGoogleMaps(null);
+    }
+
+    /**
+     * Abre a busca de bares e estabelecimentos diretamente no Google Maps.
+     */
+    private void explorarBaresNoGoogleMaps(String consultaOuCidade) {
+        String queryMaps;
+        if (consultaOuCidade != null && !consultaOuCidade.trim().isEmpty()) {
+            String cNorm = normalizarTexto(consultaOuCidade);
+            EstadoInfo st = detectarEstadoNoTexto(cNorm);
+            String cid = detectarCidadeNoTexto(cNorm, st);
+            if (cid != null) {
+                queryMaps = "bares e restaurantes em " + cid + ", " + (st != null ? st.uf : "PE");
+            } else {
+                queryMaps = "bares em " + consultaOuCidade;
+            }
+        } else if (!cidadeFiltroAtual.equals("TODAS")) {
+            queryMaps = "bares e restaurantes em " + cidadeFiltroAtual + " - " + ufFiltroAtual;
         } else if (estabelecimentoSelecionado != null) {
-            localAlvo = estabelecimentoSelecionado.cidade + " - " + estabelecimentoSelecionado.uf;
+            queryMaps = "bares e restaurantes em " + estabelecimentoSelecionado.cidade + " - " + estabelecimentoSelecionado.uf;
         } else {
-            localAlvo = "Recife - PE";
+            queryMaps = "bares e restaurantes em Recife - PE";
         }
 
-        String tipoBuscaMaps = categoriaFiltroAtual.startsWith("Todas as Categorias")
-                ? "Restaurantes, Padarias, Cafeterias, Pizzarias, Lanchonetes e Bares"
-                : categoriaFiltroAtual;
-        String queryMaps = tipoBuscaMaps + " em " + localAlvo;
-        String msg = "Abrindo o Google Maps com " + tipoBuscaMaps + " em " + localAlvo + ".";
-        atualizarPainelEFalar(msg, msg);
+        String msg = "Abrindo o Google Maps para buscar " + queryMaps + "...";
+        atualizarPainelEFalar("🗺️ " + msg, msg);
         Toast.makeText(this, "Google Maps: " + queryMaps, Toast.LENGTH_LONG).show();
 
         try {
@@ -1197,25 +1207,83 @@ public class MainActivity extends Activity {
     }
 
     private String detectarCidadeNoTexto(String textoNorm, EstadoInfo stPreferido) {
+        if (textoNorm == null || textoNorm.trim().isEmpty()) return null;
+        String t = " " + normalizarTexto(textoNorm) + " ";
+
+        // 1. Mapeamento fonético e ortográfico de cidades frequentes (especialmente Pernambuco / RMR)
+        if (t.contains(" camaragibi ") || t.contains(" camaragibe ") || t.contains(" aldeia ")) {
+            return "Camaragibe";
+        }
+        if (t.contains(" sao lorensso ") || t.contains(" lorensso ") || t.contains(" loreco ") ||
+            t.contains(" sao lourenco ") || t.contains(" lourenco ") || t.contains(" lourenco da mata ") ||
+            t.contains(" lorensso da mata ") || t.contains(" arena pernambuco ")) {
+            return "São Lourenço da Mata";
+        }
+        if (t.contains(" igarassu ") || t.contains(" igaracu ") || t.contains(" igarasso ") || t.contains(" sitio dos marcos ")) {
+            return "Igarassu";
+        }
+        if (t.contains(" jaboatao ") || t.contains(" guararapes ") || t.contains(" jaboatao dos guararapes ") || t.contains(" piedade ")) {
+            return "Jaboatão dos Guararapes";
+        }
+        if (t.contains(" olinda ") || t.contains(" alto da se ") || t.contains(" sitio historico ")) {
+            return "Olinda";
+        }
+        if (t.contains(" paulista ") || t.contains(" janga ") || t.contains(" maria farinha ")) {
+            return "Paulista";
+        }
+        if (t.contains(" cabo ") || t.contains(" santo agostinho ") || t.contains(" cabo de santo agostinho ") || t.contains(" gaibu ")) {
+            return "Cabo de Santo Agostinho";
+        }
+        if (t.contains(" abreu e lima ") || t.contains(" abreu ")) {
+            return "Abreu e Lima";
+        }
+        if (t.contains(" ipojuca ") || t.contains(" porto de galinhas ")) {
+            return "Ipojuca";
+        }
+        if (t.contains(" caruaru ") || t.contains(" alto do moura ")) {
+            return "Caruaru";
+        }
+        if (t.contains(" petrolina ")) {
+            return "Petrolina";
+        }
+        if (t.contains(" garanhuns ")) {
+            return "Garanhuns";
+        }
+        if (t.contains(" vitoria de santo antao ") || t.contains(" vitoria ")) {
+            return "Vitória de Santo Antão";
+        }
+        if (t.contains(" campina grande ") || t.contains(" campina ")) {
+            return "Campina Grande";
+        }
+        if (t.contains(" joao pessoa ")) {
+            return "João Pessoa";
+        }
+        if (t.contains(" recife ") || t.contains(" recife antigo ") || t.contains(" boa viagem ") || t.contains(" marco zero ")) {
+            return "Recife";
+        }
+
+        // 2. Busca pelas cidades cadastradas no estado preferido
         if (stPreferido != null) {
             for (int c = 0; c < stPreferido.cidadesPrincipais.length; c++) {
                 String cid = stPreferido.cidadesPrincipais[c];
-                if (textoNorm.contains(normalizarTexto(cid))) {
+                if (t.contains(" " + normalizarTexto(cid) + " ") || textoNorm.contains(normalizarTexto(cid))) {
                     return cid;
                 }
             }
         }
+
+        // 3. Busca pelas cidades de todos os estados do Brasil
         for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
             EstadoInfo st = ESTADOS_BRASIL[i];
             for (int c = 0; c < st.cidadesPrincipais.length; c++) {
                 String cid = st.cidadesPrincipais[c];
-                if (textoNorm.contains(normalizarTexto(cid))) {
+                if (t.contains(" " + normalizarTexto(cid) + " ") || textoNorm.contains(normalizarTexto(cid))) {
                     return cid;
                 }
             }
         }
-        if (!cidadeFiltroAtual.equals("TODAS")) return cidadeFiltroAtual;
-        return stPreferido != null ? stPreferido.capital : "Recife";
+
+        return null;
     }
 
     private EstadoInfo detectarEstadoNoTexto(String textoNorm) {
@@ -1240,6 +1308,11 @@ public class MainActivity extends Activity {
     private void localizarQualquerBarComCardapio(String consultaOriginal) {
         String norm = normalizarTexto(consultaOriginal);
         if (norm.isEmpty()) return;
+
+        if (norm.contains("maps") || norm.contains("nomeps") || norm.contains("no mapa") || norm.contains("mapa")) {
+            explorarBaresNoGoogleMaps(consultaOriginal);
+            return;
+        }
 
         if (ehIntencaoDeBuscaOuFiltroBares(norm)) {
             buscarEListarBaresLuna(consultaOriginal);
@@ -1630,6 +1703,63 @@ public class MainActivity extends Activity {
         barCaruaru.cardapio.add(new ItemCardapio("car_suco", "Suco de Graviola Natural", "Bebida", 1000, "suco", "graviola"));
         barCaruaru.cardapio.add(new ItemCardapio("car_chope", "Cerveja Gelada / Chope", "Bebida", 1100, "cerveja", "chope"));
         catalogoEstabelecimentos.add(barCaruaru);
+
+        // 5.1 Pernambuco (PE) - Igarassu
+        Estabelecimento barIgarassu = new Estabelecimento(
+                "bar_sitio_marcos_igarassu",
+                "Bar & Restaurante Histórico do Sítio dos Marcos",
+                "Bar & Petiscaria",
+                "Nordeste", "Pernambuco", "PE", "Igarassu", "Sítio Histórico",
+                "pix@sitiodosmarcosigarassu.com.br",
+                -7.8341, -34.9064, 56, "Baixo (Confortável)",
+                "Música acústica ambiente ao ar livre",
+                "Rampa de acesso ao centro histórico, mesas espaçosas e garçom acolhedor"
+        );
+        barIgarassu.cardapio.add(new ItemCardapio("iga_peixada", "Peixada Pernambucana com Pirão", "Prato Principal", 4800, "peixada", "peixe", "pirao"));
+        barIgarassu.cardapio.add(new ItemCardapio("iga_caldinho", "Caldinho de Sururu e Feijão", "Entrada", 1200, "caldinho", "sururu", "feijao"));
+        barIgarassu.cardapio.add(new ItemCardapio("iga_macaxeira", "Macaxeira Cozida com Manteiga de Garrafa", "Petisco", 2200, "macaxeira", "manteiga"));
+        barIgarassu.cardapio.add(new ItemCardapio("iga_chope", "Chope Artesanal Igarassu", "Bebida", 1000, "chope", "chopp", "cerveja"));
+        barIgarassu.cardapio.add(new ItemCardapio("iga_suco", "Suco Natural de Caju", "Bebida", 800, "suco", "caju"));
+        barIgarassu.cardapio.add(new ItemCardapio("iga_agua", "Água Mineral", "Bebida", 500, "agua", "mineral"));
+        catalogoEstabelecimentos.add(barIgarassu);
+
+        // 5.2 Pernambuco (PE) - Camaragibe
+        Estabelecimento barCamaragibe = new Estabelecimento(
+                "bar_aldeia_camaragibe",
+                "Bar & Espetaria Aldeia Camaragibe",
+                "Bar & Petiscaria",
+                "Nordeste", "Pernambuco", "PE", "Camaragibe", "Aldeia dos Camarás (km 9)",
+                "pix@espetariaaldeiacamaragibe.com.br",
+                -7.9897, -34.9814, 52, "Muito Baixo (Silencioso)",
+                "Brisa fresca da mata e canto de pássaros",
+                "Acesso plano, área verde ampla e atendimento assistivo dedicado"
+        );
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_espeto", "Espetinho Gourmet de Picanha com Farofa", "Petisco", 2400, "espetinho", "picanha", "espeto"));
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_caldinho", "Caldinho de Feijão Preto Tradicional", "Entrada", 1100, "caldinho", "feijao"));
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_macaxeira", "Macaxeira Frita Crocante com Queijo Coalho", "Petisco", 2600, "macaxeira", "queijo", "coalho"));
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_chope", "Chope IPA Artesanal Gelado", "Bebida", 1300, "chope", "chopp", "cerveja"));
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_suco", "Suco de Graviola Natural", "Bebida", 900, "suco", "graviola"));
+        barCamaragibe.cardapio.add(new ItemCardapio("cam_refrigerante", "Refrigerante Lata", "Bebida", 750, "refrigerante", "coca", "guarana"));
+        catalogoEstabelecimentos.add(barCamaragibe);
+
+        // 5.3 Pernambuco (PE) - São Lourenço da Mata
+        Estabelecimento barSaoLourenco = new Estabelecimento(
+                "boteco_arena_grill_slm",
+                "Boteco & Restaurante Arena Grill",
+                "Bar & Petiscaria",
+                "Nordeste", "Pernambuco", "PE", "São Lourenço da Mata", "Penedo / Perto da Arena",
+                "pix@arenagrillslm.com.br",
+                -8.0089, -35.0181, 58, "Baixo (Confortável)",
+                "Ambiente climatizado e MPB acústica suave",
+                "Rampa com piso antiderrapante, mesas acessíveis e cardápio por voz"
+        );
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_picanha", "Picanha na Chapa com Queijo Coalho", "Prato Principal", 5600, "picanha", "carne", "queijo"));
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_caldinho", "Caldinho de Feijão com Ovo de Codorna", "Entrada", 1200, "caldinho", "feijao"));
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_isca", "Isca de Frango Empanada com Molho da Casa", "Petisco", 2800, "isca", "frango"));
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_chope", "Chope Pilsen Gelado da Casa", "Bebida", 1050, "chope", "chopp", "cerveja"));
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_suco", "Suco Natural de Maracujá", "Bebida", 900, "suco", "maracuja"));
+        barSaoLourenco.cardapio.add(new ItemCardapio("slm_refrigerante", "Refrigerante Guaraná Antárctica", "Bebida", 700, "guarana", "refrigerante"));
+        catalogoEstabelecimentos.add(barSaoLourenco);
 
         // 6. Bahia (BA) - Salvador
         Estabelecimento barBahia = new Estabelecimento(
@@ -3321,9 +3451,8 @@ public class MainActivity extends Activity {
                 "• TOTAL A PAGAR: " + totalFmt + "\n\n" +
                 "🎙️ Luna pronta: fale o nome do seu banco (ex: Nubank, Inter, Caixa, Itaú, Bradesco) ou diga 'com 10%' / 'sem 10%'.";
 
-        String msgFalada = "Sua conta em " + estNome + " deu " + totalFmt +
-                (adicionarTaxaDezPorCento ? ", incluindo a taxa de dez por cento do garçom." : ", sem a taxa de serviço.") +
-                " Em qual banco você deseja pagar com Pix? Diga Nubank, Banco Inter, Caixa, Itaú, Bradesco ou Banco do Brasil. Você também pode dizer com dez por cento ou sem dez por cento.";
+        String msgFalada = "Total a pagar: " + totalFmt + (adicionarTaxaDezPorCento ? " com dez por cento." : " sem taxa.") +
+                " Em qual banco deseja pagar com Pix? Diga Nubank, Inter, Caixa, Itaú ou Bradesco. Ou diga 'com 10%' ou 'sem 10%'.";
 
         atualizarPainelEFalar(msgVisual, msgFalada);
         lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_ESCOLHER_BANCO, "Luna ouvindo: fale o nome do seu banco ou com/sem 10%...");
@@ -3670,34 +3799,20 @@ public class MainActivity extends Activity {
             opcoes[i + 2] = (i + 1) + ". " + e.nome + " (" + e.cidade + "/" + e.uf + ") — " + e.tipo;
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("🌙 Luna: Bares em " + cidade)
-                .setMessage("A Luna encontrou os seguintes bares em " + cidade + " e está falando em voz alta:")
-                .setItems(opcoes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            iniciarReconhecimentoVoz(
-                                    REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
-                                    "Luna ouvindo: diga o nome do bar em " + cidade + "..."
-                            );
-                        } else if (which == 1) {
-                            abrirDialogoDigitarNomeBarLuna();
-                        } else {
-                            int indice = which - 2;
-                            if (indice >= 0 && indice < listaFinal.size()) {
-                                mostrarConfirmacaoBarSelecionado(listaFinal.get(indice));
-                            }
-                        }
-                    }
-                })
-                .setNegativeButton("Voltar", null)
-                .show();
+        atualizarPainelEFalar(resumoVisual, perguntaFalada);
+        if (scrollPrincipal != null && containerEstabelecimentos != null) {
+            scrollPrincipal.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollPrincipal.smoothScrollTo(0, containerEstabelecimentos.getTop());
+                }
+            });
+        }
 
         lunaFalarEChamarReconhecimentoVoz(
                 perguntaFalada,
                 REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
-                "Luna ouvindo: diga o nome do bar em " + cidade + "..."
+                "Luna ouvindo: diga o nome ou número do bar em " + cidade + "..."
         );
     }
 
@@ -4101,7 +4216,7 @@ public class MainActivity extends Activity {
                 break;
 
             case VER_BARES_MAPS:
-                explorarBaresDaCidadeNoGoogleMaps();
+                explorarBaresNoGoogleMaps(resultado.parametroTexto);
                 break;
 
             case SALVAR_HISTORICO_BANCO:
@@ -4608,8 +4723,25 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Faz a Luna falar pelo alto-falante e, ao término da fala, aciona o microfone
-     * com timeout de segurança e cancelamento seguro, evitando qualquer travamento após vários comandos.
+     * Verifica se o leitor de tela nativo do sistema (TalkBack) está ativado.
+     */
+    private boolean isTalkBackAtivo() {
+        if (accessibilityManager == null || !accessibilityManager.isEnabled()) return false;
+        if (accessibilityManager.isTouchExplorationEnabled()) return true;
+        try {
+            List<AccessibilityServiceInfo> services =
+                    accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_SPOKEN);
+            return services != null && !services.isEmpty();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Faz a Luna falar e aciona o microfone para ouvir a resposta do usuário.
+     * Quando o leitor de tela nativo do sistema (TalkBack) está ativo, utiliza o mecanismo
+     * nativo de acessibilidade do Android sem competir por AudioFocus com o TTS próprio,
+     * eliminando qualquer possibilidade de congelamento no pagamento ou na navegação.
      */
     private void lunaFalarEChamarReconhecimentoVoz(final String textoParaFalar, final int requestCodeVoz, final String promptMicrofone) {
         if (tvResultado != null) {
@@ -4638,6 +4770,20 @@ public class MainActivity extends Activity {
             }
         };
 
+        // Se o leitor de tela nativo (TalkBack) estiver ativo, ele assume a locução do sistema.
+        // Não prendemos o microfone no listener de TTS interno para evitar conflito de AudioFocus!
+        if (isTalkBackAtivo()) {
+            long delayEstimadoTalkBack = Math.min(3200L, Math.max(1200L, (textoParaFalar != null ? textoParaFalar.length() : 10) * 35L));
+            runnableTimeoutLuna = new Runnable() {
+                @Override
+                public void run() {
+                    acaoAbrirVoz.run();
+                }
+            };
+            handlerLuna.postDelayed(runnableTimeoutLuna, delayEstimadoTalkBack);
+            return;
+        }
+
         if (ttsLunaPronto && ttsLuna != null) {
             final String utteranceId = "LUNA_FALA_" + requestCodeVoz + "_" + System.currentTimeMillis();
 
@@ -4659,9 +4805,8 @@ public class MainActivity extends Activity {
                 }
             });
 
-            // Timeout de segurança: calcula duração estimada da fala + margem de segurança.
-            // Se o motor TTS travar ou perder o callback onDone, a Luna NÃO congela!
-            long delayEstimado = Math.min(10000L, Math.max(2500L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 55L + 1500L));
+            // Timeout de segurança rápido (máx 4.5s) caso o motor TTS perca o callback
+            long delayEstimado = Math.min(4500L, Math.max(1800L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 40L + 800L));
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
@@ -4693,7 +4838,8 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) {
             }
         }
-        if (ttsLunaPronto && ttsLuna != null) {
+        // Se o TalkBack já está lendo pelo announceForAccessibility, não sobrepõe com ttsLuna
+        if (!isTalkBackAtivo() && ttsLunaPronto && ttsLuna != null) {
             ttsLuna.speak(texto, TextToSpeech.QUEUE_ADD, null, null);
         }
     }
