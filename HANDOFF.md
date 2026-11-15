@@ -5,12 +5,27 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.1: Correção Definitiva da Abertura da Luna (Sem Bar Pré-selecionado Forçado), Reconhecimento Total de "Opção do Cardápio" e Pedidos por Números/Ordinais (1, 2, Opção 1, O Primeiro) com Anti-Travamento Conversacional Contínuo!**  
+**Status Atual:** **APK Android v8.2: Correção Total de Remoção de Itens por Voz (Tira/Tirar/Remover), Correção de Quantidade em Opções Numeradas (Opção 5 adiciona/remove exatamente 1 unidade) e Fim do Congelamento no Cardápio (Eliminação de Diálogos Modais Bloqueantes e Timeout Ágil de 10s no TTS)!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.1)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.2)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~140 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Correção da Remoção de Itens por Voz:**
+  - Reconhecimento completo dos verbos no imperativo e infinitivo: *"tira a opção 5"*, *"tirar opção 5"*, *"tira a coxinha"*, *"remover 2 cervejas"*, *"cancela a opção 2"*, *"menos 1 caldinho"*.
+  - A Luna agora subtrai o item da comanda no SQLite, atualiza a tela e fala a confirmação (*"Removi 1x Picanha da sua comanda. Novo total a pagar: R$ X,XX. O que mais deseja pedir ou consultar?"*), reabrindo o microfone na sequência.
+
+- **Correção da Quantidade em Opções Numeradas:**
+  - Criado `extrairQuantidadeParaOpcao`. Dizer *"opção 5"* agora adiciona (ou remove) exatamente **1 unidade** do 5º item (e não 5 unidades). Para pedir mais de um, o usuário pode falar *"duas da opção 5"* ou *"3 do número 2"*.
+
+- **Eliminação Definitiva do Congelamento com a Frase "A Luna está recitando o cardápio":**
+  - Removido o `AlertDialog` modal sobreposto que congelava o áudio do TTS da Luna por conflito de AudioFocus com o TalkBack.
+  - A tela agora rola suavemente até o cardápio na tela principal (Seção 2) enquanto a Luna recita os pratos e abre o microfone sem interrupções.
+  - Timeout de segurança do TTS reduzido para no máximo 10s (com resposta rápida).
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~136 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

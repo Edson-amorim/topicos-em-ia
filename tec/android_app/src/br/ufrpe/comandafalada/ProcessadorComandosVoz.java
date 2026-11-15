@@ -260,6 +260,43 @@ public class ProcessadorComandosVoz {
     }
 
     /**
+     * Detecta intenção de remoção/cancelamento/subtração de itens da comanda.
+     */
+    public static boolean ehIntencaoRemocao(String normEspaco) {
+        if (normEspaco == null) return false;
+        return normEspaco.contains(" tirar ") || normEspaco.contains(" tira ") ||
+               normEspaco.contains(" tire ") || normEspaco.contains(" remover ") ||
+               normEspaco.contains(" remova ") || normEspaco.contains(" retire ") ||
+               normEspaco.contains(" retirar ") || normEspaco.contains(" retira ") ||
+               normEspaco.contains(" cancelar ") || normEspaco.contains(" cancela ") ||
+               normEspaco.contains(" apagar ") || normEspaco.contains(" apaga ") ||
+               normEspaco.contains(" excluir ") || normEspaco.contains(" exclua ") ||
+               normEspaco.contains(" exclui ") || normEspaco.contains(" menos ") ||
+               normEspaco.contains(" diminuir ") || normEspaco.contains(" diminui ") ||
+               normEspaco.contains(" deletar ") || normEspaco.contains(" deleta ");
+    }
+
+    /**
+     * Extrai a quantidade pedida quando o usuário escolhe por número de opção (ex: "opção 5", "duas da opção 5").
+     * Garante que o número da opção NÃO seja interpretado como quantidade de itens.
+     */
+    public static int extrairQuantidadeParaOpcao(String normFrase, int indiceItem) {
+        if (normFrase == null || normFrase.trim().isEmpty()) return 1;
+        String t = " " + normalizar(normFrase) + " ";
+        int numOpcao = indiceItem + 1;
+
+        String limpo = t.replaceAll("\\b(opcao|opcoes|numero|item|prato)\\s*(" + numOpcao + "|10|[1-9]|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez)?\\b", " ");
+        limpo = limpo.replaceAll("\\b(primeiro|primeira|segundo|segunda|terceiro|terceira|quarto|quarta|quinto|quinta|sexto|sexta|setimo|setima|oitavo|oitava|nono|nona|decimo|decima)\\b", " ");
+        limpo = limpo.replaceAll("\\b" + numOpcao + "\\b", " ");
+        limpo = limpo.replaceAll("\\b(quero|me ve|adicionar|pedir|tirar|tira|tire|remover|remova|o|a|os|as|do|da|dos|das|de)\\b", " ").replaceAll("\\s+", " ").trim();
+
+        if (limpo.isEmpty()) {
+            return 1;
+        }
+        return extrairQuantidade(limpo);
+    }
+
+    /**
      * Interpreta a fala do usuário e direciona para a ação exata no app.
      */
     public static ResultadoComando processar(
@@ -616,12 +653,17 @@ public class ProcessadorComandosVoz {
         }
 
         // 9. REMOVER ITENS DO CARDÁPIO
-        boolean ehRemocao = normEspaco.contains(" tirar ") || normEspaco.contains(" remover ") ||
-                            normEspaco.contains(" cancelar ") || normEspaco.contains(" apagar ") ||
-                            normEspaco.contains(" menos ") || normEspaco.contains(" diminuir ");
+        if (ehIntencaoRemocao(normEspaco) && estAtual != null && !estAtual.cardapio.isEmpty()) {
+            String fraseSemVerbo = norm.replaceAll(
+                    "\\b(tirar|tira|tire|remover|remova|retirar|retira|retire|cancelar|cancela|excluir|exclua|exclui|apagar|apaga|diminuir|diminui|menos|deletar|deleta)\\b",
+                    " "
+            ).replaceAll("\\s+", " ").trim();
 
-        if (ehRemocao && estAtual != null && !estAtual.cardapio.isEmpty()) {
-            List<ItemQtd> itensParaRemover = identificarItensComQuantidade(norm, estAtual);
+            List<ItemQtd> itensParaRemover = identificarItensComQuantidade(fraseSemVerbo, estAtual);
+            if (itensParaRemover.isEmpty()) {
+                itensParaRemover = identificarItensComQuantidade(norm, estAtual);
+            }
+
             if (!itensParaRemover.isEmpty()) {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < itensParaRemover.size(); i++) {
@@ -785,7 +827,7 @@ public class ProcessadorComandosVoz {
         if (resultado.isEmpty()) {
             int indice = interpretarNumeroEscolhaItemCardapio(normFrase, est.cardapio.size());
             if (indice >= 0 && indice < est.cardapio.size()) {
-                int qtd = extrairQuantidade(normFrase);
+                int qtd = extrairQuantidadeParaOpcao(normFrase, indice);
                 resultado.add(new ItemQtd(est.cardapio.get(indice), qtd));
             }
         }

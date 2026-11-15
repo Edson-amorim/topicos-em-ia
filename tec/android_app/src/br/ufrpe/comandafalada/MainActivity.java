@@ -3160,49 +3160,17 @@ public class MainActivity extends Activity {
                 "• " + sbItens.toString().replace("; ", "\n• ") +
                 "\n\nOuvindo o seu pedido no microfone da Luna (diga o número ou o prato)...";
 
-        // Cria janela com as opções do cardápio para quem quiser tocar ou ver:
-        final String[] opcoes = new String[est.cardapio.size() + 2];
-        opcoes[0] = "🎤 Falar Pedido no Microfone da Luna";
-        opcoes[1] = "🔄 Trocar de Bar";
-        for (int i = 0; i < est.cardapio.size(); i++) {
-            ItemCardapio it = est.cardapio.get(i);
-            opcoes[i + 2] = (i + 1) + ". " + it.nome + " — " + it.formatarPreco();
+        // Rola a tela até o cardápio para acompanhamento visual acessível
+        if (scrollPrincipal != null && tvTituloCardapio != null) {
+            scrollPrincipal.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollPrincipal.smoothScrollTo(0, tvTituloCardapio.getTop());
+                }
+            });
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("📖 Cardápio de " + est.nome)
-                .setMessage("A Luna está recitando o cardápio e ouvindo o seu pedido:")
-                .setItems(opcoes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            iniciarReconhecimentoVoz(
-                                    REQ_VOZ_PEDIDO_CARDAPIO,
-                                    "Luna ouvindo: fale o que deseja pedir em " + est.nome
-                            );
-                        } else if (which == 1) {
-                            listarEstabelecimentosEPerguntarLuna();
-                        } else {
-                            int itemIndex = which - 2;
-                            if (itemIndex >= 0 && itemIndex < est.cardapio.size()) {
-                                ItemCardapio it = est.cardapio.get(itemIndex);
-                                List<ProcessadorComandosVoz.ItemQtd> lista = new ArrayList<ProcessadorComandosVoz.ItemQtd>();
-                                lista.add(new ProcessadorComandosVoz.ItemQtd(it, 1));
-                                ProcessadorComandosVoz.ResultadoComando res = new ProcessadorComandosVoz.ResultadoComando(
-                                        ProcessadorComandosVoz.TipoAcao.ADICIONAR_ITENS,
-                                        it.nome,
-                                        lista,
-                                        "",
-                                        "Adicionado: " + it.nome,
-                                        "Adicionado: " + it.nome
-                                );
-                                executarAdicaoItensConversacionalLuna(res);
-                            }
-                        }
-                    }
-                })
-                .setNegativeButton("Fechar", null)
-                .show();
+        atualizarPainelEFalar(visual, fala);
 
         // Faz a Luna falar o cardápio e abrir o microfone para o usuário fazer o pedido:
         lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: fale o que deseja pedir...");
@@ -4028,14 +3996,18 @@ public class MainActivity extends Activity {
         recalcularComanda();
         if (bancoDados != null && estabelecimentoSelecionado != null) {
             bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
         }
 
-        String msgVisual = "🎙️ Comando por Voz: \"" + resultado.fraseOriginal + "\"\n" +
-                "➖ Removido da comanda: " + nomes.toString() + "\n" +
-                "💰 Novo Total: " + formatarMoedaCentavos(ultimoTotalCentavos);
-        String msgFalada = "Removido da comanda: " + nomes.toString() +
-                ". Novo total: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".";
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+        String msgFalada = "Removi " + nomes.toString() + " da sua comanda. " +
+                "Novo total a pagar: " + totalFmt + ". O que mais você deseja pedir ou consultar?";
+        String msgVisual = "➖ Removido: " + nomes.toString() + "\n" +
+                "💰 Novo Total: " + totalFmt + "\n\n" +
+                "💡 Dica da Luna: Pode continuar pedindo por voz, tirar mais itens ou pedir a conta.";
+
         atualizarPainelEFalar(msgVisual, msgFalada);
+        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
     }
 
     private void executarLimpezaComandaPorVoz() {
@@ -4044,10 +4016,12 @@ public class MainActivity extends Activity {
         recalcularComanda();
         if (bancoDados != null && estabelecimentoSelecionado != null) {
             bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
         }
         String msgVisual = "🗑️ Comanda Zerada por Voz com Sucesso!\nTodos os pratos e bebidas foram cancelados.";
-        String msgFalada = "Todos os itens da sua comanda foram cancelados e a conta foi zerada com sucesso.";
+        String msgFalada = "Todos os itens da sua comanda foram cancelados e a conta foi zerada com sucesso. O que você deseja pedir agora?";
         atualizarPainelEFalar(msgVisual, msgFalada);
+        lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo novos pedidos...");
     }
 
     private void falarCardapioCompletoEPerguntarPedido() {
@@ -4061,7 +4035,15 @@ public class MainActivity extends Activity {
             completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
         }
 
-        abrirDialogoCardapioCompletoInterativo();
+        // Rola suavemente até o cardápio na tela principal sem abrir diálogo modal bloqueante
+        if (scrollPrincipal != null && tvTituloCardapio != null) {
+            scrollPrincipal.post(new Runnable() {
+                @Override
+                public void run() {
+                    scrollPrincipal.smoothScrollTo(0, tvTituloCardapio.getTop());
+                }
+            });
+        }
 
         StringBuilder sbItens = new StringBuilder();
         int max = Math.min(5, estabelecimentoSelecionado.cardapio.size());
@@ -4453,7 +4435,7 @@ public class MainActivity extends Activity {
 
             // Timeout de segurança: calcula duração estimada da fala + margem de segurança.
             // Se o motor TTS travar ou perder o callback onDone, a Luna NÃO congela!
-            long delayEstimado = Math.min(25000L, Math.max(2500L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 100L));
+            long delayEstimado = Math.min(10000L, Math.max(2500L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 55L + 1500L));
             runnableTimeoutLuna = new Runnable() {
                 @Override
                 public void run() {
