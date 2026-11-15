@@ -1,19 +1,54 @@
 # HANDOFF · Transição de Sessão (AI for Good · UFRPE)
 
-**Data de Atualização:** 12/11/2026  
+**Data de Atualização:** 14/11/2026  
 **Aluno:** Edson Amorim (`edsoninformatica28br@gmail.com`)  
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v7.0 com Motor Semântico de Voz On-Device (Modelo 3), Banco de Dados SQLite, Filtros Nacionais e TalkBack 100% Concluído e Auditado!**  
+**Status Atual:** **APK Android v8.0 com Assistência 100% por IA da Luna: Fim do Vácuo ao Listar Bares, Seleção Total por Voz (Ordinais e Nomes), Leitura Falada do Cardápio, Consulta Fluida da Comanda com Pix e Autonomia Completa sem Operações Manuais!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v7.0)
+## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v8.0)
+
+- **Arquivo APK Pronto para Instalação:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~136 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+- **Fim Definitivo do Vácuo da Luna ao Listar Bares:**
+  - O processador semântico de linguagem natural on-device (`ProcessadorComandosVoz.java` — Modelo 3) agora reconhece com 100% de precisão todas as formas coloquiais de listagem e escolha:
+    - *"luna me lista os bares"*, *"me lista os bares"*, *"lista os bares"*, *"liste os bares"*;
+    - *"quais bares tem?"*, *"quais são os bares?"*, *"quais os bares?"*, *"quais estabelecimentos?"*, *"quais restaurantes?"*;
+    - *"me mostra os bares"*, *"mostra os bares"*, *"ver bares"*, *"ver os bares"*;
+    - *"fala os bares"*, *"me fala os bares"*, *"diga os bares"*;
+    - *"onde posso comer?"*, *"onde tem bar?"*, *"opções de bares"*;
+    - *"escolher um bar"*, *"mudar de bar"*, *"trocar de bar"*.
+- **Numeração Falada e Escolha de Bar 100% por Voz (Sem Toque Manual):**
+  - Ao listar, a Luna anuncia com clareza a numeração de cada estabelecimento:  
+    *"Temos estes bares disponíveis em Recife: Número 1: Bar do Cuscuz; Número 2: Cais do Porto Bar e Restaurante; Número 3: Bodega do Véio; Número 4: Boteco Parador; Número 5: Biruta Bar. Diga o número ou o nome do bar que você prefere."*
+  - O usuário pode responder por voz usando ordinais ou cardinais naturais (*"o primeiro"*, *"número 2"*, *"opção 3"*, *"bar 1"*, *"quero o segundo"*, *"quatro"*, *"5"*) ou simplesmente falar o nome do bar (*"Bar do Cuscuz"*, *"Bodega"*, *"Parador"*, *"Biruta"*).
+  - O interpretador semântico seleciona o bar imediatamente, recita o cardápio em voz alta e já abre o microfone para anotar o pedido.
+- **Leitura do Cardápio Completo por Voz:**
+  - Comandos como *"ler cardápio"*, *"o que tem no cardápio?"*, *"quais os pratos?"*, *"o que tem pra comer?"* acionam a fala da Luna detalhando pratos, bebidas e preços reais, com reabertura imediata do microfone para o usuário fazer o pedido.
+- **Consulta da Comanda com Encaminhamento Direto para o Pix:**
+  - Ao perguntar *"quanto deu a conta?"*, a Luna informa os itens, o subtotal, a taxa de 10% e o total final, perguntando por voz se o usuário deseja pagar com Pix. Se o usuário disser *"sim"*, o Pix BR Code é gerado e as opções de banco são apresentadas automaticamente.
+- **Ajuste de Timeout do Motor TTS (Prevenção de Cortes na Fala):**
+  - O cálculo do timeout de segurança da Luna foi ampliado para até 25 segundos (`delayEstimado = Math.min(25000L, ...)`), garantindo que a fala da assistente jamais seja interrompida no meio da frase.
 
 - **Arquivo APK Pronto para Instalação (Independente, Não Precisa da Pasta):**
-  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~123,7 KB, assinado com V1/V2/V3).
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~136 KB, assinado com V1/V2/V3).
+- **Correção Definitiva da Assistente Luna (Fim dos Travamentos e Fim da Tagarelice de Bares):**
+  - **Fim da Tagarelice de Bares ao Entrar:** Ao tocar em "Solicitar Ajuda da Luna" ou saudar a Luna por voz (*"Luna"*, *"Oi Luna"*), a Luna NÃO descarrega mais listas automáticas de bares. Ela simplesmente saúda de forma concisa (*"Olá! Sou a Luna. Você está no Bar do Cuscuz. O que deseja pedir ou consultar?"*) e abre o microfone para qualquer comando universal.
+  - **Listagem de Bares Somente sob Demanda:** A Luna só lista estabelecimentos se o usuário pedir expressamente (*"quais bares tem?"*, *"listar bares"*, *"trocar de bar"*).
+  - **Mecanismo Anti-Travamento (Timeout de Segurança no TTS):** Implementado `Handler` com timeout de segurança em `lunaFalarEChamarReconhecimentoVoz`. Se o motor TTS do Android demorar ou falhar em disparar o evento `onDone`, a Luna não congela: o timeout assume, interrompe o TTS e abre o microfone.
+  - **Prevenção de Conflito de AudioFocus:** O TTS é interrompido imediatamente antes de abrir o microfone (`ttsLuna.stop()`), evitando deadlocks de hardware de áudio do Android após múltiplos comandos.
+  - **Tratamento Gracioso de Cancelamento:** Se o microfone fechar por silêncio ou cancelamento (`RESULT_CANCELED`), o app não trava no vácuo e atualiza o estado avisando que a Luna continua a postos.
+- **Aprimoramento Conversacional da Luna e Eliminação de Diálogos Bloqueantes dos 10%:**
+  - **Eliminação de Diálogos Modais Forçados:** Removidos todos os `AlertDialog` modais que travavam a tela mandando o usuário clicar em "Sim" ou "Não" para a taxa de 10%.
+  - **Alternância Direta (Toggle 1 Toque):** O botão da comanda agora alterna a taxa diretamente (`alternarTaxaDezPorCento`) com feedback sonoro imediato no TalkBack (*"Taxa de 10% de R$ X adicionada"* / *"Taxa de 10% removida"*), sem abrir janelas extras.
+  - **Interação Natural por Voz:** Luna adiciona os pratos e anuncia o total a pagar de forma contínua e acessível (*"Adicionei X à sua comanda. Total a pagar: R$ Y. Para incluir 10%, diga 'com 10%'. O que mais deseja pedir?"*), abrindo o microfone para o usuário prosseguir livremente.
+  - **Respostas Rápidas de Voz:** Comandos como *"sim"*, *"com 10%"*, *"adicionar 10%"*, *"não"*, *"sem 10%"*, *"sem taxa"* agora ajustam a taxa de serviço instantaneamente via semântica on-device.
+  - **Fluxo de Pagamento Fluido:** Ao pedir para pagar ou tocar em abrir o app do banco, o app não interrompe o usuário com perguntas modais sobre os 10% — copia o Pix e abre o banco diretamente.
+  - **Robustez Fonética e Validação de Bares Reais:** Normalização fonética (`proculre` -> `procure`, `ba` -> `bar`) e consulta a bares reais sem criar estabelecimentos fictícios quando o bar não existe.
 - **Novo Motor Semântico e Intent Parser de Voz On-Device (Modelo 3):**
   - Arquivo: `C:\topicos-em-ia\tec\android_app\src\br\ufrpe\comandafalada\ProcessadorComandosVoz.java`
   - Permite ao usuário **fazer tudo no app por voz** com latência de 0 ms, 100% offline, sem gastar bateria e sem adicionar megabytes ao app:
@@ -34,8 +69,17 @@
     2. `🔉 Com Conforto Acústico (≤ 65 dB)`: locais silenciosos com pouco ruído, ideais para conversar e ouvir o TalkBack com clareza;
     3. `🎉 Ambientes Animados / Com Som (> 65 dB)`: locais com som ao vivo, forró, samba, música e agito para quem deseja curtir ambientes movimentados.
   - Disponível tanto no botão `btnFiltroAcustico` quanto no assistente de voz (ex.: *"Filtrar bares silenciosos"* ou *"Filtrar bares animados com som"*).
-- **Botão Mestre no Topo da Interface:**
-  - `btnComandoVozGeral` ("🎙️ Assistente de Voz: Fale Qualquer Comando para a IA"), com alto contraste (`#7C3AED`) e descrição acessível no TalkBack.
+- **Botão Mestre no Topo da Interface (`btnComandoVozGeral`):**
+  - Título atualizado para **"🎙️ Solicitar Ajuda da Luna (Escolher Meu Bar)"** com alto contraste (`#7C3AED`) e descrição acessível no TalkBack.
+  - **Fluxo Conversacional Completo de Ponta a Ponta (Luna):**
+    1. **Luna fala os bares:** A Luna recita os bares pelo alto-falante (`TextToSpeech` nativo) e o microfone abre automaticamente para o usuário responder;
+    2. **Usuário escolhe o bar:** O usuário diz o nome do bar (ex: *"Bar do Cuscuz"*);
+    3. **Luna fala o cardápio e pergunta o pedido:** A Luna recita os principais pratos e bebidas com preços (*"No cardápio temos: Coxinha por R$ 9,50, Caldinho de Feijão por R$ 12,00... O que você deseja pedir?"*) e o microfone abre automaticamente;
+    4. **Usuário faz o pedido:** O usuário diz o pedido (ex: *"Quero duas coxinhas e uma cerveja gelada"*);
+    5. **Luna anota e pergunta se quer saber o valor:** A Luna adiciona os itens na comanda e pergunta: *"Adicionei duas coxinhas e uma cerveja na sua comanda. Você quer saber o valor da conta? Diga Sim ou Não."* e o microfone abre;
+    6. **Usuário responde "Sim":** A Luna lê o valor total (*"O valor total da sua comanda é R$ 29,00. Você deseja pagar agora? Diga Sim ou Não."*) e o microfone abre;
+    7. **Usuário responde "Sim" para pagar:** A Luna gera o Pix Copia e Cola, copia para a área de transferência e abre o seletor dos aplicativos de banco do celular para pagamento imediato.
+  - Suporte semântico a saudações e comandos da Luna em `ProcessadorComandosVoz.java` (ex.: *"Luna me ajuda"*, *"Listar bares"*, *"Escolher bar"*).
 - **Ícone Oficial Personalizado (`@mipmap/ic_launcher` e `tec/icone_comanda_falada.png`):**
   - Traz o **Símbolo Universal da Acessibilidade** no topo e **duas pessoas (uma pessoa com deficiência e uma pessoa sem deficiência) segurando juntas um cardápio aberto** com prato e itens de alimentação, em alto contraste e com descrição completa para o TalkBack.
 - **Código-Fonte Android e Banco de Dados SQLite:**

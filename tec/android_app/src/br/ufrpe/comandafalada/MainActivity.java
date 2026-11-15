@@ -13,7 +13,11 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
@@ -35,6 +39,11 @@ public class MainActivity extends Activity {
 
     private static final int REQ_VOZ_BUSCA_LOCAL = 101;
     private static final int REQ_VOZ_PEDIDO_CARDAPIO = 102;
+    private static final int REQ_VOZ_UNIVERSAL = 103;
+    private static final int REQ_VOZ_ESCOLHER_ESTABELECIMENTO = 104;
+    private static final int REQ_VOZ_PERGUNTAR_SABER_VALOR = 105;
+    private static final int REQ_VOZ_PERGUNTAR_QUER_PAGAR = 106;
+    private static final int REQ_VOZ_PERGUNTAR_TAXA_DEZ = 107;
 
     // Coordenadas de referência (Marco Zero / Recife Antigo)
     private static final double LAT_USUARIO = -8.0628;
@@ -291,6 +300,7 @@ public class MainActivity extends Activity {
     private LinearLayout containerEstabelecimentos;
     private LinearLayout containerCardapio;
     private LinearLayout containerBancosInstalados;
+    private Button btnComandoVozGeral;
     private Button btnFiltroRegiao;
     private Button btnFiltroEstado;
     private Button btnFiltroCidade;
@@ -316,6 +326,10 @@ public class MainActivity extends Activity {
     private Button btnCaso3;
 
     private AccessibilityManager accessibilityManager;
+    private TextToSpeech ttsLuna;
+    private boolean ttsLunaPronto = false;
+    private final Handler handlerLuna = new Handler(Looper.getMainLooper());
+    private Runnable runnableTimeoutLuna;
     private ComandaBancoDadosHelper bancoDados;
     private final List<Estabelecimento> catalogoEstabelecimentos = new ArrayList<Estabelecimento>();
     private Estabelecimento estabelecimentoSelecionado;
@@ -350,6 +364,7 @@ public class MainActivity extends Activity {
         containerCardapio = findViewById(R.id.containerCardapio);
         containerBancosInstalados = findViewById(R.id.containerBancosInstalados);
 
+        btnComandoVozGeral = findViewById(R.id.btnComandoVozGeral);
         btnFiltroRegiao = findViewById(R.id.btnFiltroRegiao);
         btnFiltroEstado = findViewById(R.id.btnFiltroEstado);
         btnFiltroCidade = findViewById(R.id.btnFiltroCidade);
@@ -376,8 +391,16 @@ public class MainActivity extends Activity {
 
         accessibilityManager = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
         bancoDados = new ComandaBancoDadosHelper(this);
+        inicializarSintetizadorVozLuna();
 
         inicializarCatalogoESessaoComBancoSQLite();
+
+        btnComandoVozGeral.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acionarAjudaLunaConversacional();
+            }
+        });
 
         btnFiltroRegiao.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -490,10 +513,7 @@ public class MainActivity extends Activity {
         btnPedirPorVoz.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                iniciarReconhecimentoVoz(
-                        REQ_VOZ_PEDIDO_CARDAPIO,
-                        "Fale os itens do cardápio de " + estabelecimentoSelecionado.nome + " para a IA somar na comanda"
-                );
+                confirmarBarAntesDePedirPorVoz();
             }
         });
 
@@ -507,7 +527,7 @@ public class MainActivity extends Activity {
         btnTaxaServico.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                perguntarTaxaDezPorCento(false, null);
+                alternarTaxaDezPorCento(false, null);
             }
         });
 
@@ -1219,6 +1239,11 @@ public class MainActivity extends Activity {
         String norm = normalizarTexto(consultaOriginal);
         if (norm.isEmpty()) return;
 
+        if (ehIntencaoDeBuscaOuFiltroBares(norm)) {
+            buscarEListarBaresLuna(consultaOriginal);
+            return;
+        }
+
         Estabelecimento encontrado = null;
         for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
             Estabelecimento est = catalogoEstabelecimentos.get(i);
@@ -1229,50 +1254,45 @@ public class MainActivity extends Activity {
             }
         }
 
-        if (encontrado == null) {
-            EstadoInfo estadoDetectado = detectarEstadoNoTexto(norm);
-            if (estadoDetectado == null && !ufFiltroAtual.equals("TODOS")) {
-                estadoDetectado = buscarEstadoPorUf(ufFiltroAtual);
-            }
-            if (estadoDetectado == null) {
-                estadoDetectado = ESTADOS_BRASIL[0];
+        if (encontrado != null) {
+            regiaoFiltroAtual = encontrado.regiao;
+            ufFiltroAtual = encontrado.uf;
+            cidadeFiltroAtual = encontrado.cidade;
+            categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
+            filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
+            termoBuscaAtual = "";
+            atualizarRotulosFiltros();
+            selecionarEstabelecimento(encontrado, true, false);
+
+            String msgVisual = "✅ Local Localizado:\n" +
+                    "• " + encontrado.nome + " [" + encontrado.tipo + "] — " + encontrado.cidade + "/" + encontrado.uf + "\n" +
+                    "• Conforto Acústico: " + encontrado.decibeisMedio + " dB (" + encontrado.nivelRuido + ")\n" +
+                    "• Cardápio Completo: " + encontrado.cardapio.size() + " itens disponíveis abaixo e na janela rápida!";
+            String msgFalada = "Local encontrado: " + encontrado.nome + ", na cidade de " + encontrado.cidade +
+                    ". O cardápio completo com " + encontrado.cardapio.size() + " itens está aberto!";
+            atualizarPainelEFalar(msgVisual, msgFalada);
+            rolarParaCardapioEAbrirJanelaCompleta();
+        } else {
+            // Se o estabelecimento não existe no catálogo, NUNCA inventar bar fictício nem abrir cardápio!
+            String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
+            List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados();
+            if (listaEst.isEmpty()) listaEst = catalogoEstabelecimentos;
+            StringBuilder sbNomes = new StringBuilder();
+            int max = Math.min(3, listaEst.size());
+            for (int i = 0; i < max; i++) {
+                sbNomes.append(listaEst.get(i).nome);
+                if (i < max - 1) sbNomes.append(", ");
             }
 
-            String cidadeDetectada = detectarCidadeNoTexto(norm, estadoDetectado);
-            String categoriaDetectada = detectarCategoriaNoTexto(norm);
-            String nomeFormatado = capitalizarFrase(consultaOriginal.trim());
-
-            encontrado = criarEstabelecimentoPorCategoria(
-                    "local_dinamico_" + Math.abs(norm.hashCode()),
-                    nomeFormatado,
-                    categoriaDetectada,
-                    estadoDetectado,
-                    cidadeDetectada
-            );
-            catalogoEstabelecimentos.add(0, encontrado);
-            if (bancoDados != null) {
-                bancoDados.salvarOuAtualizarEstabelecimento(encontrado);
-            }
+            String msgVisual = "❌ Estabelecimento não encontrado: \"" + consultaOriginal + "\"\n\n" +
+                    "Nenhum bar com esse nome existe no catálogo.\n" +
+                    "Bares cadastrados em " + cid + ":\n" + sbNomes.toString() + "\n\n" +
+                    "Escolha um dos bares existentes ou toque em 'Solicitar Ajuda da Luna'.";
+            String msgFalada = "Não encontrei nenhum estabelecimento com o nome " + consultaOriginal +
+                    ". Temos os seguintes bares em " + cid + ": " + sbNomes.toString() +
+                    ". Escolha um dos bares cadastrados ou peça ajuda da Luna.";
+            atualizarPainelEFalar(msgVisual, msgFalada);
         }
-
-        regiaoFiltroAtual = encontrado.regiao;
-        ufFiltroAtual = encontrado.uf;
-        cidadeFiltroAtual = encontrado.cidade;
-        categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
-        filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
-        termoBuscaAtual = "";
-        atualizarRotulosFiltros();
-        selecionarEstabelecimento(encontrado, true, false);
-
-        String msgVisual = "✅ Local p/ Comer e Consumir Localizado:\n" +
-                "• " + encontrado.nome + " [" + encontrado.tipo + "] — " + encontrado.cidade + "/" + encontrado.uf + "\n" +
-                "• Conforto Acústico: " + encontrado.decibeisMedio + " dB (" + encontrado.nivelRuido + ")\n" +
-                "• Cardápio Completo: " + encontrado.cardapio.size() + " itens disponíveis abaixo e na janela rápida!";
-        String msgFalada = "Local para comer encontrado: " + encontrado.nome + ", categoria " + encontrado.tipo +
-                ", na cidade de " + encontrado.cidade + ", estado de " + encontrado.estado +
-                ". O cardápio completo com " + encontrado.cardapio.size() + " itens de comidas e bebidas está aberto!";
-        atualizarPainelEFalar(msgVisual, msgFalada);
-        rolarParaCardapioEAbrirJanelaCompleta();
     }
 
     private String detectarCategoriaNoTexto(String norm) {
@@ -2186,8 +2206,7 @@ public class MainActivity extends Activity {
             btnEst.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    selecionarEstabelecimento(est, true);
-                    rolarParaCardapioEAbrirJanelaCompleta();
+                    mostrarConfirmacaoBarSelecionado(est);
                 }
             });
             linhaBar.addView(btnEst);
@@ -2305,10 +2324,10 @@ public class MainActivity extends Activity {
                         mostrarConfirmacaoItemNoCardapioCompleto(escolhido);
                     }
                 })
-                .setPositiveButton("💰 Ver Soma / 10% (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")", new DialogInterface.OnClickListener() {
+                .setPositiveButton("💰 Alternar 10% (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        perguntarTaxaDezPorCento(false, null);
+                        alternarTaxaDezPorCento(false, null);
                     }
                 })
                 .setNeutralButton("🎙️ Pedir por Voz", new DialogInterface.OnClickListener() {
@@ -2329,7 +2348,7 @@ public class MainActivity extends Activity {
 
         final String[] acoes = new String[]{
                 "➕ Continuar escolhendo no Cardápio Completo (" + estabelecimentoSelecionado.cardapio.size() + " itens)",
-                "💁 Perguntar sobre os 10% e Ver Soma (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")",
+                "💁 Alternar Taxa de 10% do Garçom (" + (adicionarTaxaDezPorCento ? "Ativa" : "Desativada") + ")",
                 "🏦 Ir para Pagamento Pix no App do Banco (" + formatarMoedaCentavos(ultimoTotalCentavos) + ")",
                 "➖ Remover 1x " + recemAdicionado.nome + " da comanda"
         };
@@ -2342,7 +2361,7 @@ public class MainActivity extends Activity {
                         if (which == 0) {
                             abrirDialogoCardapioCompletoInterativo();
                         } else if (which == 1) {
-                            perguntarTaxaDezPorCento(false, null);
+                            alternarTaxaDezPorCento(false, null);
                         } else if (which == 2) {
                             acaoPagarComandaNosBancos();
                         } else if (which == 3) {
@@ -2512,13 +2531,13 @@ public class MainActivity extends Activity {
             int valorDezExemplo = (int) Math.round(somaCentavos * 0.10);
             String sufixoValor = somaCentavos > 0 ? (" (" + formatarMoedaCentavos(valorDezExemplo) + ")") : "";
             String textoBtnTaxa = adicionarTaxaDezPorCento
-                    ? "✅ 10% do Garçom Adicionado: Sim" + sufixoValor + " (Toque p/ mudar)"
-                    : "💁 Deseja adicionar os 10% na soma? (Atual: Não" + sufixoValor + ")";
+                    ? "✅ 10% do Garçom: Ativado" + sufixoValor + " (Toque p/ alternar)"
+                    : "💁 10% do Garçom: Desativado" + sufixoValor + " (Toque p/ alternar)";
             btnTaxaServico.setText(textoBtnTaxa);
             btnTaxaServico.setContentDescription(
-                    "Pergunta da soma: Deseja adicionar os dez por cento de taxa de serviço? Situação atual: " +
-                            (adicionarTaxaDezPorCento ? "Sim, dez por cento incluído" : "Não, sem taxa de dez por cento") +
-                            ". Toque duas vezes para responder Sim ou Não."
+                    "Taxa de serviço de dez por cento do garçom. Situação: " +
+                            (adicionarTaxaDezPorCento ? "Ativada, valor de " + formatarMoedaCentavos(valorDezExemplo) + " incluído" : "Desativada") +
+                            ". Toque para alternar ou use comando de voz."
             );
         }
 
@@ -2568,51 +2587,41 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Pergunta em voz alta pelo leitor de tela (TalkBack) e em diálogo se o usuário deseja adicionar os 10% na soma.
+     * Alterna a inclusão da taxa de serviço de 10% diretamente (toggle direto de um toque),
+     * sem abrir caixas de diálogo modais que forçam o usuário a clicar em Sim ou Não.
      */
-    private void perguntarTaxaDezPorCento(final boolean abrirPagamentoDepois, final BancoAppInfo bancoEspecifico) {
+    private void alternarTaxaDezPorCento(final boolean abrirPagamentoDepois, final BancoAppInfo bancoEspecifico) {
+        definirTaxaDezPorCento(!adicionarTaxaDezPorCento, abrirPagamentoDepois, bancoEspecifico);
+    }
+
+    /**
+     * Define o estado da taxa de serviço de 10% de forma imediata e anuncia em áudio e texto.
+     */
+    private void definirTaxaDezPorCento(final boolean ativar, final boolean abrirPagamentoDepois, final BancoAppInfo bancoEspecifico) {
         if (ultimoSubtotalCentavos <= 0 && abrirPagamentoDepois) {
             String msg = "Sua comanda ainda está vazia! Escolha pelo menos um item do cardápio para a IA somar.";
             atualizarPainelEFalar(msg, msg);
             return;
         }
 
-        final int subtotal = ultimoSubtotalCentavos;
-        final int valorDez = (int) Math.round(subtotal * 0.10);
-        final int totalComDez = subtotal + valorDez;
+        adicionarTaxaDezPorCento = ativar;
+        recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+        }
 
-        final String[] opcoes = new String[]{
-                "✅ Sim, adicionar os 10% (+" + formatarMoedaCentavos(valorDez) + " -> Total: " + formatarMoedaCentavos(totalComDez) + ")",
-                "❌ Não adicionar os 10% (Manter apenas o subtotal: " + formatarMoedaCentavos(subtotal) + ")"
-        };
+        String confirmacao = adicionarTaxaDezPorCento
+                ? ("Taxa de 10% de " + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + " adicionada! Total da conta: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".")
+                : ("Sem taxa de 10%. Total da conta mantido em: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".");
+        atualizarPainelEFalar(confirmacao, confirmacao);
 
-        new AlertDialog.Builder(this)
-                .setTitle("💁 Deseja adicionar os 10% na soma?")
-                .setItems(opcoes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        adicionarTaxaDezPorCento = (which == 0);
-                        recalcularComanda();
-                        if (bancoDados != null && estabelecimentoSelecionado != null) {
-                            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
-                        }
-
-                        String confirmacao = adicionarTaxaDezPorCento
-                                ? ("Taxa de 10% (" + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + ") adicionada! Nova soma total da comanda: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".")
-                                : ("Sem taxa de 10%. Soma total da comanda mantida em: " + formatarMoedaCentavos(ultimoTotalCentavos) + ".");
-                        atualizarPainelEFalar(confirmacao, confirmacao);
-
-                        if (abrirPagamentoDepois) {
-                            if (bancoEspecifico != null) {
-                                executarAberturaBancoComPix(bancoEspecifico);
-                            } else {
-                                prosseguirPagamentoNosBancos();
-                            }
-                        }
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+        if (abrirPagamentoDepois) {
+            if (bancoEspecifico != null) {
+                executarAberturaBancoComPix(bancoEspecifico);
+            } else {
+                prosseguirPagamentoNosBancos();
+            }
+        }
     }
 
     private void ouvirResumoFaladoDaComanda() {
@@ -2645,10 +2654,9 @@ public class MainActivity extends Activity {
         } else {
             fala.append("Valor dentro do seu teto de gastos. ");
         }
-        fala.append("Deseja adicionar ou alterar os dez por cento antes de pagar?");
+        fala.append("Para alternar a taxa de serviço, basta dizer 'com 10%' ou 'sem 10%'.");
 
         atualizarPainelEFalar(fala.toString(), fala.toString());
-        perguntarTaxaDezPorCento(false, null);
     }
 
     private void alternarTetoDeGastos() {
@@ -2934,7 +2942,7 @@ public class MainActivity extends Activity {
             atualizarPainelEFalar(msg, msg);
             return;
         }
-        perguntarTaxaDezPorCento(true, banco);
+        executarAberturaBancoComPix(banco);
     }
 
     private void executarAberturaBancoComPix(BancoAppInfo banco) {
@@ -2959,7 +2967,7 @@ public class MainActivity extends Activity {
             atualizarPainelEFalar(msg, msg);
             return;
         }
-        perguntarTaxaDezPorCento(true, null);
+        prosseguirPagamentoNosBancos();
     }
 
     private void prosseguirPagamentoNosBancos() {
@@ -3021,9 +3029,658 @@ public class MainActivity extends Activity {
                 .show();
     }
 
-    // --- RECONHECIMENTO DE VOZ E PROCESSAMENTO NLP DA IA ---
+    // --- RECONHECIMENTO DE VOZ, LUNA E PROCESSAMENTO NLP DA IA ---
+
+    /**
+     * Aciona a assistente Luna de forma direta, acolhedora e objetiva,
+     * SEM sair despejando uma lista de bares na fala do usuário.
+     */
+    private void acionarAjudaLunaConversacional() {
+        String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : null;
+        String fala;
+        String visual;
+
+        if (estNome == null) {
+            fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Vamos escolher o seu bar! Diga 'listar bares' para ouvir as opções disponíveis, ou diga o nome do seu bar.";
+            visual = "🌙 Luna a postos!\n\n" +
+                    "• Diga \"Listar bares\" ou \"Quais bares tem?\"\n" +
+                    "• Ou fale o nome do bar (ex: \"Bar do Cuscuz\")\n" +
+                    "• Ou pesquise cidades (ex: \"Bares em Olinda\")";
+        } else {
+            fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Você está no " + estNome + ". O que você deseja fazer? Você pode pedir pratos, consultar a conta, pagar com Pix ou dizer 'listar bares' para trocar de bar.";
+            visual = "🌙 Luna a postos em " + estNome + "!\n" +
+                    "• Peça pratos ou bebidas (ex: \"Quero 2 coxinhas e 1 refrigerante\")\n" +
+                    "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
+                    "• Alterne a taxa de 10% (ex: \"Com 10%\" ou \"Sem 10%\")\n" +
+                    "• Pague com Pix (ex: \"Pagar com Pix\")\n" +
+                    "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
+        }
+
+        atualizarPainelEFalar(visual, fala);
+        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
+    }
+
+    /**
+     * Lista estabelecimentos disponíveis por voz e tela com inteligência artificial,
+     * numerando cada opção e abrindo o microfone para escolha direta por voz.
+     */
+    private void listarEstabelecimentosEPerguntarLuna() {
+        final List<Estabelecimento> listaVisiveis = obterEstabelecimentosFiltrados();
+        final List<Estabelecimento> listaEst = (!listaVisiveis.isEmpty())
+                ? listaVisiveis
+                : new ArrayList<Estabelecimento>(catalogoEstabelecimentos);
+
+        String cidNome = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
+
+        // A Luna fala os bares disponíveis em voz alta pelo alto-falante com numeração explícita:
+        StringBuilder nomesFalados = new StringBuilder();
+        int limiteFalado = Math.min(5, listaEst.size());
+        for (int i = 0; i < limiteFalado; i++) {
+            nomesFalados.append("Número ").append(i + 1).append(": ").append(listaEst.get(i).nome);
+            if (i < limiteFalado - 1) nomesFalados.append("; ");
+        }
+
+        String perguntaFalada = "Temos estes bares disponíveis em " + cidNome + ": " +
+                nomesFalados.toString() + ". Diga o número ou o nome do bar que você prefere.";
+
+        String resumoVisual = "🌙 Luna: Bares disponíveis em " + cidNome + ":\n" +
+                nomesFalados.toString().replace("; ", "\n• ").replace("Número ", "• ") +
+                "\n\nOuvindo sua escolha no microfone da Luna (diga o número ou o nome)...";
+
+        // Monta as opções do diálogo: responder por voz, digitação e os estabelecimentos numerados
+        final String[] opcoes = new String[listaEst.size() + 2];
+        opcoes[0] = "🎤 Responder por Voz (Microfone da Luna)";
+        opcoes[1] = "⌨️ Digitar o Nome do Bar";
+
+        for (int i = 0; i < listaEst.size(); i++) {
+            Estabelecimento e = listaEst.get(i);
+            opcoes[i + 2] = (i + 1) + ". " + e.nome + " (" + e.cidade + "/" + e.uf + ") — " + e.tipo;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("🌙 Luna: Em Qual Bar Você Está?")
+                .setMessage("A Luna está falando os bares pelo alto-falante e ouvindo sua resposta:")
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            iniciarReconhecimentoVoz(
+                                    REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
+                                    "Luna ouvindo: diga o número ou nome do bar..."
+                            );
+                        } else if (which == 1) {
+                            abrirDialogoDigitarNomeBarLuna();
+                        } else {
+                            int indiceEst = which - 2;
+                            if (indiceEst >= 0 && indiceEst < listaEst.size()) {
+                                mostrarConfirmacaoBarSelecionado(listaEst.get(indiceEst));
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Voltar", null)
+                .show();
+
+        atualizarPainelEFalar(resumoVisual, perguntaFalada);
+
+        // Faz a Luna falar os bares e, ao terminar a fala, abre o microfone para o usuário responder:
+        lunaFalarEChamarReconhecimentoVoz(
+                perguntaFalada,
+                REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
+                "Luna ouvindo: diga o número ou nome do bar..."
+        );
+    }
+
+    /**
+     * Quando o usuário escolhe o bar:
+     * A Luna fala o cardápio em voz alta pelo alto-falante e pergunta o pedido,
+     * abrindo o microfone automaticamente para o usuário falar o que quer pedir.
+     */
+    private void mostrarConfirmacaoBarSelecionado(final Estabelecimento est) {
+        if (est == null) return;
+        selecionarEstabelecimento(est, true, false);
+
+        if (est.cardapio.size() < 12) {
+            completarCardapioDoEstabelecimento(est);
+        }
+
+        // Monta os principais itens do cardápio com preços para a Luna falar:
+        StringBuilder sbItens = new StringBuilder();
+        int max = Math.min(5, est.cardapio.size());
+        for (int i = 0; i < max; i++) {
+            ItemCardapio it = est.cardapio.get(i);
+            sbItens.append(it.nome).append(" por ").append(it.formatarPreco());
+            if (i < max - 1) sbItens.append(", ");
+        }
+
+        String fala = "Você escolheu o " + est.nome + "! No cardápio temos: " + sbItens.toString() +
+                ". O que você deseja pedir? Diga o seu pedido.";
+
+        String visual = "🌙 Luna falando: Cardápio de " + est.nome + "\n" +
+                "Temos: " + sbItens.toString() + "\nOuvindo o seu pedido no microfone...";
+
+        // Cria janela com as opções do cardápio para quem quiser tocar ou ver:
+        final String[] opcoes = new String[est.cardapio.size() + 2];
+        opcoes[0] = "🎤 Falar Pedido no Microfone da Luna";
+        opcoes[1] = "🔄 Trocar de Bar";
+        for (int i = 0; i < est.cardapio.size(); i++) {
+            ItemCardapio it = est.cardapio.get(i);
+            opcoes[i + 2] = (i + 1) + ". " + it.nome + " — " + it.formatarPreco();
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("📖 Cardápio de " + est.nome)
+                .setMessage("A Luna está recitando o cardápio e ouvindo o seu pedido:")
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            iniciarReconhecimentoVoz(
+                                    REQ_VOZ_PEDIDO_CARDAPIO,
+                                    "Luna ouvindo: fale o que deseja pedir em " + est.nome
+                            );
+                        } else if (which == 1) {
+                            listarEstabelecimentosEPerguntarLuna();
+                        } else {
+                            int itemIndex = which - 2;
+                            if (itemIndex >= 0 && itemIndex < est.cardapio.size()) {
+                                ItemCardapio it = est.cardapio.get(itemIndex);
+                                List<ProcessadorComandosVoz.ItemQtd> lista = new ArrayList<ProcessadorComandosVoz.ItemQtd>();
+                                lista.add(new ProcessadorComandosVoz.ItemQtd(it, 1));
+                                ProcessadorComandosVoz.ResultadoComando res = new ProcessadorComandosVoz.ResultadoComando(
+                                        ProcessadorComandosVoz.TipoAcao.ADICIONAR_ITENS,
+                                        it.nome,
+                                        lista,
+                                        "",
+                                        "Adicionado: " + it.nome,
+                                        "Adicionado: " + it.nome
+                                );
+                                executarAdicaoItensConversacionalLuna(res);
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Fechar", null)
+                .show();
+
+        // Faz a Luna falar o cardápio e abrir o microfone para o usuário fazer o pedido:
+        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: fale o que deseja pedir...");
+    }
+
+    /**
+     * Processa o pedido por voz feito pelo usuário e, em seguida, pergunta se deseja saber o valor da conta.
+     */
+    private void executarPedidoConversacionalLuna(String fraseFalada) {
+        if (fraseFalada == null || fraseFalada.trim().isEmpty()) {
+            return;
+        }
+
+        ProcessadorComandosVoz.ResultadoComando resultado = ProcessadorComandosVoz.processar(
+                fraseFalada,
+                estabelecimentoSelecionado,
+                ultimoTotalCentavos,
+                adicionarTaxaDezPorCento
+        );
+
+        if (resultado.acao == ProcessadorComandosVoz.TipoAcao.ADICIONAR_ITENS && !resultado.itensModificados.isEmpty()) {
+            executarAdicaoItensConversacionalLuna(resultado);
+        } else {
+            executarComandoVozUniversal(fraseFalada);
+        }
+    }
+
+    /**
+     * Adiciona os itens à comanda de forma direta e fluida, sem abrir caixas de diálogo bloqueantes
+     * mandando o usuário clicar em Sim ou Não.
+     */
+    private void executarAdicaoItensConversacionalLuna(ProcessadorComandosVoz.ResultadoComando resultado) {
+        StringBuilder nomes = new StringBuilder();
+        for (int i = 0; i < resultado.itensModificados.size(); i++) {
+            ProcessadorComandosVoz.ItemQtd iq = resultado.itensModificados.get(i);
+            int atual = quantidadesComanda.containsKey(iq.item.id) ? quantidadesComanda.get(iq.item.id) : 0;
+            quantidadesComanda.put(iq.item.id, atual + iq.quantidade);
+            nomes.append(iq.quantidade).append("x ").append(iq.item.nome);
+            if (i < resultado.itensModificados.size() - 1) nomes.append(", ");
+        }
+
+        // Se a própria fala já indicava com ou sem 10%, aplica diretamente
+        String fraseNorm = normalizarTexto(resultado.fraseOriginal);
+        if (fraseNorm.contains("com 10") || fraseNorm.contains("com dez") || fraseNorm.contains("com taxa") || fraseNorm.contains("incluir 10")) {
+            adicionarTaxaDezPorCento = true;
+        } else if (fraseNorm.contains("sem 10") || fraseNorm.contains("sem dez") || fraseNorm.contains("sem taxa") || fraseNorm.contains("tirar 10")) {
+            adicionarTaxaDezPorCento = false;
+        }
+
+        renderizarCardapioEstabelecimento();
+        recalcularComanda();
+        if (bancoDados != null && estabelecimentoSelecionado != null) {
+            bancoDados.salvarComandaAtivaNoBanco(estabelecimentoSelecionado.id, quantidadesComanda);
+            bancoDados.salvarConfiguracaoSessao(estabelecimentoSelecionado.id, tetoGastosCentavos, adicionarTaxaDezPorCento);
+        }
+
+        final int subtotal = ultimoSubtotalCentavos;
+        String subtotalFmt = formatarMoedaCentavos(subtotal);
+        String totalFmt = formatarMoedaCentavos(ultimoTotalCentavos);
+
+        String fala = "Adicionei " + nomes.toString() + " à sua comanda. " +
+                "Total a pagar: " + totalFmt + ". " +
+                (adicionarTaxaDezPorCento ? "Taxa de 10% incluída. " : "Para incluir 10%, diga com 10 por cento. ") +
+                "O que mais você deseja pedir?";
+
+        String visual = "✅ Adicionado: " + nomes.toString() + "\n" +
+                "• Subtotal: " + subtotalFmt + "\n" +
+                "• Taxa de 10%: " + (adicionarTaxaDezPorCento ? ("+ " + formatarMoedaCentavos(ultimaTaxaServicoCentavos) + " (Inclusa)") : "R$ 0,00 (Desativada)") + "\n" +
+                "💰 Total da Comanda: " + totalFmt + "\n\n" +
+                "💡 Dica da Luna: Pode continuar pedindo por voz, ou dizer 'com 10%' / 'sem 10%'.";
+
+        atualizarPainelEFalar(visual, fala);
+
+        // Deixa a Luna pronta para continuar ouvindo por voz sem nenhum AlertDialog bloqueando a tela
+        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu próximo pedido...");
+    }
+
+    /**
+     * Trata a resposta por voz sobre a inclusão da taxa de 10% de forma conversacional e limpa,
+     * sem abrir janelas modais mandando clicar em Sim ou Não.
+     */
+    private void tratarRespostaTaxaDezLuna(String resposta) {
+        if (ehAfirmacao(resposta)) {
+            definirTaxaDezPorCento(true, false, null);
+        } else if (ehNegacao(resposta)) {
+            definirTaxaDezPorCento(false, false, null);
+        } else {
+            executarComandoVozUniversal(resposta);
+        }
+    }
+
+    /**
+     * Se o usuário consultar o valor da conta pela Luna, ela pergunta sobre os 10% antes de fechar.
+     */
+    private void tratarRespostaSaberValorLuna(String resposta) {
+        if (ehAfirmacao(resposta)) {
+            tratarRespostaTaxaDezLuna("sim");
+        } else {
+            String msg = "Tudo bem! Os itens continuam anotados na sua comanda. Bom apetite!";
+            atualizarPainelEFalar(msg, msg);
+        }
+    }
+
+    /**
+     * Se o usuário responder Sim para pagar, gera o código Pix e abre as opções de banco.
+     */
+    private void tratarRespostaQuerPagarLuna(String resposta) {
+        if (ehAfirmacao(resposta)) {
+            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "estabelecimento";
+            String msgVisual = "📲 Gerando Pix e preparando bancos...\n" +
+                    "Total: " + formatarMoedaCentavos(ultimoTotalCentavos) + " em " + estNome;
+            String msgFalada = "Gerando código Pix para pagamento! Escolha o aplicativo do seu banco para pagar.";
+            atualizarPainelEFalar(msgVisual, msgFalada);
+
+            acaoPagarComandaNosBancos();
+        } else {
+            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "estabelecimento";
+            String msg = "Comanda mantida aberta em " + estNome + ". Quando quiser fechar a conta, é só chamar a Luna!";
+            atualizarPainelEFalar(msg, msg);
+        }
+    }
+
+    private boolean ehAfirmacao(String texto) {
+        if (texto == null || texto.trim().isEmpty()) return false;
+        String n = " " + normalizarTexto(texto) + " ";
+        return n.contains(" sim ") || n.contains(" quero ") || n.contains(" pode ") ||
+                n.contains(" quanto ") || n.contains(" pagar ") || n.contains(" com certeza ") ||
+                n.contains(" claro ") || n.contains(" por favor ") || n.contains(" bora ") ||
+                n.contains(" vamos ") || n.contains(" me diga ") || n.contains(" fale ") ||
+                n.contains(" ok ") || n.contains(" positivo ");
+    }
+
+    private boolean ehNegacao(String texto) {
+        if (texto == null || texto.trim().isEmpty()) return false;
+        String n = " " + normalizarTexto(texto) + " ";
+        return n.contains(" nao ") || n.contains(" depois ") || n.contains(" agora nao ") ||
+                n.contains(" ainda nao ") || n.contains(" deixa ") || n.contains(" cancelar ") ||
+                n.contains(" negativo ");
+    }
+
+    /**
+     * Aciona diretamente o reconhecimento de voz para pedir pratos e bebidas no bar atual,
+     * sem abrir janelas extras nem recitar listas de bares.
+     */
+    private void confirmarBarAntesDePedirPorVoz() {
+        if (estabelecimentoSelecionado == null && !catalogoEstabelecimentos.isEmpty()) {
+            estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+        }
+        String nomeBar = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+        iniciarReconhecimentoVoz(
+                REQ_VOZ_PEDIDO_CARDAPIO,
+                "Fale os pratos ou bebidas que deseja pedir em " + nomeBar
+        );
+    }
+
+    /**
+     * Permite digitar o nome ou o número do bar para a Luna (ideal para locais barulhentos).
+     */
+    private void abrirDialogoDigitarNomeBarLuna() {
+        final EditText etNome = new EditText(this);
+        etNome.setHint("Ex.: Bar do Cuscuz, Cais do Porto, 1, 2...");
+        etNome.setContentDescription("Campo para digitar o nome ou número do estabelecimento para a Luna");
+        etNome.setPadding(32, 24, 32, 24);
+
+        new AlertDialog.Builder(this)
+                .setTitle("⌨️ Digitar Estabelecimento para a Luna")
+                .setMessage("Digite o nome ou o número do estabelecimento em que você está:")
+                .setView(etNome)
+                .setPositiveButton("Confirmar Bar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String digitado = etNome.getText() != null ? etNome.getText().toString().trim() : "";
+                        if (!digitado.isEmpty()) {
+                            tratarEscolhaEstabelecimentoPorTextoOuVoz(digitado);
+                        }
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    /**
+     * Detecta se a fala do usuário é uma intenção de busca, pesquisa ou filtro de bares/cidades,
+     * como "procure um bar em recife", "proculre um ba em recife", "buscar bares em olinda", etc.
+     */
+    private boolean ehIntencaoDeBuscaOuFiltroBares(String textoNorm) {
+        if (textoNorm == null || textoNorm.trim().isEmpty()) return false;
+        String t = " " + textoNorm.trim().toLowerCase(Locale.ROOT) + " ";
+
+        // Verbos e termos de busca / listagem com tolerância fonética
+        if (t.contains(" procure ") || t.contains(" procurar ") ||
+            t.contains(" proculre ") || t.contains(" proculrar ") ||
+            t.contains(" busca ") || t.contains(" buscar ") || t.contains(" busque ") ||
+            t.contains(" localizar ") || t.contains(" localize ") ||
+            t.contains(" pesquisar ") || t.contains(" pesquise ") ||
+            t.contains(" filtrar ") || t.contains(" filtre ") ||
+            t.contains(" achar ") || t.contains(" ache ") ||
+            t.contains(" encontrar ") || t.contains(" encontre ") ||
+            t.contains(" listar ") || t.contains(" liste ") ||
+            t.contains(" quais ") || t.contains(" quais sao ") ||
+            t.contains(" ver ") || t.contains(" mostrar ") ||
+            t.contains(" tem bar ") || t.contains(" tem ba ") || t.contains(" tem bares ")) {
+            return true;
+        }
+
+        // Se fala "bar em...", "ba em...", "bares em...", "bar no...", "bar na..."
+        if ((t.contains(" bar ") || t.contains(" ba ") || t.contains(" bares ") || t.contains(" boteco ") || t.contains(" restaurante ")) &&
+            (t.contains(" em ") || t.contains(" no ") || t.contains(" na ") || t.contains(" de "))) {
+            return true;
+        }
+
+        // Se fala cidade conhecida ("recife", "olinda", "caruaru") acompanhada de "bar" ou isolada
+        EstadoInfo st = detectarEstadoNoTexto(textoNorm);
+        String cid = detectarCidadeNoTexto(textoNorm, st);
+        if (cid != null && (textoNorm.trim().equalsIgnoreCase(normalizarTexto(cid)) || t.contains(" bar ") || t.contains(" ba "))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Quando o usuário pede para a Luna procurar/buscar bares em uma cidade (ex.: "procure um bar em recife"):
+     * A Luna filtra a cidade e categoria solicitadas, lista os estabelecimentos reais e fala em voz alta
+     * os bares disponíveis para que o usuário possa escolher onde ser atendido.
+     */
+    private void buscarEListarBaresLuna(String entrada) {
+        if (entrada == null || entrada.trim().isEmpty()) {
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
+
+        String norm = normalizarTexto(entrada);
+
+        EstadoInfo estado = detectarEstadoNoTexto(norm);
+        if (estado == null && !ufFiltroAtual.equals("TODOS")) {
+            estado = buscarEstadoPorUf(ufFiltroAtual);
+        }
+        if (estado == null) {
+            estado = ESTADOS_BRASIL[0]; // Pernambuco padrão
+        }
+
+        String cidadeTemp = detectarCidadeNoTexto(norm, estado);
+        if (cidadeTemp == null || cidadeTemp.isEmpty()) {
+            cidadeTemp = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : estado.capital;
+        }
+        final String cidade = cidadeTemp;
+
+        String categoria = "Bares, Botecos e Petiscarias";
+        if (norm.contains("restaurante")) {
+            categoria = "Restaurantes, Bistrôs e Self-Service";
+        } else if (norm.contains("padaria") || norm.contains("cafe") || norm.contains("cafeteria")) {
+            categoria = "Padarias, Cafeterias e Confeitarias";
+        } else if (norm.contains("pizza") || norm.contains("hamburguer") || norm.contains("lanche")) {
+            categoria = "Pizzarias, Hamburguerias e Lanchonetes";
+        } else if (norm.contains("churrasc") || norm.contains("espetinho")) {
+            categoria = "Churrascarias, Espetinhos e Peixarias";
+        } else if (norm.contains("sorvet") || norm.contains("acai") || norm.contains("tapioca")) {
+            categoria = "Sorveterias, Açaí, Docerias e Tapiocarias";
+        }
+
+        regiaoFiltroAtual = estado.regiao;
+        ufFiltroAtual = estado.uf;
+        cidadeFiltroAtual = cidade;
+        categoriaFiltroAtual = categoria;
+        filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
+        termoBuscaAtual = "";
+        atualizarRotulosFiltros();
+        renderizarListaEstabelecimentos();
+
+        List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados();
+        if (listaEst.isEmpty()) {
+            garantirEstabelecimentoNaCidadeECategoria(estado, cidade, categoria);
+            renderizarListaEstabelecimentos();
+            listaEst = obterEstabelecimentosFiltrados();
+        }
+
+        if (listaEst.isEmpty()) {
+            categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
+            atualizarRotulosFiltros();
+            renderizarListaEstabelecimentos();
+            listaEst = obterEstabelecimentosFiltrados();
+        }
+
+        if (listaEst.isEmpty()) {
+            listaEst = catalogoEstabelecimentos;
+        }
+
+        // A Luna fala os bares encontrados na cidade pelo alto-falante:
+        StringBuilder sbNomes = new StringBuilder();
+        int maxFalados = Math.min(4, listaEst.size());
+        for (int i = 0; i < maxFalados; i++) {
+            sbNomes.append(listaEst.get(i).nome);
+            if (i < maxFalados - 1) sbNomes.append(", ");
+        }
+
+        String perguntaFalada = "Encontrei os seguintes bares em " + cidade + ": " + sbNomes.toString() +
+                ". Em qual bar você deseja ser atendido? Diga o nome ou o número do bar.";
+
+        String resumoVisual = "🌙 Luna falando: Bares encontrados em " + cidade + " (" + estado.uf + "):\n" +
+                sbNomes.toString() + "\n\nOuvindo sua resposta no microfone...";
+
+        final List<Estabelecimento> listaFinal = listaEst;
+        final String[] opcoes = new String[listaFinal.size() + 2];
+        opcoes[0] = "🎤 Responder por Voz (Microfone da Luna)";
+        opcoes[1] = "⌨️ Digitar o Nome do Bar";
+        for (int i = 0; i < listaFinal.size(); i++) {
+            Estabelecimento e = listaFinal.get(i);
+            opcoes[i + 2] = (i + 1) + ". " + e.nome + " (" + e.cidade + "/" + e.uf + ") — " + e.tipo;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("🌙 Luna: Bares em " + cidade)
+                .setMessage("A Luna encontrou os seguintes bares em " + cidade + " e está falando em voz alta:")
+                .setItems(opcoes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            iniciarReconhecimentoVoz(
+                                    REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
+                                    "Luna ouvindo: diga o nome do bar em " + cidade + "..."
+                            );
+                        } else if (which == 1) {
+                            abrirDialogoDigitarNomeBarLuna();
+                        } else {
+                            int indice = which - 2;
+                            if (indice >= 0 && indice < listaFinal.size()) {
+                                mostrarConfirmacaoBarSelecionado(listaFinal.get(indice));
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Voltar", null)
+                .show();
+
+        lunaFalarEChamarReconhecimentoVoz(
+                perguntaFalada,
+                REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
+                "Luna ouvindo: diga o nome do bar em " + cidade + "..."
+        );
+    }
+
+    /**
+     * Interpreta a fala ou o texto digitado (número ou nome do bar) e confirma o bar correspondente.
+     */
+    private void tratarEscolhaEstabelecimentoPorTextoOuVoz(String entrada) {
+        if (entrada == null || entrada.trim().isEmpty()) return;
+        String limpo = normalizarTexto(entrada.trim());
+
+        // Se pediu explicitamente para listar os bares novamente
+        if (ProcessadorComandosVoz.ehIntencaoListarBares(" " + limpo + " ")) {
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
+
+        // Se for uma intenção de busca por cidade (ex: "procure um bar em recife", "bares em olinda"):
+        if (ehIntencaoDeBuscaOuFiltroBares(limpo)) {
+            buscarEListarBaresLuna(entrada);
+            return;
+        }
+
+        List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados();
+        if (listaEst.isEmpty()) {
+            listaEst = catalogoEstabelecimentos;
+        }
+
+        // 1. Interpretação robusta de número cardinal ou ordinal (ex: "o primeiro", "número 2", "opção 3", "bar 1", "3")
+        int indiceEscolhido = ProcessadorComandosVoz.interpretarNumeroEscolha(entrada, listaEst.size());
+        if (indiceEscolhido >= 0 && indiceEscolhido < listaEst.size()) {
+            mostrarConfirmacaoBarSelecionado(listaEst.get(indiceEscolhido));
+            return;
+        }
+
+        // 2. Busca por similaridade semântica e correspondência de palavras no nome dos bares
+        Estabelecimento melhorEncontrado = null;
+        int maiorScore = 0;
+
+        for (int i = 0; i < listaEst.size(); i++) {
+            Estabelecimento e = listaEst.get(i);
+            String nomeNorm = normalizarTexto(e.nome);
+            int score = 0;
+
+            if (nomeNorm.equals(limpo) || limpo.contains(nomeNorm)) {
+                score = 100;
+            } else if (nomeNorm.contains(limpo)) {
+                score = 80;
+            } else {
+                String[] palavras = nomeNorm.split("\\s+");
+                for (String p : palavras) {
+                    if (p.length() > 2 && limpo.contains(p)) {
+                        score += 20;
+                    }
+                }
+            }
+
+            if (score > maiorScore) {
+                maiorScore = score;
+                melhorEncontrado = e;
+            }
+        }
+
+        // Se não achou na lista filtrada, procura no catálogo geral
+        if (melhorEncontrado == null || maiorScore < 20) {
+            for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
+                Estabelecimento e = catalogoEstabelecimentos.get(i);
+                String nomeNorm = normalizarTexto(e.nome);
+                int score = 0;
+
+                if (nomeNorm.equals(limpo) || limpo.contains(nomeNorm)) {
+                    score = 100;
+                } else if (nomeNorm.contains(limpo)) {
+                    score = 80;
+                } else {
+                    String[] palavras = nomeNorm.split("\\s+");
+                    for (String p : palavras) {
+                        if (p.length() > 2 && limpo.contains(p)) {
+                            score += 20;
+                        }
+                    }
+                }
+
+                if (score > maiorScore) {
+                    maiorScore = score;
+                    melhorEncontrado = e;
+                }
+            }
+        }
+
+        if (melhorEncontrado != null && maiorScore >= 20) {
+            mostrarConfirmacaoBarSelecionado(melhorEncontrado);
+            return;
+        }
+
+        // Se o usuário falou uma função ou comando (ex.: ajuda, teto de gastos, total, comanda, pix, etc.),
+        // executa a função solicitada em vez de tentar inventar um bar!
+        ProcessadorComandosVoz.ResultadoComando cmd = ProcessadorComandosVoz.processar(
+                entrada,
+                estabelecimentoSelecionado,
+                ultimoTotalCentavos,
+                adicionarTaxaDezPorCento
+        );
+        if (cmd.acao != ProcessadorComandosVoz.TipoAcao.COMANDO_NAO_RECONHECIDO &&
+            cmd.acao != ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL) {
+            executarComandoVozUniversal(entrada);
+            return;
+        }
+
+        // O estabelecimento NÃO existe no catálogo! NUNCA deixar o usuário no vácuo
+        String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
+        StringBuilder sbNomes = new StringBuilder();
+        int max = Math.min(3, listaEst.size());
+        for (int i = 0; i < max; i++) {
+            sbNomes.append("Número ").append(i + 1).append(": ").append(listaEst.get(i).nome);
+            if (i < max - 1) sbNomes.append(", ");
+        }
+
+        String falaAviso = "Não encontrei o bar " + entrada + ". Temos os seguintes bares em " + cid + ": " +
+                sbNomes.toString() + ". Diga o número ou o nome de um bar cadastrado.";
+
+        String visualAviso = "❌ Bar não encontrado: \"" + entrada + "\"\n\n" +
+                "Bares disponíveis em " + cid + ":\n" + sbNomes.toString().replace(", ", "\n• ").replace("Número ", "• ") + "\n\n" +
+                "Ouvindo seu comando no microfone da Luna (diga o número ou o nome)...";
+
+        atualizarPainelEFalar(visualAviso, falaAviso);
+
+        lunaFalarEChamarReconhecimentoVoz(
+                falaAviso,
+                REQ_VOZ_ESCOLHER_ESTABELECIMENTO,
+                "Luna ouvindo: diga o número ou nome de um bar em " + cid + "..."
+        );
+    }
 
     private void iniciarReconhecimentoVoz(final int requestCode, String promptFalado) {
+        if (ttsLuna != null) {
+            try {
+                ttsLuna.stop();
+            } catch (Exception ignored) {
+            }
+        }
         try {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -3036,7 +3693,50 @@ public class MainActivity extends Activity {
     }
 
     private void mostrarDialogoSimulacaoVoz(final int requestCode) {
-        if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
+        if (requestCode == REQ_VOZ_ESCOLHER_ESTABELECIMENTO) {
+            final List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados().isEmpty()
+                    ? catalogoEstabelecimentos
+                    : obterEstabelecimentosFiltrados();
+
+            final String[] nomes = new String[listaEst.size()];
+            for (int i = 0; i < listaEst.size(); i++) {
+                nomes[i] = (i + 1) + ". " + listaEst.get(i).nome + " (" + listaEst.get(i).cidade + ")";
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("🌙 Luna: Escolha o Estabelecimento para Atendimento:")
+                    .setItems(nomes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mostrarConfirmacaoBarSelecionado(listaEst.get(which));
+                        }
+                    })
+                    .show();
+        } else if (requestCode == REQ_VOZ_PERGUNTAR_SABER_VALOR) {
+            final String[] opcoes = new String[]{"👍 Sim, quero saber o valor da conta", "👎 Não, continuar pedindo"};
+            new AlertDialog.Builder(this)
+                    .setTitle("💰 Saber o Valor da Comanda?")
+                    .setItems(opcoes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            tratarRespostaSaberValorLuna(which == 0 ? "sim" : "nao");
+                        }
+                    })
+                    .show();
+        } else if (requestCode == REQ_VOZ_PERGUNTAR_TAXA_DEZ) {
+            alternarTaxaDezPorCento(false, null);
+        } else if (requestCode == REQ_VOZ_PERGUNTAR_QUER_PAGAR) {
+            final String[] opcoes = new String[]{"💳 Sim, pagar agora nos bancos com Pix", "⏳ Não, pagar depois"};
+            new AlertDialog.Builder(this)
+                    .setTitle("💳 Efetuar Pagamento Agora?")
+                    .setItems(opcoes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            tratarRespostaQuerPagarLuna(which == 0 ? "sim" : "nao");
+                        }
+                    })
+                    .show();
+        } else if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
             final String[] frasesBusca = new String[]{
                     "Quero um bar no Recife Antigo em Pernambuco com música baixa",
                     "Localizar bar no Alto da Sé em Olinda",
@@ -3046,7 +3746,7 @@ public class MainActivity extends Activity {
                     "Localizar restaurante na Estação das Docas em Belém do Pará"
             };
             new AlertDialog.Builder(this)
-                    .setTitle("🎤 Escolha ou Simule a Busca por Voz:")
+                    .setTitle("🎤 Luna: Escolha ou Simule a Busca por Voz:")
                     .setItems(frasesBusca, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -3063,11 +3763,11 @@ public class MainActivity extends Activity {
                     "Quero uma porção de entrada e dois chopes gelados"
             };
             new AlertDialog.Builder(this)
-                    .setTitle("🎙️ Escolha ou Simule o Pedido Falado:")
+                    .setTitle("🎙️ Luna: Escolha ou Simule o Pedido Falado:")
                     .setItems(frasesPedido, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            executarComandoVozUniversal(frasesPedido[which]);
+                            executarPedidoConversacionalLuna(frasesPedido[which]);
                         }
                     })
                     .show();
@@ -3091,7 +3791,7 @@ public class MainActivity extends Activity {
                     "Ajuda com comandos de voz"
             };
             new AlertDialog.Builder(this)
-                    .setTitle("🎙️ Assistente de Voz: Escolha ou Simule um Comando:")
+                    .setTitle("🌙 Luna: Escolha um Comando Rápido:")
                     .setItems(frasesUniversal, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -3109,7 +3809,27 @@ public class MainActivity extends Activity {
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches != null && !matches.isEmpty()) {
                 String textoFalado = matches.get(0);
-                executarComandoVozUniversal(textoFalado);
+                if (requestCode == REQ_VOZ_BUSCA_LOCAL) {
+                    etBuscaQualquerBar.setText(textoFalado);
+                    localizarQualquerBarComCardapio(textoFalado);
+                } else if (requestCode == REQ_VOZ_ESCOLHER_ESTABELECIMENTO) {
+                    tratarEscolhaEstabelecimentoPorTextoOuVoz(textoFalado);
+                } else if (requestCode == REQ_VOZ_PEDIDO_CARDAPIO) {
+                    executarPedidoConversacionalLuna(textoFalado);
+                } else if (requestCode == REQ_VOZ_PERGUNTAR_SABER_VALOR) {
+                    tratarRespostaSaberValorLuna(textoFalado);
+                } else if (requestCode == REQ_VOZ_PERGUNTAR_TAXA_DEZ) {
+                    tratarRespostaTaxaDezLuna(textoFalado);
+                } else if (requestCode == REQ_VOZ_PERGUNTAR_QUER_PAGAR) {
+                    tratarRespostaQuerPagarLuna(textoFalado);
+                } else {
+                    executarComandoVozUniversal(textoFalado);
+                }
+            }
+        } else if (resultCode == RESULT_CANCELED) {
+            if (tvResultado != null) {
+                String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+                tvResultado.setText("🌙 Luna a postos em " + estNome + ".\nToque em 'Solicitar Ajuda da Luna' para falar a qualquer momento.");
             }
         }
     }
@@ -3152,7 +3872,7 @@ public class MainActivity extends Activity {
                 break;
 
             case TAXA_DEZ_POR_CENTO_PERGUNTAR:
-                perguntarTaxaDezPorCento(true, null);
+                alternarTaxaDezPorCento(false, null);
                 break;
 
             case FILTRAR_SOM_CONFORTO:
@@ -3176,7 +3896,7 @@ public class MainActivity extends Activity {
                 break;
 
             case ABRIR_CARDAPIO_COMPLETO:
-                abrirDialogoCardapioCompletoInterativo();
+                falarCardapioCompletoEPerguntarPedido();
                 break;
 
             case ABRIR_ROTA_MAPS:
@@ -3203,13 +3923,25 @@ public class MainActivity extends Activity {
                 abrirDialogoCadastrarNovoItemNoBanco();
                 break;
 
+            case ALTERAR_TETO_GASTOS:
+                alternarTetoDeGastos();
+                break;
+
             case FILTRAR_OU_BUSCAR_LOCAL:
                 etBuscaQualquerBar.setText(resultado.parametroTexto);
-                localizarQualquerBarComCardapio(resultado.parametroTexto);
+                if (ehIntencaoDeBuscaOuFiltroBares(resultado.parametroTexto)) {
+                    buscarEListarBaresLuna(resultado.parametroTexto);
+                } else {
+                    localizarQualquerBarComCardapio(resultado.parametroTexto);
+                }
                 break;
 
             case AJUDA_VOZ:
                 exibirDialogoAjudaVoz(resultado.mensagemTalkBack);
+                break;
+
+            case LISTAR_ESTABELECIMENTOS_LUNA:
+                listarEstabelecimentosEPerguntarLuna();
                 break;
 
             case COMANDO_NAO_RECONHECIDO:
@@ -3300,6 +4032,37 @@ public class MainActivity extends Activity {
         atualizarPainelEFalar(msgVisual, msgFalada);
     }
 
+    private void falarCardapioCompletoEPerguntarPedido() {
+        if (estabelecimentoSelecionado == null) {
+            listarEstabelecimentosEPerguntarLuna();
+            return;
+        }
+
+        if (estabelecimentoSelecionado.cardapio.size() < 12) {
+            completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
+        }
+
+        abrirDialogoCardapioCompletoInterativo();
+
+        StringBuilder sbItens = new StringBuilder();
+        int max = Math.min(6, estabelecimentoSelecionado.cardapio.size());
+        for (int i = 0; i < max; i++) {
+            ItemCardapio it = estabelecimentoSelecionado.cardapio.get(i);
+            sbItens.append(it.nome).append(" por ").append(it.formatarPreco());
+            if (i < max - 1) sbItens.append(", ");
+        }
+
+        String fala = "Cardápio de " + estabelecimentoSelecionado.nome + ": " + sbItens.toString() +
+                ". O que você deseja pedir? Diga o seu pedido.";
+
+        String visual = "📖 Cardápio de " + estabelecimentoSelecionado.nome + ":\n" +
+                "• " + sbItens.toString().replace(", ", "\n• ") +
+                "\n\nOuvindo seu pedido no microfone da Luna...";
+
+        atualizarPainelEFalar(visual, fala);
+        lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
+    }
+
     private void executarConsultaTotalPorVoz() {
         int totalItens = 0;
         for (int q : quantidadesComanda.values()) totalItens += q;
@@ -3319,9 +4082,20 @@ public class MainActivity extends Activity {
         String msgFalada = "Sua conta em " + estNome + " tem " + totalItens + " itens. " +
                 "Subtotal: " + subtotalFmt + ". " +
                 (adicionarTaxaDezPorCento ? "Com a taxa de dez por cento de " + taxaFmt + ", o " : "") +
-                "Total final a pagar é " + totalFmt + ". Sua senha de atendimento é " + senhaEntregaAtual + ".";
+                "Total final a pagar é " + totalFmt + ". Senha: " + senhaEntregaAtual + ".";
 
-        atualizarPainelEFalar(msgVisual, msgFalada);
+        if (totalItens > 0) {
+            String pergunta = " Deseja pagar com Pix agora? Diga sim para gerar o Pix, ou continue pedindo.";
+            msgFalada += pergunta;
+            msgVisual += "\n\n💡 Dica da Luna: Diga \"Sim\" para pagar com Pix, ou faça mais pedidos.";
+            atualizarPainelEFalar(msgVisual, msgFalada);
+            lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PERGUNTAR_QUER_PAGAR, "Luna ouvindo: quer pagar com Pix agora?");
+        } else {
+            String vazia = " Sua comanda está vazia. Diga 'ver cardápio' ou fale o que deseja pedir.";
+            msgFalada += vazia;
+            atualizarPainelEFalar(msgVisual, msgFalada);
+            lunaFalarEChamarReconhecimentoVoz(msgFalada, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: o que deseja pedir?");
+        }
     }
 
     private void executarAlteracaoTaxaPorVoz(boolean ativar) {
@@ -3547,7 +4321,12 @@ public class MainActivity extends Activity {
     private static String normalizarTexto(String s) {
         if (s == null) return "";
         String norm = Normalizer.normalize(s, Normalizer.Form.NFD);
-        return norm.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase(Locale.US);
+        norm = norm.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "").toLowerCase(Locale.US);
+        norm = norm.replaceAll("[^a-z0-9\\s]", " ");
+        norm = norm.replaceAll("\\bproculre\\b", "procure");
+        norm = norm.replaceAll("\\bproculrar\\b", "procurar");
+        norm = norm.replaceAll("\\bba\\b", "bar");
+        return norm.replaceAll("\\s+", " ").trim();
     }
 
     private static String capitalizarFrase(String s) {
@@ -3578,10 +4357,100 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void inicializarSintetizadorVozLuna() {
+        try {
+            ttsLuna = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status == TextToSpeech.SUCCESS) {
+                        try {
+                            int r = ttsLuna.setLanguage(new Locale("pt", "BR"));
+                            if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) {
+                                ttsLuna.setLanguage(Locale.getDefault());
+                            }
+                            ttsLunaPronto = true;
+                        } catch (Exception e) {
+                            ttsLunaPronto = false;
+                        }
+                    }
+                }
+            });
+        } catch (Exception e) {
+            ttsLunaPronto = false;
+        }
+    }
+
     /**
-     * Envia o anúncio diretamente para o Leitor de Tela nativo do Sistema Android (TalkBack / Assistente de Voz),
-     * sem atrasos, sem filas duplicadas e sem qualquer sintetizador que atropele o leitor do sistema.
+     * Faz a Luna falar pelo alto-falante e, ao término da fala, aciona o microfone
+     * com timeout de segurança e cancelamento seguro, evitando qualquer travamento após vários comandos.
      */
+    private void lunaFalarEChamarReconhecimentoVoz(final String textoParaFalar, final int requestCodeVoz, final String promptMicrofone) {
+        if (tvResultado != null) {
+            tvResultado.setText("🔊 " + textoParaFalar);
+            tvResultado.setContentDescription(textoParaFalar);
+            tvResultado.announceForAccessibility(textoParaFalar);
+        }
+
+        if (runnableTimeoutLuna != null) {
+            handlerLuna.removeCallbacks(runnableTimeoutLuna);
+            runnableTimeoutLuna = null;
+        }
+
+        final boolean[] jaDisparou = new boolean[]{false};
+        final Runnable acaoAbrirVoz = new Runnable() {
+            @Override
+            public void run() {
+                if (!jaDisparou[0]) {
+                    jaDisparou[0] = true;
+                    if (runnableTimeoutLuna != null) {
+                        handlerLuna.removeCallbacks(runnableTimeoutLuna);
+                        runnableTimeoutLuna = null;
+                    }
+                    iniciarReconhecimentoVoz(requestCodeVoz, promptMicrofone);
+                }
+            }
+        };
+
+        if (ttsLunaPronto && ttsLuna != null) {
+            final String utteranceId = "LUNA_FALA_" + requestCodeVoz + "_" + System.currentTimeMillis();
+
+            ttsLuna.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override
+                public void onStart(String id) {
+                }
+
+                @Override
+                public void onDone(String id) {
+                    if (utteranceId.equals(id)) {
+                        runOnUiThread(acaoAbrirVoz);
+                    }
+                }
+
+                @Override
+                public void onError(String id) {
+                    runOnUiThread(acaoAbrirVoz);
+                }
+            });
+
+            // Timeout de segurança: calcula duração estimada da fala + margem de segurança.
+            // Se o motor TTS travar ou perder o callback onDone, a Luna NÃO congela!
+            long delayEstimado = Math.min(25000L, Math.max(2500L, (textoParaFalar != null ? textoParaFalar.length() : 20) * 100L));
+            runnableTimeoutLuna = new Runnable() {
+                @Override
+                public void run() {
+                    acaoAbrirVoz.run();
+                }
+            };
+            handlerLuna.postDelayed(runnableTimeoutLuna, delayEstimado);
+
+            Bundle params = new Bundle();
+            params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
+            ttsLuna.speak(textoParaFalar, TextToSpeech.QUEUE_FLUSH, params, utteranceId);
+        } else {
+            acaoAbrirVoz.run();
+        }
+    }
+
     private void falar(String texto) {
         if (texto == null || texto.trim().isEmpty()) return;
         if (tvResultado != null) {
@@ -3594,6 +4463,25 @@ public class MainActivity extends Activity {
                 event.setPackageName(getPackageName());
                 event.getText().add(texto);
                 accessibilityManager.sendAccessibilityEvent(event);
+            } catch (Exception ignored) {
+            }
+        }
+        if (ttsLunaPronto && ttsLuna != null) {
+            ttsLuna.speak(texto, TextToSpeech.QUEUE_ADD, null, null);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (runnableTimeoutLuna != null) {
+            handlerLuna.removeCallbacks(runnableTimeoutLuna);
+            runnableTimeoutLuna = null;
+        }
+        if (ttsLuna != null) {
+            try {
+                ttsLuna.stop();
+                ttsLuna.shutdown();
             } catch (Exception ignored) {
             }
         }

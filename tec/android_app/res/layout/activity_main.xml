@@ -78,12 +78,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="60dp"
-            android:text="🎙️ Assistente de Voz: Fale Qualquer Comando para a IA"
+            android:text="🎙️ Solicitar Ajuda da Luna (Escolher Meu Bar)"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
             android:backgroundTint="#7C3AED"
-            android:contentDescription="Botão Falar Qualquer Comando para a IA. Toque duas vezes para falar o que deseja fazer no app: pedir ou retirar pratos, ver o total da conta, calcular taxa de dez por cento, traçar rota no Maps, gerar Pix, abrir banco ou pesquisar novos bares e cidades."
+            android:contentDescription="Botão Solicitar Ajuda da Luna. Toque duas vezes para a assistente listar os estabelecimentos disponíveis, perguntar em qual bar você está e confirmar seu atendimento antes de abrir o cardápio."
             android:layout_marginBottom="14dp" />
 
         <!-- SEÇÃO 1: FILTROS POR REGIÃO, ESTADO, CIDADE E GOOGLE MAPS -->

@@ -25,6 +25,7 @@ public class ProcessadorComandosVoz {
         TAXA_DEZ_POR_CENTO_ATIVAR,
         TAXA_DEZ_POR_CENTO_DESATIVAR,
         TAXA_DEZ_POR_CENTO_PERGUNTAR,
+        ALTERAR_TETO_GASTOS,
         PAGAR_PIX,
         ABRIR_BANCO,
         ABRIR_CARDAPIO_COMPLETO,
@@ -37,6 +38,7 @@ public class ProcessadorComandosVoz {
         FILTRAR_SOM_CONFORTO,
         FILTRAR_SOM_ANIMADO,
         FILTRAR_SOM_TODOS,
+        LISTAR_ESTABELECIMENTOS_LUNA,
         AJUDA_VOZ,
         COMANDO_NAO_RECONHECIDO
     }
@@ -82,6 +84,9 @@ public class ProcessadorComandosVoz {
         s = s.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
         s = s.toLowerCase(Locale.ROOT);
         s = s.replaceAll("[^a-z0-9\\s]", " ");
+        s = s.replaceAll("\\bproculre\\b", "procure");
+        s = s.replaceAll("\\bproculrar\\b", "procurar");
+        s = s.replaceAll("\\bba\\b", "bar");
         s = s.replaceAll("\\s+", " ").trim();
         return s;
     }
@@ -111,6 +116,100 @@ public class ProcessadorComandosVoz {
     }
 
     /**
+     * Interpreta um número de escolha (0-indexado) a partir da fala do usuário,
+     * aceitando ordinais, cardinais e locuções (ex: "o primeiro", "o 2", "opção 3", "bar 1", "número 4").
+     * Retorna -1 se não identificar um número válido dentro dos limites.
+     */
+    public static int interpretarNumeroEscolha(String entrada, int maxOpcoes) {
+        if (entrada == null || entrada.trim().isEmpty() || maxOpcoes <= 0) return -1;
+        String t = " " + normalizar(entrada) + " ";
+
+        int valor = -1;
+        if (t.contains(" 10 ") || t.contains(" decimo ") || t.contains(" decima ") || t.contains(" dez ")) valor = 10;
+        else if (t.contains(" 9 ") || t.contains(" nono ") || t.contains(" nona ") || t.contains(" nove ")) valor = 9;
+        else if (t.contains(" 8 ") || t.contains(" oitavo ") || t.contains(" oitava ") || t.contains(" oito ")) valor = 8;
+        else if (t.contains(" 7 ") || t.contains(" setimo ") || t.contains(" setima ") || t.contains(" sete ")) valor = 7;
+        else if (t.contains(" 6 ") || t.contains(" sexto ") || t.contains(" sexta ") || t.contains(" seis ")) valor = 6;
+        else if (t.contains(" 5 ") || t.contains(" quinto ") || t.contains(" quinta ") || t.contains(" cinco ")) valor = 5;
+        else if (t.contains(" 4 ") || t.contains(" quarto ") || t.contains(" quarta ") || t.contains(" quatro ")) valor = 4;
+        else if (t.contains(" 3 ") || t.contains(" terceiro ") || t.contains(" terceira ") || t.contains(" tres ")) valor = 3;
+        else if (t.contains(" 2 ") || t.contains(" segundo ") || t.contains(" segunda ") || t.contains(" dois ") || t.contains(" duas ")) valor = 2;
+        else if (t.contains(" 1 ") || t.contains(" primeiro ") || t.contains(" primeira ") || t.contains(" um ") || t.contains(" uma ")) valor = 1;
+
+        if (valor == -1) {
+            Matcher m = Pattern.compile("\\b(\\d+)\\b").matcher(t);
+            if (m.find()) {
+                try {
+                    valor = Integer.parseInt(m.group(1));
+                } catch (Exception ignored) {}
+            }
+        }
+
+        if (valor >= 1 && valor <= maxOpcoes) {
+            return valor - 1; // Retorna índice 0-baseado
+        }
+        return -1;
+    }
+
+    public static boolean ehIntencaoListarBares(String normEspaco) {
+        if (normEspaco == null || normEspaco.trim().isEmpty()) return false;
+        String t = normEspaco;
+
+        // Variações diretas extremamente comuns
+        if (t.contains(" listar bares ") || t.contains(" listar os bares ") ||
+            t.contains(" lista os bares ") || t.contains(" me lista os bares ") ||
+            t.contains(" me lista bares ") || t.contains(" liste os bares ") ||
+            t.contains(" liste bares ") || t.contains(" lista bares ") ||
+            t.contains(" listar bar ") || t.contains(" lista bar ") ||
+            t.contains(" lista de bares ") || t.contains(" listar estabelecimentos ") ||
+            t.contains(" me lista os estabelecimentos ") || t.contains(" listar restaurantes ") ||
+            t.contains(" me lista os restaurantes ") || t.contains(" lista restaurantes ") ||
+            t.contains(" quais bares ") || t.contains(" quais os bares ") ||
+            t.contains(" quais sao os bares ") || t.contains(" quais sao os restaurantes ") ||
+            t.contains(" quais restaurantes ") || t.contains(" quais estabelecimentos ") ||
+            t.contains(" quais locais ") || t.contains(" quais opcoes de bares ") ||
+            t.contains(" opcoes de bares ") || t.contains(" opcoes de bar ") ||
+            t.contains(" quais bares tem ") || t.contains(" quais bares existem ") ||
+            t.contains(" quais bares disponiveis ") || t.contains(" bares disponiveis ") ||
+            t.contains(" bares cadastrados ") || t.contains(" ver estabelecimentos ") ||
+            t.contains(" ver outros bares ") || t.contains(" ver os bares ") ||
+            t.contains(" ver bares ") || t.contains(" mostrar bares ") ||
+            t.contains(" mostra os bares ") || t.contains(" me mostra os bares ") ||
+            t.contains(" mostre os bares ") || t.contains(" mostrar os bares ") ||
+            t.contains(" fala os bares ") || t.contains(" me fala os bares ") ||
+            t.contains(" fale os bares ") || t.contains(" me fale os bares ") ||
+            t.contains(" diga os bares ") || t.contains(" me diga os bares ") ||
+            t.contains(" escolher bar ") || t.contains(" escolher um bar ") ||
+            t.contains(" escolher outro bar ") || t.contains(" trocar bar ") ||
+            t.contains(" trocar de bar ") || t.contains(" mudar de bar ") ||
+            t.contains(" mudar bar ") || t.contains(" onde comer ") ||
+            t.contains(" onde posso comer ") || t.contains(" onde tem bar ") ||
+            t.contains(" onde beber ") || t.contains(" onde posso beber ")) {
+            return true;
+        }
+
+        // Combinação semântica: verbo de listar/mostrar/falar/quais + substantivo bar/restaurante/local
+        boolean temSubstantivo = t.contains(" bar ") || t.contains(" bares ") ||
+                t.contains(" restaurante ") || t.contains(" restaurantes ") ||
+                t.contains(" estabelecimento ") || t.contains(" estabelecimentos ") ||
+                t.contains(" boteco ") || t.contains(" botecos ") ||
+                t.contains(" local ") || t.contains(" locais ");
+
+        boolean temVerboApresentar = t.contains(" list ") || t.contains(" lista ") ||
+                t.contains(" listar ") || t.contains(" liste ") ||
+                t.contains(" mostre ") || t.contains(" mostra ") ||
+                t.contains(" mostrar ") || t.contains(" ver ") ||
+                t.contains(" veja ") || t.contains(" fale ") ||
+                t.contains(" fala ") || t.contains(" falar ") ||
+                t.contains(" diga ") || t.contains(" dizer ") ||
+                t.contains(" quais ") || t.contains(" escolher ") ||
+                t.contains(" troca ") || t.contains(" trocar ") ||
+                t.contains(" muda ") || t.contains(" mudar ");
+
+        return temSubstantivo && temVerboApresentar;
+    }
+
+    /**
      * Interpreta a fala do usuário e direciona para a ação exata no app.
      */
     public static ResultadoComando processar(
@@ -133,6 +232,55 @@ public class ProcessadorComandosVoz {
         String original = fraseFalada.trim();
         String norm = normalizar(original);
         String normEspaco = " " + norm + " ";
+
+        // 0. VERIFICAÇÃO PRIORITÁRIA DE INTENÇÃO DE LISTAR/ESCOLHER BARES PELA LUNA
+        // Se a fala expressa desejo de listar bares (mesmo contendo 'luna' ou 'ajuda'),
+        // a Luna NÃO fica no vácuo e dispara IMEDIATAMENTE a listagem de bares falada!
+        if (ehIntencaoListarBares(normEspaco)) {
+            String parametroCidade = extrairTermoBusca(original, norm);
+            return new ResultadoComando(
+                    TipoAcao.LISTAR_ESTABELECIMENTOS_LUNA,
+                    original,
+                    null,
+                    parametroCidade,
+                    "🌙 Luna: Listando estabelecimentos disponíveis...",
+                    "Listando os bares disponíveis para você escolher."
+            );
+        }
+
+        // 0.1 SAUDAÇÃO OU AJUDA GERAL DA LUNA
+        if (normEspaco.contains(" luna ") || norm.equals("luna")) {
+            // Se falou apenas o nome da Luna ou uma saudação direta, responde com acolhimento e opções claras
+            if (norm.equals("luna") || norm.equals("oi luna") || norm.equals("ola luna") ||
+                normEspaco.contains(" ajuda da luna ") || normEspaco.contains(" solicitar ajuda da luna ") ||
+                normEspaco.contains(" luna me ajuda ") || normEspaco.contains(" falar com a luna ")) {
+
+                return new ResultadoComando(
+                        TipoAcao.AJUDA_VOZ,
+                        original,
+                        null,
+                        "",
+                        "🌙 Luna a postos!\n\nVocê pode:\n• Dizer \"Listar bares\" ou falar o nome do bar\n• Fazer pedidos (ex: \"Quero 2 coxinhas e 1 cerveja\")\n• Consultar a conta (ex: \"Quanto deu a comanda?\")\n• Alternar os 10% (ex: \"Com 10%\" ou \"Sem 10%\")\n• Pagar com Pix (ex: \"Pagar com Pix\")",
+                        "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Você pode me pedir para listar os bares, anotar seus pedidos, consultar o valor da conta ou pagar com Pix. O que deseja fazer?"
+                );
+            }
+            // Se falou 'luna' no meio de outro comando (ex: 'luna me vê 2 coxinhas' ou 'luna quanto deu a conta'),
+            // remove 'luna' para facilitar o reconhecimento dos pratos e das demais ações.
+            norm = norm.replaceAll("\\bluna\\b", " ").replaceAll("\\s+", " ").trim();
+            normEspaco = " " + norm + " ";
+
+            // Reavalia intenção de listar bares após retirar a palavra 'luna'
+            if (ehIntencaoListarBares(normEspaco)) {
+                return new ResultadoComando(
+                        TipoAcao.LISTAR_ESTABELECIMENTOS_LUNA,
+                        original,
+                        null,
+                        extrairTermoBusca(original, norm),
+                        "🌙 Luna: Listando estabelecimentos disponíveis...",
+                        "Listando os bares disponíveis para você escolher."
+                );
+            }
+        }
 
         // 1. AJUDA DE VOZ
         if (normEspaco.contains(" ajuda ") || normEspaco.contains(" o que falar ") ||
@@ -195,28 +343,40 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 2. ABRIR CARDÁPIO COMPLETO
+        // 2. ABRIR CARDÁPIO COMPLETO / LER CARDÁPIO
         if (normEspaco.contains(" abrir cardapio ") || normEspaco.contains(" ver cardapio ") ||
-            normEspaco.contains(" ler cardapio ") || normEspaco.contains(" cardapio completo ") ||
+            normEspaco.contains(" ler cardapio ") || normEspaco.contains(" leia o cardapio ") ||
+            normEspaco.contains(" fale o cardapio ") || normEspaco.contains(" me fale o cardapio ") ||
+            normEspaco.contains(" diga o cardapio ") || normEspaco.contains(" cardapio completo ") ||
             normEspaco.contains(" lista do cardapio ") || normEspaco.contains(" opcoes do cardapio ") ||
-            normEspaco.contains(" o que tem pra comer ") || normEspaco.contains(" o que tem para comer ")) {
+            normEspaco.contains(" o que tem no cardapio ") || normEspaco.contains(" o que tem no cardapio ") ||
+            normEspaco.contains(" o que tem pra comer ") || normEspaco.contains(" o que tem para comer ") ||
+            normEspaco.contains(" quais os pratos ") || normEspaco.contains(" quais as bebidas ") ||
+            normEspaco.contains(" quais pratos ") || normEspaco.contains(" quais bebidas ") ||
+            norm.equals("cardapio") || norm.equals("ver cardapio") || norm.equals("cardapio")) {
             return new ResultadoComando(
                     TipoAcao.ABRIR_CARDAPIO_COMPLETO,
                     original,
                     null,
                     "",
-                    "📖 Abrindo janela com o Cardápio Completo...",
-                    "Abrindo janela com o cardápio completo deste estabelecimento."
+                    "📖 Abrindo e lendo o Cardápio Completo...",
+                    "Abrindo e lendo os itens do cardápio completo deste estabelecimento."
             );
         }
 
         // 3. CONSULTAR TOTAL / PEDIR A CONTA
         if (normEspaco.contains(" quanto deu ") || normEspaco.contains(" quanto ta dando ") ||
             normEspaco.contains(" quanto esta dando ") || normEspaco.contains(" qual o total ") ||
+            normEspaco.contains(" quanto e ") || normEspaco.contains(" quanto deu a conta ") ||
+            normEspaco.contains(" quanto ta a conta ") || normEspaco.contains(" quanto deu a comanda ") ||
+            normEspaco.contains(" quanto ta a comanda ") || normEspaco.contains(" quanto custa ") ||
             normEspaco.contains(" fechar conta ") || normEspaco.contains(" fechar a conta ") ||
             normEspaco.contains(" pedir a conta ") || normEspaco.contains(" ver conta ") ||
-            normEspaco.contains(" valor da conta ") || normEspaco.contains(" saldo ") ||
-            normEspaco.contains(" total da comanda ") || normEspaco.contains(" quanto ficou ")) {
+            normEspaco.contains(" valor da conta ") || normEspaco.contains(" valor da comanda ") ||
+            normEspaco.contains(" saldo ") || normEspaco.contains(" total da comanda ") ||
+            normEspaco.contains(" total da conta ") || normEspaco.contains(" quanto ficou ") ||
+            normEspaco.contains(" minha comanda ") || normEspaco.contains(" minha conta ") ||
+            norm.equals("conta") || norm.equals("comanda") || norm.equals("total") || norm.equals("quanto deu")) {
             return new ResultadoComando(
                     TipoAcao.CONSULTAR_TOTAL,
                     original,
@@ -242,13 +402,38 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 5. TAXA DE 10% DO GARÇOM
+        // 5. TAXA DE 10% DO GARÇOM / RESPOSTAS RÁPIDAS
+        if (norm.equals("sim") || norm.equals("quero") || norm.equals("pode ser") ||
+            norm.equals("com certeza") || norm.equals("claro") || norm.equals("positivo") ||
+            norm.equals("adicionar 10") || norm.equals("com 10") || norm.equals("colocar 10")) {
+            return new ResultadoComando(
+                    TipoAcao.TAXA_DEZ_POR_CENTO_ATIVAR,
+                    original,
+                    null,
+                    "",
+                    "💁 Taxa de 10% incluída na comanda.",
+                    "Taxa de serviço de dez por cento adicionada à sua conta."
+            );
+        }
+        if (norm.equals("nao") || norm.equals("nao quero") || norm.equals("sem 10") ||
+            norm.equals("tirar 10") || norm.equals("sem taxa") || norm.equals("negativo")) {
+            return new ResultadoComando(
+                    TipoAcao.TAXA_DEZ_POR_CENTO_DESATIVAR,
+                    original,
+                    null,
+                    "",
+                    "💁 Taxa de 10% desativada na comanda.",
+                    "Taxa de serviço de dez por cento removida da sua conta."
+            );
+        }
+
         if (normEspaco.contains(" 10 por cento ") || normEspaco.contains(" dez por cento ") ||
-            normEspaco.contains(" taxa ") || normEspaco.contains(" gorjeta ") || normEspaco.contains(" taxa de servico ")) {
+            normEspaco.contains(" taxa ") || normEspaco.contains(" gorjeta ") || normEspaco.contains(" taxa de servico ") ||
+            normEspaco.contains(" 10 ") || normEspaco.contains(" dez ")) {
 
             if (normEspaco.contains(" tirar ") || normEspaco.contains(" sem ") ||
                 normEspaco.contains(" remover ") || normEspaco.contains(" nao quero ") ||
-                normEspaco.contains(" cancelar ")) {
+                normEspaco.contains(" cancelar ") || normEspaco.contains(" tira ")) {
                 return new ResultadoComando(
                         TipoAcao.TAXA_DEZ_POR_CENTO_DESATIVAR,
                         original,
@@ -259,6 +444,7 @@ public class ProcessadorComandosVoz {
                 );
             } else if (normEspaco.contains(" colocar ") || normEspaco.contains(" adicionar ") ||
                        normEspaco.contains(" com ") || normEspaco.contains(" incluir ") ||
+                       normEspaco.contains(" bota ") || normEspaco.contains(" poe ") ||
                        normEspaco.contains(" bota ")) {
                 return new ResultadoComando(
                         TipoAcao.TAXA_DEZ_POR_CENTO_ATIVAR,
@@ -274,10 +460,25 @@ public class ProcessadorComandosVoz {
                         original,
                         null,
                         "",
-                        "💁 Abrindo diálogo da Taxa de Serviço de 10%...",
-                        "Deseja adicionar os dez por cento de taxa de serviço na sua conta?"
+                        "💁 Alternando taxa de 10% do garçom...",
+                        "Alternando a taxa de dez por cento da sua conta."
                 );
             }
+        }
+
+        // 5.1 TETO DE GASTOS / ALTERAR LIMITE
+        if (normEspaco.contains(" teto ") || normEspaco.contains(" teto de gastos ") ||
+            normEspaco.contains(" alterar teto ") || normEspaco.contains(" mudar teto ") ||
+            normEspaco.contains(" limite de gastos ") || normEspaco.contains(" limite ") ||
+            normEspaco.contains(" alterar limite ") || normEspaco.contains(" trocar teto ")) {
+            return new ResultadoComando(
+                    TipoAcao.ALTERAR_TETO_GASTOS,
+                    original,
+                    null,
+                    "",
+                    "🎯 Alternando teto de gastos da comanda...",
+                    "Alternando limite de teto de gastos da comanda."
+            );
         }
 
         // 6. PAGAMENTO POR PIX OU ABRIR BANCO
@@ -440,25 +641,14 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 12. FALLBACK INTELIGENTE (TENTA LOCALIZAR BAR OU INFORMA OPÇÕES)
-        if (original.length() >= 3) {
-            return new ResultadoComando(
-                    TipoAcao.FILTRAR_OU_BUSCAR_LOCAL,
-                    original,
-                    null,
-                    original,
-                    "🔍 Tentando localizar estabelecimento por voz: \"" + original + "\"...",
-                    "Buscando estabelecimento correspondente a " + original + "."
-            );
-        }
-
+        // 12. COMANDO NÃO RECONHECIDO (NUNCA DEIXAR O USUÁRIO NO VÁCUO)
         return new ResultadoComando(
                 TipoAcao.COMANDO_NAO_RECONHECIDO,
                 original,
                 null,
                 "",
-                "🎙️ Você disse: \"" + original + "\". Diga 'ajuda' para ouvir comandos.",
-                "Não entendi o comando. Diga ajuda para ouvir todas as opções."
+                "🎙️ Luna não reconheceu: \"" + original + "\".\n\nVocê pode pedir por voz:\n• \"Listar bares\" ou \"Mudar de bar\"\n• Falar o nome do prato ou bebida\n• \"Quanto tá a conta?\"\n• \"Com 10%\" ou \"Sem 10%\"\n• \"Pagar com Pix\"",
+                "Não entendi esse comando. Você pode me pedir para listar os bares, fazer um pedido, consultar a comanda ou pagar com Pix. Diga o que deseja fazer."
         );
     }
 
