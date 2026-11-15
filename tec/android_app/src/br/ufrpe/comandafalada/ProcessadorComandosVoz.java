@@ -210,6 +210,56 @@ public class ProcessadorComandosVoz {
     }
 
     /**
+     * Detecta qualquer intenção relacionada a abrir, ler ou ver o cardápio ou menu de pratos.
+     */
+    public static boolean ehIntencaoCardapio(String normEspaco, String norm) {
+        if (normEspaco == null || norm == null) return false;
+        // Evita conflito com cadastro de novo item no banco
+        if (normEspaco.contains(" cadastrar ") || normEspaco.contains(" cadastrar prato ") || normEspaco.contains(" novo prato ")) {
+            return false;
+        }
+        if (norm.contains("cardapio") || norm.contains("cardapios") ||
+            normEspaco.contains(" menu ") || norm.equals("menu") ||
+            normEspaco.contains(" o que tem pra comer ") || normEspaco.contains(" o que tem para comer ") ||
+            normEspaco.contains(" o que tem de bom ") || normEspaco.contains(" o que tem para beber ") ||
+            normEspaco.contains(" o que tem pra beber ") ||
+            normEspaco.contains(" quais os pratos ") || normEspaco.contains(" quais as bebidas ") ||
+            normEspaco.contains(" quais pratos ") || normEspaco.contains(" quais bebidas ") ||
+            normEspaco.contains(" lista de pratos ") || normEspaco.contains(" ver pratos ") ||
+            normEspaco.contains(" mostrar pratos ") || normEspaco.contains(" ver comidas ") ||
+            normEspaco.contains(" opcoes de comida ") || normEspaco.contains(" opcao de comida ") ||
+            normEspaco.contains(" ver opcoes ") || normEspaco.contains(" ver as opcoes ")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Interpreta escolha de item do cardápio por número ou ordinal (ex: "opção 1", "número 2", "o primeiro", "1").
+     */
+    public static int interpretarNumeroEscolhaItemCardapio(String entrada, int maxOpcoes) {
+        if (entrada == null || entrada.trim().isEmpty() || maxOpcoes <= 0) return -1;
+        String t = " " + normalizar(entrada) + " ";
+        boolean temIndicadorOpcao = t.contains(" opcao ") || t.contains(" opcoes ") ||
+                t.contains(" numero ") || t.contains(" item ") || t.contains(" prato ") ||
+                t.contains(" primeiro ") || t.contains(" primeira ") ||
+                t.contains(" segundo ") || t.contains(" segunda ") ||
+                t.contains(" terceiro ") || t.contains(" terceira ") ||
+                t.contains(" quarto ") || t.contains(" quarta ") ||
+                t.contains(" quinto ") || t.contains(" quinta ") ||
+                t.contains(" sexto ") || t.contains(" sexta ") ||
+                t.contains(" quero o ") || t.contains(" quero a ") ||
+                t.contains(" me ve o ") || t.contains(" me ve a ") ||
+                t.contains(" pedir o ") || t.contains(" pedir a ");
+
+        String limpo = normalizar(entrada).trim();
+        if (temIndicadorOpcao || limpo.matches("^(10|[1-9]|um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez)$")) {
+            return interpretarNumeroEscolha(entrada, maxOpcoes);
+        }
+        return -1;
+    }
+
+    /**
      * Interpreta a fala do usuário e direciona para a ação exata no app.
      */
     public static ResultadoComando processar(
@@ -343,17 +393,8 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 2. ABRIR CARDÁPIO COMPLETO / LER CARDÁPIO
-        if (normEspaco.contains(" abrir cardapio ") || normEspaco.contains(" ver cardapio ") ||
-            normEspaco.contains(" ler cardapio ") || normEspaco.contains(" leia o cardapio ") ||
-            normEspaco.contains(" fale o cardapio ") || normEspaco.contains(" me fale o cardapio ") ||
-            normEspaco.contains(" diga o cardapio ") || normEspaco.contains(" cardapio completo ") ||
-            normEspaco.contains(" lista do cardapio ") || normEspaco.contains(" opcoes do cardapio ") ||
-            normEspaco.contains(" o que tem no cardapio ") || normEspaco.contains(" o que tem no cardapio ") ||
-            normEspaco.contains(" o que tem pra comer ") || normEspaco.contains(" o que tem para comer ") ||
-            normEspaco.contains(" quais os pratos ") || normEspaco.contains(" quais as bebidas ") ||
-            normEspaco.contains(" quais pratos ") || normEspaco.contains(" quais bebidas ") ||
-            norm.equals("cardapio") || norm.equals("ver cardapio") || norm.equals("cardapio")) {
+        // 2. ABRIR CARDÁPIO COMPLETO / LER CARDÁPIO / OPÇÕES DO CARDÁPIO
+        if (ehIntencaoCardapio(normEspaco, norm)) {
             return new ResultadoComando(
                     TipoAcao.ABRIR_CARDAPIO_COMPLETO,
                     original,
@@ -736,6 +777,16 @@ public class ProcessadorComandosVoz {
                     resultado.add(new ItemQtd(it, qtd));
                     break;
                 }
+            }
+        }
+
+        // Se a busca textual por nome do prato não achou nada, tenta identificar por número/opção do cardápio
+        // (ex: "opção 1", "número 2", "o primeiro", "1", "quero o 2", "duas da opção 1")
+        if (resultado.isEmpty()) {
+            int indice = interpretarNumeroEscolhaItemCardapio(normFrase, est.cardapio.size());
+            if (indice >= 0 && indice < est.cardapio.size()) {
+                int qtd = extrairQuantidade(normFrase);
+                resultado.add(new ItemQtd(est.cardapio.get(indice), qtd));
             }
         }
 

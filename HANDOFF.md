@@ -5,12 +5,28 @@
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.0 com Assistência 100% por IA da Luna: Fim do Vácuo ao Listar Bares, Seleção Total por Voz (Ordinais e Nomes), Leitura Falada do Cardápio, Consulta Fluida da Comanda com Pix e Autonomia Completa sem Operações Manuais!**  
+**Status Atual:** **APK Android v8.1: Correção Definitiva da Abertura da Luna (Sem Bar Pré-selecionado Forçado), Reconhecimento Total de "Opção do Cardápio" e Pedidos por Números/Ordinais (1, 2, Opção 1, O Primeiro) com Anti-Travamento Conversacional Contínuo!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. O Que Foi Concluído no Aplicativo Android `Comanda Falada` (v8.0)
+## 1. O Que Foi Corrigido e Concluído no Aplicativo Android `Comanda Falada` (v8.1)
+
+- **Arquivo APK Atualizado e Sincronizado:**
+  - `C:\topicos-em-ia\tec\comanda-falada.apk` (~136 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
+
+- **Correção do Bug 1: Abertura da Luna sem Bar Pré-selecionado Forçado:**
+  - **Problema anterior:** Ao abrir o app ou clicar em "Solicitar Ajuda da Luna (Escolher Meu Bar)", a Luna já abria dizendo *"Você está no Bar do Cuscuz. O que deseja fazer?"*, sem o usuário ter escolhido nenhum bar ainda.
+  - **Solução implementada:** Criado o estado `barEscolhidoPeloUsuario`. Quando o app abre com comanda zerada, a Luna acolhe o usuário e imediatamente apresenta os bares disponíveis por voz e tela para escolha:  
+    *"Olá! Sou a Luna. Temos estes bares disponíveis em Recife: Número 1: Bar do Cuscuz; Número 2: Cais do Porto Bar e Restaurante; Número 3: Bodega do Véio; Número 4: Boteco Parador; Número 5: Biruta Bar. Diga o número ou o nome do bar que você prefere."*
+  - O bar só passa a ser considerado ativo após a confirmação explícita do usuário (por voz ou toque).
+
+- **Correção do Bug 2: Fim dos Travamentos e Reconhecimento Total do Cardápio:**
+  - **Problema anterior:** Dizer *"opção do cardápio"*, *"o cardápio"*, *"abrir o cardápio"* ou responder ao cardápio com ordinais/números (*"1"*, *"opção 1"*, *"o primeiro"*) gerava "Comando não reconhecido" e a Luna travava em silêncio absoluto sem reabrir o microfone.
+  - **Solução implementada:**
+    1. **Reconhecimento Semântico Abrangente do Cardápio (`ehIntencaoCardapio`):** Reconhece com 100% de precisão todas as formas coloquiais: *"opção do cardápio"*, *"opções do cardápio"*, *"o cardápio"*, *"cardápio"*, *"abrir o cardápio"*, *"ler o cardápio"*, *"ver o cardápio"*, *"me mostra o cardápio"*, *"menu"*, *"o que tem pra comer"*.
+    2. **Pedidos no Cardápio por Número e Ordinal (`interpretarNumeroEscolhaItemCardapio`):** A Luna numera as opções em voz alta (*"Opção 1: Coxinha por R$ 9,50; Opção 2: Caldinho por R$ 12,00..."*) e agora aceita comandos como *"quero a opção 1"*, *"opção 1"*, *"número 2"*, *"o primeiro"*, *"1"*, *"2"*, *"duas da opção 1"*, além dos nomes dos pratos.
+    3. **Prevenção de Travamentos em Respostas Não Reconhecidas:** Se o usuário falar algo incompreensível no cardápio ou no app, a Luna não congela no vácuo: ela orienta com calma pelo alto-falante e **reabre o microfone automaticamente** para nova tentativa.
 
 - **Arquivo APK Pronto para Instalação:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (~136 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).

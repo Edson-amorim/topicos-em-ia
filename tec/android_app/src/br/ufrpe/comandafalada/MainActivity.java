@@ -333,6 +333,7 @@ public class MainActivity extends Activity {
     private ComandaBancoDadosHelper bancoDados;
     private final List<Estabelecimento> catalogoEstabelecimentos = new ArrayList<Estabelecimento>();
     private Estabelecimento estabelecimentoSelecionado;
+    private boolean barEscolhidoPeloUsuario = false;
 
     private String regiaoFiltroAtual = "Todas as Regiões";
     private String ufFiltroAtual = "TODOS";
@@ -2021,6 +2022,8 @@ public class MainActivity extends Activity {
             Map<String, Integer> comandaSalva = bancoDados.carregarComandaAtivaDoBanco(estabelecimentoSelecionado.id);
             quantidadesComanda.clear();
             quantidadesComanda.putAll(comandaSalva);
+            // O bar só é considerado previamente escolhido se o usuário já tiver itens em sua comanda
+            barEscolhidoPeloUsuario = !quantidadesComanda.isEmpty();
         }
     }
 
@@ -2270,6 +2273,7 @@ public class MainActivity extends Activity {
         }
 
         if (anunciar) {
+            barEscolhidoPeloUsuario = true;
             String msgVisual = "Cardápio Aberto: " + novoEst.nome + " (" + novoEst.cidade + "/" + novoEst.uf + ").\n" +
                     "Ruído: " + novoEst.decibeisMedio + " dB (" + novoEst.nivelRuido + "). " + novoEst.cardapio.size() + " opções no cardápio.";
             String msgFalada = "Cardápio aberto de " + novoEst.nome + ", em " + novoEst.cidade + ", com " + novoEst.cardapio.size() + " itens disponíveis.";
@@ -3032,29 +3036,24 @@ public class MainActivity extends Activity {
     // --- RECONHECIMENTO DE VOZ, LUNA E PROCESSAMENTO NLP DA IA ---
 
     /**
-     * Aciona a assistente Luna de forma direta, acolhedora e objetiva,
-     * SEM sair despejando uma lista de bares na fala do usuário.
+     * Aciona a assistente Luna de forma direta, acolhedora e conversacional.
+     * Se o usuário ainda não escolheu um bar, ela ajuda a escolher listando as opções disponíveis.
      */
     private void acionarAjudaLunaConversacional() {
-        String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : null;
-        String fala;
-        String visual;
-
-        if (estNome == null) {
-            fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Vamos escolher o seu bar! Diga 'listar bares' para ouvir as opções disponíveis, ou diga o nome do seu bar.";
-            visual = "🌙 Luna a postos!\n\n" +
-                    "• Diga \"Listar bares\" ou \"Quais bares tem?\"\n" +
-                    "• Ou fale o nome do bar (ex: \"Bar do Cuscuz\")\n" +
-                    "• Ou pesquise cidades (ex: \"Bares em Olinda\")";
-        } else {
-            fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Você está no " + estNome + ". O que você deseja fazer? Você pode pedir pratos, consultar a conta, pagar com Pix ou dizer 'listar bares' para trocar de bar.";
-            visual = "🌙 Luna a postos em " + estNome + "!\n" +
-                    "• Peça pratos ou bebidas (ex: \"Quero 2 coxinhas e 1 refrigerante\")\n" +
-                    "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
-                    "• Alterne a taxa de 10% (ex: \"Com 10%\" ou \"Sem 10%\")\n" +
-                    "• Pague com Pix (ex: \"Pagar com Pix\")\n" +
-                    "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
+        if (!barEscolhidoPeloUsuario) {
+            // O usuário ainda não escolheu seu bar: Luna acolhe e lista os estabelecimentos disponíveis para escolha imediata
+            listarEstabelecimentosEPerguntarLuna();
+            return;
         }
+
+        String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "seu bar";
+        String fala = "Olá! Eu sou a Luna, sua assistente com inteligência artificial. Você está no " + estNome + ". O que você deseja fazer? Você pode pedir pratos, consultar a conta, pagar com Pix ou dizer 'listar bares' para trocar de bar.";
+        String visual = "🌙 Luna a postos em " + estNome + "!\n" +
+                "• Peça pratos ou bebidas (ex: \"Quero 2 coxinhas e 1 refrigerante\")\n" +
+                "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
+                "• Alterne a taxa de 10% (ex: \"Com 10%\" ou \"Sem 10%\")\n" +
+                "• Pague com Pix (ex: \"Pagar com Pix\")\n" +
+                "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
 
         atualizarPainelEFalar(visual, fala);
         lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
@@ -3138,26 +3137,28 @@ public class MainActivity extends Activity {
      */
     private void mostrarConfirmacaoBarSelecionado(final Estabelecimento est) {
         if (est == null) return;
+        barEscolhidoPeloUsuario = true;
         selecionarEstabelecimento(est, true, false);
 
         if (est.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(est);
         }
 
-        // Monta os principais itens do cardápio com preços para a Luna falar:
+        // Monta os principais itens do cardápio com preços numerados para a Luna falar:
         StringBuilder sbItens = new StringBuilder();
         int max = Math.min(5, est.cardapio.size());
         for (int i = 0; i < max; i++) {
             ItemCardapio it = est.cardapio.get(i);
-            sbItens.append(it.nome).append(" por ").append(it.formatarPreco());
-            if (i < max - 1) sbItens.append(", ");
+            sbItens.append("Opção ").append(i + 1).append(": ").append(it.nome).append(" por ").append(it.formatarPreco());
+            if (i < max - 1) sbItens.append("; ");
         }
 
         String fala = "Você escolheu o " + est.nome + "! No cardápio temos: " + sbItens.toString() +
-                ". O que você deseja pedir? Diga o seu pedido.";
+                ". O que você deseja pedir? Diga o número da opção ou o nome do prato.";
 
         String visual = "🌙 Luna falando: Cardápio de " + est.nome + "\n" +
-                "Temos: " + sbItens.toString() + "\nOuvindo o seu pedido no microfone...";
+                "• " + sbItens.toString().replace("; ", "\n• ") +
+                "\n\nOuvindo o seu pedido no microfone da Luna (diga o número ou o prato)...";
 
         // Cria janela com as opções do cardápio para quem quiser tocar ou ver:
         final String[] opcoes = new String[est.cardapio.size() + 2];
@@ -3224,8 +3225,16 @@ public class MainActivity extends Activity {
 
         if (resultado.acao == ProcessadorComandosVoz.TipoAcao.ADICIONAR_ITENS && !resultado.itensModificados.isEmpty()) {
             executarAdicaoItensConversacionalLuna(resultado);
-        } else {
+        } else if (resultado.acao != ProcessadorComandosVoz.TipoAcao.COMANDO_NAO_RECONHECIDO) {
             executarComandoVozUniversal(fraseFalada);
+        } else {
+            // Item não reconhecido no cardápio: orienta por voz e REABRE o microfone sem travar a assistente!
+            String estNome = estabelecimentoSelecionado != null ? estabelecimentoSelecionado.nome : "cardápio";
+            String falaAviso = "Não reconheci esse item no cardápio de " + estNome + ". Diga o número da opção ou o nome do prato que você deseja pedir.";
+            String visualAviso = "❓ Item não reconhecido: \"" + fraseFalada + "\"\n\n" +
+                    "Diga o número da opção (ex: \"Opção 1\") ou o nome do prato (ex: \"Caldinho de Feijão\").";
+            atualizarPainelEFalar(visualAviso, falaAviso);
+            lunaFalarEChamarReconhecimentoVoz(falaAviso, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo: diga o número ou prato...");
         }
     }
 
@@ -3946,7 +3955,16 @@ public class MainActivity extends Activity {
 
             case COMANDO_NAO_RECONHECIDO:
             default:
-                atualizarPainelEFalar(resultado.mensagemVisual, resultado.mensagemTalkBack);
+                String avisoFalado = resultado.mensagemTalkBack;
+                if (avisoFalado == null || avisoFalado.trim().isEmpty()) {
+                    avisoFalado = "Não entendi esse comando. Você pode me pedir para listar os bares, escolher um prato, consultar a comanda ou pagar com Pix. Diga o que deseja fazer.";
+                }
+                atualizarPainelEFalar(resultado.mensagemVisual, avisoFalado);
+                lunaFalarEChamarReconhecimentoVoz(
+                        avisoFalado,
+                        REQ_VOZ_UNIVERSAL,
+                        "Luna ouvindo seu comando..."
+                );
                 break;
         }
     }
@@ -4038,6 +4056,7 @@ public class MainActivity extends Activity {
             return;
         }
 
+        barEscolhidoPeloUsuario = true;
         if (estabelecimentoSelecionado.cardapio.size() < 12) {
             completarCardapioDoEstabelecimento(estabelecimentoSelecionado);
         }
@@ -4045,19 +4064,19 @@ public class MainActivity extends Activity {
         abrirDialogoCardapioCompletoInterativo();
 
         StringBuilder sbItens = new StringBuilder();
-        int max = Math.min(6, estabelecimentoSelecionado.cardapio.size());
+        int max = Math.min(5, estabelecimentoSelecionado.cardapio.size());
         for (int i = 0; i < max; i++) {
             ItemCardapio it = estabelecimentoSelecionado.cardapio.get(i);
-            sbItens.append(it.nome).append(" por ").append(it.formatarPreco());
-            if (i < max - 1) sbItens.append(", ");
+            sbItens.append("Opção ").append(i + 1).append(": ").append(it.nome).append(" por ").append(it.formatarPreco());
+            if (i < max - 1) sbItens.append("; ");
         }
 
         String fala = "Cardápio de " + estabelecimentoSelecionado.nome + ": " + sbItens.toString() +
-                ". O que você deseja pedir? Diga o seu pedido.";
+                ". O que você deseja pedir? Diga o número da opção ou o nome do prato.";
 
         String visual = "📖 Cardápio de " + estabelecimentoSelecionado.nome + ":\n" +
-                "• " + sbItens.toString().replace(", ", "\n• ") +
-                "\n\nOuvindo seu pedido no microfone da Luna...";
+                "• " + sbItens.toString().replace("; ", "\n• ") +
+                "\n\nOuvindo seu pedido no microfone da Luna (diga o número ou o prato)...";
 
         atualizarPainelEFalar(visual, fala);
         lunaFalarEChamarReconhecimentoVoz(fala, REQ_VOZ_PEDIDO_CARDAPIO, "Luna ouvindo seu pedido...");
