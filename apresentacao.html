@@ -302,7 +302,8 @@
 
       <p>
         Todas as peças foram validadas a partir do código-fonte no computador e em aplicativo nativo Android
-        (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/comanda-falada.apk">comanda-falada.apk</a>)
+        (<a href="https://github.com/Edson-amorim/topicos-em-ia/blob/master/tec/comanda-falada.apk">comanda-falada.apk — v8.9 com Assistente Luna e Banco SQLite v2</a>,
+        <strong>38/38 testes automatizados aprovados e 0 bugs</strong>)
         rodando no celular <strong>Samsung Galaxy A15</strong> com o leitor de telas <strong>TalkBack</strong> ativo e gravação com a própria voz do aluno Edson Amorim.
       </p>
 
@@ -340,11 +341,11 @@
             <td>Roda leve e sem custo por chamada. O banco <strong>Neo4j</strong> (GPLv3) é pesado demais para o protótipo, e o <strong>Microsoft GraphRAG</strong> (MIT) exige dezenas de chamadas lentas e caras de LLM.</td>
           </tr>
           <tr>
-            <td><strong>4. Regras Exatas Determinísticas</strong> (Python e Java Android)</td>
-            <td>Apoio Determinístico</td>
-            <td>Calcula distância GPS por Haversine (130m), soma a conta sem erro (R$ 56,00), valida teto de gasto, gera senha falada de 4 dígitos (<code>8186</code>) e código Pix oficial (BR Code com CRC16).</td>
+            <td><strong>4. Regras Exatas + Assistente Conversacional Luna + SQLite v2</strong> (Python e Java Android)</td>
+            <td>Apoio Determinístico e Persistência</td>
+            <td>Assistente de voz <strong>Luna</strong> com parser semântico <em>on-device</em> (0 ms, microfone em 1,8s), filtro de 185 cidades de PE e 8 categorias, integração bidirecional com Google Maps, soma exata com opção de 10% por voz, escolha do banco por voz (Nubank, Inter, Caixa, Itaú, Bradesco, BB), Pix BR Code CRC16 e banco relacional <strong>SQLite v2</strong> (5 tabelas).</td>
             <td>MIT</td>
-            <td>Regras matemáticas nunca alucinam centavos. Deixar soma da conta, senha ou código Pix para um LLM traz risco financeiro inaceitável.</td>
+            <td>Regras matemáticas nunca alucinam centavos e o SQLite v2 preserva a comanda e o histórico offline. Deixar soma da conta, taxa de 10%, senha ou código Pix para um LLM puro traz risco financeiro inaceitável.</td>
           </tr>
         </tbody>
       </table>
