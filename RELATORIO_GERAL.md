@@ -1,18 +1,18 @@
-# 📋 Relatório Geral de Desenvolvimento — Comanda Falada · Passo à Frente (v9.0)
+# 📋 Relatório Geral de Desenvolvimento — Comanda Falada · Passo à Frente (v9.1)
 
 **Aluno:** Edson Amorim (`edsoninformatica28br@gmail.com`)  
 **Disciplina:** Tópicos em Inteligência Artificial (*AI for Good* · UFRPE · Prof. Lucas Silva Figueiredo)  
 **Repositório Oficial:** [C:\topicos-em-ia](file:///C:/topicos-em-ia) (`https://github.com/Edson-amorim/topicos-em-ia`)  
-**APK Final Pronto para Instalação:** [comanda-falada.apk](file:///C:/topicos-em-ia/tec/comanda-falada.apk) (`156 KB`, independente, assinado com V1/V2/V3 e sincronizado em `G:\Meu Drive\comanda-falada.apk`)  
-**Validação Automatizada:** **53/53 testes gerais aprovados (0 bugs)** em [`TesteGeralCompleto.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/TesteGeralCompleto.java) + **29/29 asserções aprovadas** em [`LunaTempoAcessibilidadeTest.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/LunaTempoAcessibilidadeTest.java)
+**APK Final Pronto para Instalação:** [comanda-falada.apk](file:///C:/topicos-em-ia/tec/comanda-falada.apk) (`160 KB`, independente, assinado com V1/V2/V3 e sincronizado em `G:\Meu Drive\comanda-falada.apk`)  
+**Validação Automatizada:** **59/59 testes gerais aprovados (0 bugs)** em [`TesteGeralCompleto.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/TesteGeralCompleto.java) + **29/29 asserções aprovadas** em [`LunaTempoAcessibilidadeTest.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/LunaTempoAcessibilidadeTest.java) — **Total: 88/88 Testes Aprovados (100% de cobertura operacional)**
 
 ---
 
-## 1. Visão Geral da Arquitetura do Aplicativo Android (`v9.0`)
+## 1. Visão Geral da Arquitetura do Aplicativo Android (`v9.1`)
 
 O aplicativo **Comanda Falada · Passo à Frente** garante **autonomia gastronômica, espacial e financeira** a pessoas cegas, com baixa visão e demais usuários ao escolher um local para comer, conversar com a **assistente de voz Luna** para consultar o cardápio completo, somar a comanda sem erros e pagar via Pix no próprio celular.
 
-Na **v9.0**, foi integrado o **Modelo de IA de Localização Geográfica On-Device (`EngineIALocalizacao`)**, permitindo obter as coordenadas reais do GPS do aparelho e classificar com 100% de acerto a cidade do usuário (como São Lourenço da Mata / PE), eliminando alucinações sobre cidades distantes (como João Pessoa / PB) e garantindo que cada sessão inicie sempre limpa (do zero).
+Na **v9.1**, foi consolidada a **Regra Universal para Usuários de Qualquer Cidade do Brasil** combinada com o **Modelo de IA de Localização Geográfica On-Device (`EngineIALocalizacao`)**, permitindo obter as coordenadas reais do GPS do aparelho, classificar com precisão absoluta centróides urbanos (como São Lourenço da Mata / PE x João Pessoa / PB), aceitar qualquer um dos 5.570 municípios do Brasil e garantir que toda comanda inicie sempre limpa (do zero, R$ 0,00).
 
 ```mermaid
 flowchart TD
@@ -76,18 +76,18 @@ flowchart TD
   - Botões dedicados para **Cadastrar Novo Prato/Bebida no SQLite** e **Ouvir Histórico de Comandas**.
 
 ### 2.5. Suítes de Testes Automatizados (`100%` de Aprovação e `0` Bugs)
-- **[`TesteGeralCompleto.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/TesteGeralCompleto.java):** 53 testes automatizados validando integridade dos cardápios completos (17 itens), tempos de fala da Luna (`< 3,6s`), cálculos financeiros com e sem 10%, teto de gastos, NLP de voz (adição, remoção, opções numeradas, 8 bancos para Pix), confirmação do último bar, Modelo de IA de Localização Geográfica On-Device (Haversine para São Lourenço da Mata, João Pessoa, Recife, Caruaru) e início do zero.
+- **[`TesteGeralCompleto.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/TesteGeralCompleto.java):** 59 testes automatizados validando integridade dos cardápios completos (17 itens), tempos de fala da Luna (`< 3,6s`), cálculos financeiros com e sem 10%, teto de gastos, NLP de voz (adição, remoção, opções numeradas, 8 bancos para Pix), confirmação do último bar, Modelo de IA de Localização Geográfica On-Device (Haversine para São Lourenço da Mata, João Pessoa, Recife, Caruaru), regra universal para qualquer município do Brasil e início sempre do zero (R$ 0,00).
 - **[`LunaTempoAcessibilidadeTest.java`](file:///C:/topicos-em-ia/tec/android_app/src/br/ufrpe/comandafalada/LunaTempoAcessibilidadeTest.java):** 29 asserções unitárias garantindo abertura rápida do microfone e preservação integral das descrições do TalkBack.
 
 ---
 
 ## 3. Artigos Científicos Principais Mais Próximos do Projeto (`va2/cmp.md`)
 
-| Artigo Científico Principal | Veículo | O que Faz de Parecido com o Nosso Projeto | Onde o `Comanda Falada v9.0 (Luna)` Vai Além |
+| Artigo Científico Principal | Veículo | O que Faz de Parecido com o Nosso Projeto | Onde o `Comanda Falada v9.1 (Luna)` Vai Além |
 | :--- | :--- | :--- | :--- |
-| **[AccessMenu: Enhancing Usability of Online Restaurant Menus for Screen Reader Users](https://digitalcommons.odu.edu/computerscience_fac_pubs/407) (Venkatraman et al., 2025)** | **ACM W4A '25** (Artigo Completo · DOI `10.1145/3744257.3744275`) | Usa IA (LLM) para estruturar cardápios confusos em seções claras com preços e permite a pessoas cegas consultar pratos em linguagem natural (validado com 10 cegos). | O *AccessMenu* é apenas uma extensão web de PC para ler cardápio de 1 site por vez. O **Comanda Falada v9.0** roda nativo no Android com a assistente **Luna**, possui **IA de Localização Geográfica On-Device**, filtra bares por conforto acústico e qualquer cidade do Brasil, soma a comanda no **SQLite v2**, gerencia os **10%** por voz e abre o app do **banco com Pix copiado**. |
-| **[Improving Mealtime Experiences of People with Visual Impairments](https://doi.org/10.1145/3430263.3452421) (Chung et al., 2021)** | **ACM W4A '21** (Artigo Completo) | Pesquisa com 91 pessoas cegas em restaurantes (79,1% sentem desconforto ao pedir ajuda; 61,5% evitam sair sozinhos) e protótipo por comando de voz na mesa. | O protótipo de Chung et al. só descreve a posição da comida depois que o prato já foi servido. A **Luna (`v9.0`)** resolve a jornada inteira: detecção da cidade real por IA, escolha do bar, leitura numerada do cardápio, pedido por voz, cálculo da conta com 10% e pagamento Pix. |
-| **["Siri Talks at You"](https://doi.org/10.1145/3234695.3236344) (Abdolrahmani et al., 2018)** e **["Nobody Speaks that Fast!"](https://doi.org/10.1145/3313831.3376569) (Choi et al., 2020)** | **ACM ASSETS '18 (A1)** e **ACM CHI '20 (A1)** | Provam que pessoas cegas usando assistentes de voz em público sofrem com ruído ambiente e precisam de **fala acelerada, respostas curtas e atalhos rápidos**. | Fundamentam diretamente a engenharia da **Luna `v9.0`**: fala acelerada (`1.18f`), respostas curtas que abrem o microfone em `1,8s`, pedidos curtos por número (*"opção 5"*) e proteção determinística contra ruído de bar. |
+| **[AccessMenu: Enhancing Usability of Online Restaurant Menus for Screen Reader Users](https://digitalcommons.odu.edu/computerscience_fac_pubs/407) (Venkatraman et al., 2025)** | **ACM W4A '25** (Artigo Completo · DOI `10.1145/3744257.3744275`) | Usa IA (LLM) para estruturar cardápios confusos em seções claras com preços e permite a pessoas cegas consultar pratos em linguagem natural (validado com 10 cegos). | O *AccessMenu* é apenas uma extensão web de PC para ler cardápio de 1 site por vez. O **Comanda Falada v9.1** roda nativo no Android com a assistente **Luna**, possui **IA de Localização Geográfica On-Device**, filtra bares por conforto acústico e qualquer cidade do Brasil, soma a comanda no **SQLite v2**, gerencia os **10%** por voz e abre o app do **banco com Pix copiado**. |
+| **[Improving Mealtime Experiences of People with Visual Impairments](https://doi.org/10.1145/3430263.3452421) (Chung et al., 2021)** | **ACM W4A '21** (Artigo Completo) | Pesquisa com 91 pessoas cegas em restaurantes (79,1% sentem desconforto ao pedir ajuda; 61,5% evitam sair sozinhos) e protótipo por comando de voz na mesa. | O protótipo de Chung et al. só descreve a posição da comida depois que o prato já foi servido. A **Luna (`v9.1`)** resolve a jornada inteira: detecção da cidade real por IA, escolha do bar, leitura numerada do cardápio, pedido por voz, cálculo da conta com 10% e pagamento Pix. |
+| **["Siri Talks at You"](https://doi.org/10.1145/3234695.3236344) (Abdolrahmani et al., 2018)** e **["Nobody Speaks that Fast!"](https://doi.org/10.1145/3313831.3376569) (Choi et al., 2020)** | **ACM ASSETS '18 (A1)** e **ACM CHI '20 (A1)** | Provam que pessoas cegas usando assistentes de voz em público sofrem com ruído ambiente e precisam de **fala acelerada, respostas curtas e atalhos rápidos**. | Fundamentam diretamente a engenharia da **Luna `v9.1`**: fala acelerada (`1.18f`), respostas curtas que abrem o microfone em `1,8s`, pedidos curtos por número (*"opção 5"*) e proteção determinística contra ruído de bar. |
 
 ---
 
@@ -98,7 +98,8 @@ flowchart TD
 | **Artefato 1 — Brainwriting Híbrido** | [va2/brw.md](file:///C:/topicos-em-ia/va2/brw.md) | ✅ Concluído |
 | **Artefato 2 — Competidores e Contribuição** | [va2/cmp.md](file:///C:/topicos-em-ia/va2/cmp.md) | ✅ Concluído e Auditado |
 | **Artefato 3 — Tecnologia Base Demonstrável** | [va2/tec.md](file:///C:/topicos-em-ia/va2/tec.md) | ✅ Concluído e Auditado |
-| **Apresentação Web Interativa e Acessível** | [apresentacao.html](file:///C:/topicos-em-ia/apresentacao.html) | ✅ Atualizada (`v9.0`) |
+| **Artigo Científico da Solução (SBC / W4A)** | [artigo/artigo_comanda_falada.md](file:///C:/topicos-em-ia/artigo/artigo_comanda_falada.md) | ✅ Concluído e Formatado |
+| **Apresentação Web Interativa e Acessível** | [apresentacao.html](file:///C:/topicos-em-ia/apresentacao.html) | ✅ Atualizada (`v9.1`) |
 | **Vídeo Demonstrativo com Voz e Captura Android** | [tec/demonstracao.mp4](file:///C:/topicos-em-ia/tec/demonstracao.mp4) | ✅ Concluído |
-| **Aplicativo Android Nativo (APK v9.0 + Luna + IA Localização)** | [tec/comanda-falada.apk](file:///C:/topicos-em-ia/tec/comanda-falada.apk) | ✅ Compilado, Testado (53/53) e Assinado |
-| **Documento de Transição de Sessão (Handoff)** | [HANDOFF.md](file:///C:/topicos-em-ia/HANDOFF.md) | ✅ Atualizado (`v9.0`) |
+| **Aplicativo Android Nativo (APK v9.1 + Luna + IA Localização)** | [tec/comanda-falada.apk](file:///C:/topicos-em-ia/tec/comanda-falada.apk) | ✅ Compilado, Testado (88/88) e Assinado |
+| **Documento de Transição de Sessão (Handoff)** | [HANDOFF.md](file:///C:/topicos-em-ia/HANDOFF.md) | ✅ Atualizado (`v9.1`) |

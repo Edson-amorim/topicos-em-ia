@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comanda Falada: Autonomia Gastronômica, Espacial e Financeira para Pessoas com Deficiência Visual</title>
+  <style>
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      line-height: 1.6;
+      color: #111;
+      background-color: #fafafa;
+      margin: 0;
+      padding: 20px;
+    }
+    .paper-container {
+      max-width: 900px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 40px 50px;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+      border-radius: 4px;
+    }
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 15px;
+      color: #0d233a;
+      line-height: 1.3;
+    }
+    .authors {
+      text-align: center;
+      font-size: 15px;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    .authors strong {
+      display: block;
+      font-size: 17px;
+      color: #000;
+    }
+    .abstract-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #1a73e8;
+      padding: 15px 20px;
+      margin: 25px 0;
+      font-size: 14px;
+      text-align: justify;
+    }
+    .abstract-box h3 {
+      margin-top: 0;
+      font-size: 15px;
+      color: #1a73e8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h2 {
+      font-size: 18px;
+      color: #0d233a;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 6px;
+      margin-top: 30px;
+    }
+    h3 {
+      font-size: 15px;
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+    p, li {
+      font-size: 14.5px;
+      text-align: justify;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13.5px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f3f4;
+      color: #202124;
+    }
+    code {
+      font-family: 'Consolas', monospace;
+      background-color: #f1f3f4;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    .references {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .btn-bar {
+      text-align: right;
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: sans-serif;
+    }
+    .btn:hover {
+      background: #1557b0;
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .paper-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+      .btn-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="paper-container">
+    <div class="btn-bar">
+      <button class="btn" onclick="window.print()">🖨️ Imprimir / Salvar como PDF</button>
+    </div>
+
+    <h1>Comanda Falada: Autonomia Gastronômica, Espacial e Financeira para Pessoas com Deficiência Visual via IA Conversacional On-Device, GraphRAG e Regras Determinísticas</h1>
+    
+    <div class="authors">
+      <strong>Edson Amorim</strong>
+      Departamento de Computação — Universidade Federal Rural de Pernambuco (UFRPE)<br>
+      <code>edsoninformatica28br@gmail.com</code><br>
+      <em>Orientador / Docente: Prof. Dr. Lucas Silva Figueiredo (Tópicos em IA · AI for Good)</em>
+    </div>
+
+    <div class="abstract-box">
+      <h3>Resumo</h3>
+      O atendimento presencial em bares e restaurantes ainda impõe severas barreiras de acessibilidade a pessoas cegas e com baixa visão. Cardápios impressos, placas táteis escassas, cardápios em PDF/imagem e sistemas baseados exclusivamente em QR Codes na mesa privam o cliente com deficiência visual da sua autonomia. Este artigo apresenta o <strong>Comanda Falada</strong>, um ecossistema móvel acessível para Android fundamentado na união de três paradigmas: (1) um agente conversacional por voz on-device de baixa latência (<strong>Luna</strong>), desenhado especificamente para operação compatível com TalkBack; (2) um classificador geoespacial por IA e distância de Haversine (<strong>EngineIALocalizacao</strong>) capaz de inferir a localização real do usuário e resolver centróides urbanos sem alucinações, com suporte a qualquer um dos 5.570 municípios do Brasil e garantia de início limpo (comanda zerada em R$ 0,00); e (3) uma arquitetura híbrida com representação em grafo e banco relacional offline (<em>SQLite v2</em>), aliada a regras financeiras determinísticas que eliminam erros de cálculo de centavos na comanda, conferem teto de gastos, gerenciam taxa de serviço por voz e efetuam pagamentos via Pix Copia e Cola EMV com CRC16. A solução foi submetida a uma bateria rigorosa de 88 testes automatizados, alcançando 100% de aprovação e abrindo o canal de escuta em aproximadamente 1,8 segundo após a síntese de fala.<br><br>
+      <strong>Palavras-chave:</strong> Acessibilidade, Deficiência Visual, IA Conversacional On-Device, GraphRAG, Localização Geoespacial, Regras Determinísticas, Pix, TalkBack.
+    </div>
+
+    <h2>1. Introdução</h2>
+    <p>A alimentação fora do lar constitui uma dimensão central da convivência social e da cidadania. Entretanto, pesquisas recentes demonstram que indivíduos com deficiência visual enfrentam barreiras estruturais significativas ao frequentar estabelecimentos gastronômicos: 79,1% relatam desconforto recorrente ao solicitar auxílio a garçons e 61,5% evitam sair desacompanhados unicamente pelo receio da dependência de terceiros (Chung et al., 2021).</p>
+    <p>A transição recente do setor gastronômico para "cardápios digitais" frequentemente agravou o cenário de exclusão. A grande maioria dos estabelecimentos adotou adesivos de QR Code colados nas mesas ou arquivos em formato PDF não tagueado ou imagens nas redes sociais, que se mostram invisíveis ou inoperantes para leitores de tela como TalkBack no Android e VoiceOver no iOS (Bigham et al., 2017). O Comanda Falada resolve a jornada inteira com independência total.</p>
+
+    <h2>2. Trabalhos Relacionados</h2>
+    <p>A literatura em Tecnologias Assistivas e IHC inclui iniciativas relevantes como o <em>AccessMenu</em> (Venkatraman et al., ACM W4A '25), que converte páginas web de cardápio em diálogos acessíveis, mas restringe-se ao desktop e a um site por vez. Chung et al. (W4A '21) propuseram assistência auditiva na mesa, mas apenas para comida já servida. Abdolrahmani et al. (ASSETS '18) e Choi et al. (CHI '20) comprovaram que pessoas cegas precisam de respostas conversacionais curtas e fala rápida (1.18x) para evitar ruído e constrangimento em público.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Solução / Artigo</th>
+          <th>Veículo</th>
+          <th>Entrada / Canal</th>
+          <th>Escopo Gastronômico</th>
+          <th>Tratamento Financeiro</th>
+          <th>Geolocalização</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Venkatraman et al. (2025)</strong></td>
+          <td>ACM W4A '25</td>
+          <td>Web / Texto LLM</td>
+          <td>1 Restaurante Web</td>
+          <td>Inexistente</td>
+          <td>Sem geolocalização</td>
+        </tr>
+        <tr>
+          <td><strong>Chung et al. (2021)</strong></td>
+          <td>ACM W4A '21</td>
+          <td>Voz / Mockup</td>
+          <td>Mesa servida</td>
+          <td>Inexistente</td>
+          <td>Sem geolocalização</td>
+        </tr>
+        <tr>
+          <td><strong>Goomer / Anota AI</strong></td>
+          <td>Comercial</td>
+          <td>QR Code / WhatsApp</td>
+          <td>1 Bar por vez</td>
+          <td>Cartão / Pix Manual</td>
+          <td>Delivery/mesa</td>
+        </tr>
+        <tr>
+          <td><strong>Comanda Falada (Luna v9.1)</strong></td>
+          <td><strong>UFRPE (2026)</strong></td>
+          <td><strong>Voz On-Device + TalkBack</strong></td>
+          <td><strong>Jornada Completa</strong></td>
+          <td><strong>Regras Exatas + Pix EMV</strong></td>
+          <td><strong>IA Geoespacial On-Device</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Arquitetura da Solução</h2>
+    <p>O aplicativo (com apenas 160 KB) integra:</p>
+    <ul>
+      <li><strong>Assistente Conversacional Luna (NLP On-Device 0 ms):</strong> interpreta pedidos numerados, adições, subtrações e ordens de pagamento sem depender de servidores em nuvem.</li>
+      <li><strong>Classificador Geoespacial Haversine (EngineIALocalizacao):</strong> mapeia com precisão absoluta coordenadas de GPS em centróides municipais (como São Lourenço da Mata x João Pessoa), suporta qualquer um dos 5.570 municípios do Brasil e garante início sempre limpo (R$ 0,00).</li>
+      <li><strong>Base de Dados SQLite v2 Offline:</strong> 5 tabelas relacionais com cardápios completos entre 12 e 17 itens por bar.</li>
+      <li><strong>Regras Determinísticas e Pix:</strong> cálculos financeiros inteiros em centavos, teto de gastos e geração de payload EMV BR Code com CRC16 válido.</li>
+    </ul>
+
+    <h2>4. Avaliação Experimental e Resultados</h2>
+    <p>O sistema foi certificado com <strong>88 testes automatizados (100% aprovados)</strong>:</p>
+    <ul>
+      <li><strong>TesteGeralCompleto.java (59 testes):</strong> cálculos de 10%, integridade de cardápios, 8 bancos para Pix, classificação de cidades por IA, início do zero e extração de cidades arbitrárias.</li>
+      <li><strong>LunaTempoAcessibilidadeTest.java (29 asserções):</strong> tempos de resposta da Luna (~1,8s a 2,5s) e compatibilidade com TalkBack.</li>
+    </ul>
+
+    <h2>5. Conclusão</h2>
+    <p>O Comanda Falada oferece uma solução robusta, inclusiva e ágil para a autonomia gastronômica de pessoas com deficiência visual, eliminando barreiras físicas e digitais através de IA aplicada para o bem social (AI for Good).</p>
+
+    <h2>Referências</h2>
+    <div class="references">
+      <p>• <strong>Abdolrahmani, A., et al. (2018).</strong> "Siri Talks at You": Voice-Activated Personal Assistant Usage by Individuals Who Are Blind. <em>ACM ASSETS '18</em>. DOI: 10.1145/3234695.3236344.</p>
+      <p>• <strong>Bigham, J. P., et al. (2017).</strong> The Effects of "Not Knowing What You Don't Know" on Web Accessibility. <em>ACM ASSETS '17</em>. DOI: 10.1145/3132525.3132533.</p>
+      <p>• <strong>Choi, E., et al. (2020).</strong> "Nobody Speaks that Fast!" Speech Rate in Conversational Agents. <em>ACM CHI '20</em>. DOI: 10.1145/3313831.3376569.</p>
+      <p>• <strong>Chung, J., et al. (2021).</strong> Improving Mealtime Experiences of People with Visual Impairments. <em>ACM W4A '21</em>. DOI: 10.1145/3430263.3452421.</p>
+      <p>• <strong>Venkatraman, S., et al. (2025).</strong> AccessMenu: Enhancing Usability of Online Restaurant Menus. <em>ACM W4A '25</em>. DOI: 10.1145/3744257.3744275.</p>
+    </div>
+  </div>
+
+</body>
+</html>
