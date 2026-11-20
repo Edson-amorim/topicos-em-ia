@@ -1,0 +1,5 @@
+﻿Comanda Falada - Atualização Sincronizada em: 2026-11-19 22:05:47
+APK v9.1: 160 KB
+Artigo Acadêmico: artigo_comanda_falada.html e artigo_comanda_falada.md
+Relatório Geral: RELATORIO_GERAL.md
+Testes: 88/88 aprovados (0 bugs)
