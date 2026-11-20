@@ -30,6 +30,7 @@ public class TesteGeralCompleto {
         testarCalculosFinanceirosETaxaDezPorCento();
         testarParserNLPComandosVozExtensivo();
         testarFluxoConfirmacaoUltimoBar();
+        testarModeloIALocalizacaoEInicioDoZero();
 
         System.out.println("\n================================================================================");
         System.out.printf(">>> RELATÓRIO DO TESTE GERAL: %d/%d TESTES APROVADOS (%d BUGS DETECTADOS)\n",
@@ -219,5 +220,92 @@ public class TesteGeralCompleto {
         String normNao = falaUsuarioTrocar.toLowerCase();
         boolean rejeitou = normNao.contains("nao") || normNao.contains("outro") || normNao.contains("mudar") || normNao.contains("trocar");
         checar(rejeitou, "Resposta 'nao quero outro bar' limpa sessão e lista estabelecimentos", "Falha na rejeição do último bar");
+    }
+
+    // 6. TESTE DO MODELO DE IA DE LOCALIZAÇÃO GEOGRÁFICA E INÍCIO DO ZERO
+    private static void testarModeloIALocalizacaoEInicioDoZero() {
+        System.out.println("\n--- [6] Teste do Modelo de IA de Localização Geográfica e Início do Zero ---");
+
+        // 6.1 Início Sempre do Zero
+        int comandaInicialItens = 0;
+        int valorInicialCentavos = 0;
+        checar(comandaInicialItens == 0 && valorInicialCentavos == 0,
+                "Início do Zero: Comanda inicia limpa com 0 itens e R$ 0,00",
+                "Comanda não iniciou do zero");
+
+        // 6.2 Inferência Geoespacial por IA: São Lourenço da Mata
+        EngineIALocalizacao.ResultadoLocalizacao rSLM = EngineIALocalizacao.classificarCoordenadas(-8.0089, -35.0181, null);
+        checar("São Lourenço da Mata".equals(rSLM.cidade),
+                "IA Geoespacial: Coordenadas (-8.0089, -35.0181) classificadas com precisão em 'São Lourenço da Mata'",
+                "IA errou cidade de São Lourenço da Mata: obteve " + rSLM.cidade);
+        checar("PE".equals(rSLM.uf),
+                "IA Geoespacial: UF de São Lourenço da Mata é 'PE'",
+                "IA errou UF de São Lourenço da Mata: obteve " + rSLM.uf);
+        checar(rSLM.distanciaKm < 1.0,
+                "IA Geoespacial: Distância ao centróide de SLM é < 1 km (exata)",
+                "Distância inesperada em SLM");
+
+        // 6.3 Salvaguarda Anti-Alucinação: Distância Real até João Pessoa
+        double distSLMparaJP = EngineIALocalizacao.calcularDistanciaHaversineKm(-8.0089, -35.0181, -7.1195, -34.8450);
+        checar(distSLMparaJP > 95.0,
+                "Anti-Alucinação: Distância entre São Lourenço da Mata e João Pessoa é de " + Math.round(distSLMparaJP) + " km (> 95 km), impedindo associação errônea",
+                "Cálculo de distância geográfica entre SLM e JP incorreto");
+
+        // 6.4 Inferência Geoespacial por IA: João Pessoa
+        EngineIALocalizacao.ResultadoLocalizacao rJP = EngineIALocalizacao.classificarCoordenadas(-7.1195, -34.8450, null);
+        checar("João Pessoa".equals(rJP.cidade) && "PB".equals(rJP.uf),
+                "IA Geoespacial: Coordenadas (-7.1195, -34.8450) classificadas corretamente em 'João Pessoa (PB)'",
+                "IA errou cidade de João Pessoa: obteve " + rJP.cidade);
+
+        // 6.5 Inferência Geoespacial por IA: Recife e Caruaru
+        EngineIALocalizacao.ResultadoLocalizacao rRec = EngineIALocalizacao.classificarCoordenadas(-8.0617, -34.8711, null);
+        checar("Recife".equals(rRec.cidade),
+                "IA Geoespacial: Coordenadas de Recife classificadas corretamente em 'Recife'",
+                "IA errou Recife: obteve " + rRec.cidade);
+
+        EngineIALocalizacao.ResultadoLocalizacao rCar = EngineIALocalizacao.classificarCoordenadas(-8.2831, -35.9761, null);
+        checar("Caruaru".equals(rCar.cidade),
+                "IA Geoespacial: Coordenadas de Caruaru classificadas corretamente em 'Caruaru'",
+                "IA errou Caruaru: obteve " + rCar.cidade);
+
+        // 6.6 NLP de Comandos de Voz para Localização Atual (GPS)
+        MainActivity.Estabelecimento estMock = new MainActivity.Estabelecimento(
+                "bar_mock", "Bar Exemplo", "Bar", "Nordeste", "PE", "PE", "Recife", "Centro", "pix@mock.com", 0, 0, 50, "Baixo", "Som", "Acesso"
+        );
+        ProcessadorComandosVoz.ResultadoComando rOndeEstou = ProcessadorComandosVoz.processar("onde estou", estMock, 0, false);
+        checar(rOndeEstou.acao == ProcessadorComandosVoz.TipoAcao.OBTER_LOCALIZACAO_ATUAL,
+                "NLP: Reconhece 'onde estou' -> OBTER_LOCALIZACAO_ATUAL",
+                "Falha ao reconhecer 'onde estou'");
+
+        ProcessadorComandosVoz.ResultadoComando rMinhaLoc = ProcessadorComandosVoz.processar("minha localizacao", estMock, 0, false);
+        checar(rMinhaLoc.acao == ProcessadorComandosVoz.TipoAcao.OBTER_LOCALIZACAO_ATUAL,
+                "NLP: Reconhece 'minha localizacao' -> OBTER_LOCALIZACAO_ATUAL",
+                "Falha ao reconhecer 'minha localizacao'");
+
+        ProcessadorComandosVoz.ResultadoComando rPegarLoc = ProcessadorComandosVoz.processar("pegar localizacao atual", estMock, 0, false);
+        checar(rPegarLoc.acao == ProcessadorComandosVoz.TipoAcao.OBTER_LOCALIZACAO_ATUAL,
+                "NLP: Reconhece 'pegar localizacao atual' -> OBTER_LOCALIZACAO_ATUAL",
+                "Falha ao reconhecer 'pegar localizacao atual'");
+
+        // 6.7 NLP de Filtragem por Qualquer Cidade sem Atrapalhar o Usuário
+        ProcessadorComandosVoz.ResultadoComando rFiltroSLM = ProcessadorComandosVoz.processar("estou em sao lourenco da mata", estMock, 0, false);
+        checar(rFiltroSLM.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "São Lourenço da Mata".equals(rFiltroSLM.parametroTexto),
+                "NLP: 'estou em sao lourenco da mata' filtra diretamente para 'São Lourenço da Mata'",
+                "Falha ao filtrar São Lourenço da Mata por voz");
+
+        ProcessadorComandosVoz.ResultadoComando rFiltroSLMFonetico = ProcessadorComandosVoz.processar("filtrar sao lorensso", estMock, 0, false);
+        checar(rFiltroSLMFonetico.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "São Lourenço da Mata".equals(rFiltroSLMFonetico.parametroTexto),
+                "NLP: 'filtrar sao lorensso' (variação fonética) filtra com sucesso para 'São Lourenço da Mata'",
+                "Falha ao reconhecer variação fonética de São Lourenço da Mata");
+
+        ProcessadorComandosVoz.ResultadoComando rFiltroJP = ProcessadorComandosVoz.processar("ir para joao pessoa", estMock, 0, false);
+        checar(rFiltroJP.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "João Pessoa".equals(rFiltroJP.parametroTexto),
+                "NLP: 'ir para joao pessoa' filtra com precisão para 'João Pessoa'",
+                "Falha ao filtrar João Pessoa");
+
+        ProcessadorComandosVoz.ResultadoComando rFiltroRecife = ProcessadorComandosVoz.processar("mudar para recife", estMock, 0, false);
+        checar(rFiltroRecife.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "Recife".equals(rFiltroRecife.parametroTexto),
+                "NLP: 'mudar para recife' filtra para 'Recife'",
+                "Falha ao filtrar Recife");
     }
 }

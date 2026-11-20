@@ -31,6 +31,7 @@ public class ProcessadorComandosVoz {
         ABRIR_CARDAPIO_COMPLETO,
         ABRIR_ROTA_MAPS,
         VER_BARES_MAPS,
+        OBTER_LOCALIZACAO_ATUAL,
         FILTRAR_OU_BUSCAR_LOCAL,
         SALVAR_HISTORICO_BANCO,
         OUVIR_HISTORICO_BANCO,
@@ -319,6 +320,35 @@ public class ProcessadorComandosVoz {
         String original = fraseFalada.trim();
         String norm = normalizar(original);
         String normEspaco = " " + norm + " ";
+
+        // 0. VERIFICAÇÃO DE LOCALIZAÇÃO ATUAL VIA GPS / IA (PRIORIDADE ALTA)
+        if (EngineIALocalizacao.ehIntencaoLocalizacaoAtual(normEspaco)) {
+            return new ResultadoComando(
+                    TipoAcao.OBTER_LOCALIZACAO_ATUAL,
+                    original,
+                    null,
+                    "",
+                    "📍 Obtendo localização atual via GPS e IA...",
+                    "Identificando sua localização atual via GPS e inteligência artificial."
+            );
+        }
+
+        // 0.01 FILTRAGEM POR CIDADE INFORMADA POR VOZ (EX: "SÃO LOURENÇO DA MATA", "ESTOU EM SÃO LOURENÇO")
+        String cidadeDireta = EngineIALocalizacao.detectarCidadeNoComando(normEspaco);
+        if (cidadeDireta != null && (normEspaco.contains(" filtrar ") || normEspaco.contains(" cidade ") ||
+                normEspaco.contains(" mudar para ") || normEspaco.contains(" ir para ") ||
+                normEspaco.contains(" estou em ") || normEspaco.contains(" em ") ||
+                normEspaco.contains(" bares em ") || normEspaco.contains(" bar em ") ||
+                norm.equals(EngineIALocalizacao.normalizar(cidadeDireta)))) {
+            return new ResultadoComando(
+                    TipoAcao.FILTRAR_OU_BUSCAR_LOCAL,
+                    original,
+                    null,
+                    cidadeDireta,
+                    "🔍 Filtrando estabelecimentos em " + cidadeDireta + "...",
+                    "Filtrando estabelecimentos na cidade de " + cidadeDireta + "."
+            );
+        }
 
         // 0. VERIFICAÇÃO PRIORITÁRIA DE INTENÇÃO DE LISTAR/ESCOLHER BARES PELA LUNA
         // Se a fala expressa desejo de listar bares (mesmo contendo 'luna' ou 'ajuda'),

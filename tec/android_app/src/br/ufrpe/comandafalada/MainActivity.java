@@ -1,5 +1,6 @@
 package br.ufrpe.comandafalada;
 
+import android.Manifest;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,6 +13,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +51,7 @@ public class MainActivity extends Activity {
     private static final int REQ_VOZ_PERGUNTAR_TAXA_DEZ = 107;
     private static final int REQ_VOZ_ESCOLHER_BANCO = 108;
     private static final int REQ_VOZ_CONFIRMAR_ULTIMO_BAR = 109;
+    private static final int REQ_PERMISSAO_LOCALIZACAO = 1010;
 
     // Coordenadas de referência (Marco Zero / Recife Antigo)
     private static final double LAT_USUARIO = -8.0628;
@@ -304,6 +309,7 @@ public class MainActivity extends Activity {
     private LinearLayout containerCardapio;
     private LinearLayout containerBancosInstalados;
     private Button btnComandoVozGeral;
+    private Button btnLocalizacaoAtual;
     private Button btnFiltroRegiao;
     private Button btnFiltroEstado;
     private Button btnFiltroCidade;
@@ -343,6 +349,7 @@ public class MainActivity extends Activity {
     private String regiaoFiltroAtual = "Todas as Regiões";
     private String ufFiltroAtual = "TODOS";
     private String cidadeFiltroAtual = "TODAS";
+    private EngineIALocalizacao.ResultadoLocalizacao localizacaoAtualDetectada = null;
     private String categoriaFiltroAtual = "Todas as Categorias (Para Comer e Consumir)";
     private String termoBuscaAtual = "";
     private ModoFiltroAcustico filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
@@ -371,6 +378,7 @@ public class MainActivity extends Activity {
         containerBancosInstalados = findViewById(R.id.containerBancosInstalados);
 
         btnComandoVozGeral = findViewById(R.id.btnComandoVozGeral);
+        btnLocalizacaoAtual = findViewById(R.id.btnLocalizacaoAtual);
         btnFiltroRegiao = findViewById(R.id.btnFiltroRegiao);
         btnFiltroEstado = findViewById(R.id.btnFiltroEstado);
         btnFiltroCidade = findViewById(R.id.btnFiltroCidade);
@@ -405,6 +413,13 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 acionarAjudaLunaConversacional();
+            }
+        });
+
+        btnLocalizacaoAtual.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                obterLocalizacaoAtualViaIa(true);
             }
         });
 
@@ -610,6 +625,9 @@ public class MainActivity extends Activity {
         tvResultado.setText("🔊 " + saudacaoInicial);
         tvResultado.setContentDescription(saudacaoInicial);
 
+        // Tenta detectar a localização atual via GPS e IA geoespacial on-device
+        obterLocalizacaoAtualViaIa(false);
+
         // Verifica se o aplicativo foi aberto a partir do Google Maps (Compartilhar ou Link de Mapa)
         tratarIntentRecebidaDoGoogleMaps(getIntent());
     }
@@ -727,6 +745,128 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    /**
+     * Obtém a localização atual do dispositivo via GPS / Network e aciona o Modelo de IA
+     * Geoespacial On-Device para classificar a cidade atual (ex.: São Lourenço da Mata).
+     */
+    public void obterLocalizacaoAtualViaIa(boolean interativo) {
+        boolean temPermissao = checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+
+        if (!temPermissao) {
+            if (interativo) {
+                requestPermissions(
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                        REQ_PERMISSAO_LOCALIZACAO
+                );
+            }
+            return;
+        }
+
+        Location loc = EngineIALocalizacao.obterUltimaLocalizacaoConhecida(this);
+        if (loc != null) {
+            EngineIALocalizacao.ResultadoLocalizacao res = EngineIALocalizacao.classificarCoordenadas(
+                    loc.getLatitude(),
+                    loc.getLongitude(),
+                    this
+            );
+            aplicarLocalizacaoDetectada(res, interativo);
+        } else {
+            final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (lm != null) {
+                try {
+                    LocationListener listenerTemp = new LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
+                            if (location != null) {
+                                EngineIALocalizacao.ResultadoLocalizacao res = EngineIALocalizacao.classificarCoordenadas(
+                                        location.getLatitude(),
+                                        location.getLongitude(),
+                                        MainActivity.this
+                                );
+                                aplicarLocalizacaoDetectada(res, true);
+                                try {
+                                    lm.removeUpdates(this);
+                                } catch (Exception ignored) {}
+                            }
+                        }
+                        @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+                        @Override public void onProviderEnabled(String provider) {}
+                        @Override public void onProviderDisabled(String provider) {}
+                    };
+
+                    if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        lm.requestSingleUpdate(LocationManager.GPS_PROVIDER, listenerTemp, Looper.getMainLooper());
+                    } else if (lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                        lm.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, listenerTemp, Looper.getMainLooper());
+                    }
+                } catch (SecurityException ignored) {
+                } catch (Exception ignored) {}
+            }
+
+            if (interativo) {
+                String msgAviso = "Buscando sinal do GPS... Enquanto isso, você pode escolher qualquer cidade no filtro.";
+                atualizarPainelEFalar("📍 " + msgAviso, msgAviso);
+            }
+        }
+    }
+
+    public void aplicarLocalizacaoDetectada(EngineIALocalizacao.ResultadoLocalizacao res, boolean falar) {
+        if (res == null) return;
+        localizacaoAtualDetectada = res;
+        regiaoFiltroAtual = res.regiao;
+        ufFiltroAtual = res.uf;
+        cidadeFiltroAtual = res.cidade;
+
+        if (btnLocalizacaoAtual != null) {
+            btnLocalizacaoAtual.setText("📍 Localização: " + res.cidade + " (" + res.uf + ")");
+        }
+        if (btnFiltroCidade != null) {
+            btnFiltroCidade.setText("🏙️ Cidade: " + res.cidade);
+        }
+
+        atualizarRotulosFiltros();
+        renderizarListaEstabelecimentos();
+
+        List<Estabelecimento> visiveis = obterEstabelecimentosFiltrados();
+        if (visiveis.isEmpty()) {
+            EstadoInfo estInfo = buscarEstadoPorUf(res.uf);
+            if (estInfo == null) estInfo = ESTADOS_BRASIL[0];
+            garantirEstabelecimentoNaCidadeECategoria(estInfo, res.cidade, "Todas as Categorias (Para Comer e Consumir)");
+            renderizarListaEstabelecimentos();
+            visiveis = obterEstabelecimentosFiltrados();
+        }
+
+        if (!visiveis.isEmpty()) {
+            selecionarEstabelecimento(visiveis.get(0), false, false);
+        }
+
+        String msgVisual = "📍 Localização Atual Detectada pela IA: " + res.cidade + " (" + res.uf + ")\n" +
+                "• Estabelecimentos locais: " + visiveis.size() + "\n" +
+                "• Você pode pedir por voz ou filtrar por qualquer outra cidade a qualquer momento.";
+        String msgFala = "Localização identificada: " + res.cidade + ", " + res.uf + ". Encontrei os estabelecimentos locais para você.";
+
+        if (falar) {
+            atualizarPainelEFalar(msgVisual, msgFala);
+        } else if (tvResultado != null) {
+            tvResultado.setText("📍 " + res.cidade + " (" + res.uf + ") · " + visiveis.size() + " estabelecimentos disponíveis.");
+            tvResultado.setContentDescription("Localização atual: " + res.cidade + ", " + res.uf);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_PERMISSAO_LOCALIZACAO) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                obterLocalizacaoAtualViaIa(true);
+            } else {
+                String msg = "Permissão de localização não concedida. Você pode filtrar sua cidade manualmente no botão de cidades.";
+                atualizarPainelEFalar("📍 " + msg, msg);
+            }
+        }
+    }
+
     private void abrirDialogoFiltroCidade() {
         exibirDialogoCidadesFiltradas("");
     }
@@ -754,16 +894,17 @@ public class MainActivity extends Activity {
             }
         }
 
-        final String[] opcoes = new String[cidadesLista.size() + 2];
-        opcoes[0] = "🔎 Pesquisar / Digitar Nome da Cidade...";
-        opcoes[1] = "🏙️ Todas as Cidades";
+        final String[] opcoes = new String[cidadesLista.size() + 3];
+        opcoes[0] = "📍 Usar Minha Localização Atual (GPS / IA)";
+        opcoes[1] = "🔎 Pesquisar / Digitar Nome da Cidade...";
+        opcoes[2] = "🏙️ Todas as Cidades";
         for (int i = 0; i < cidadesLista.size(); i++) {
             EstadoInfo st = estadoDeCadaCidade.get(i);
-            opcoes[i + 2] = cidadesLista.get(i) + " (" + st.uf + ")";
+            opcoes[i + 3] = cidadesLista.get(i) + " (" + st.uf + ")";
         }
 
         String tituloDialogo = ufFiltroAtual.equals("PE")
-                ? "🏙️ Todas as 185 Cidades de Pernambuco (" + cidadesLista.size() + "):"
+                ? "🏙️ Cidades de Pernambuco (" + cidadesLista.size() + " opções):"
                 : "🏙️ Filtrar por Cidade (" + cidadesLista.size() + " opções):";
 
         new AlertDialog.Builder(this)
@@ -772,10 +913,14 @@ public class MainActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (which == 0) {
-                            abrirDialogoPesquisarCidadePorNome();
+                            obterLocalizacaoAtualViaIa(true);
                             return;
                         }
                         if (which == 1) {
+                            abrirDialogoPesquisarCidadePorNome();
+                            return;
+                        }
+                        if (which == 2) {
                             cidadeFiltroAtual = "TODAS";
                             atualizarRotulosFiltros();
 
@@ -791,8 +936,8 @@ public class MainActivity extends Activity {
                             return;
                         }
 
-                        String cidadeEscolhida = cidadesLista.get(which - 2);
-                        EstadoInfo stEscolhido = estadoDeCadaCidade.get(which - 2);
+                        String cidadeEscolhida = cidadesLista.get(which - 3);
+                        EstadoInfo stEscolhido = estadoDeCadaCidade.get(which - 3);
                         selecionarCidadeEEstado(stEscolhido, cidadeEscolhida);
                     }
                 })
@@ -1204,6 +1349,20 @@ public class MainActivity extends Activity {
         for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
             if (ESTADOS_BRASIL[i].uf.equalsIgnoreCase(uf)) {
                 return ESTADOS_BRASIL[i];
+            }
+        }
+        return null;
+    }
+
+    private EstadoInfo encontrarEstadoPorCidade(String nomeCidade) {
+        if (nomeCidade == null || nomeCidade.trim().isEmpty()) return null;
+        String normCid = normalizarTexto(nomeCidade);
+        for (int i = 0; i < ESTADOS_BRASIL.length; i++) {
+            EstadoInfo st = ESTADOS_BRASIL[i];
+            for (int c = 0; c < st.cidadesPrincipais.length; c++) {
+                if (normalizarTexto(st.cidadesPrincipais[c]).equals(normCid)) {
+                    return st;
+                }
             }
         }
         return null;
@@ -2129,14 +2288,21 @@ public class MainActivity extends Activity {
                         adicionarSeNaoExistir(estBase, estBanco.cardapio.get(k));
                     }
                 } else {
-                    catalogoEstabelecimentos.add(0, estBanco);
+                    catalogoEstabelecimentos.add(estBanco);
                 }
             }
         }
 
         estabelecimentoSelecionado = catalogoEstabelecimentos.get(0);
+
+        // O usuário deve começar SEMPRE DO 0: limpa comanda e sessão anterior
         ultimoBarSalvoSessao = null;
-        usuarioDecidiuSobreUltimoBar = false;
+        usuarioDecidiuSobreUltimoBar = true;
+        barEscolhidoPeloUsuario = false;
+        quantidadesComanda.clear();
+        ultimoSubtotalCentavos = 0;
+        ultimaTaxaServicoCentavos = 0;
+        ultimoTotalCentavos = 0;
 
         ComandaBancoDadosHelper.EstadoSessaoSalva sessao = bancoDados.carregarConfiguracaoSessao();
         if (sessao != null) {
@@ -2144,14 +2310,6 @@ public class MainActivity extends Activity {
             adicionarTaxaDezPorCento = sessao.adicionarTaxaDezPorCento;
             if (btnAlterarTeto != null) {
                 btnAlterarTeto.setText("🎯 Teto: R$ " + (tetoGastosCentavos / 100));
-            }
-            if (sessao.idEstabelecimentoAtual != null) {
-                for (int i = 0; i < catalogoEstabelecimentos.size(); i++) {
-                    if (catalogoEstabelecimentos.get(i).id.equals(sessao.idEstabelecimentoAtual)) {
-                        ultimoBarSalvoSessao = catalogoEstabelecimentos.get(i);
-                        break;
-                    }
-                }
             }
         }
 
@@ -2164,7 +2322,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        // A Luna NUNCA abre no último bar direto: ela sempre pergunta antes ao usuário!
+        // Sessão 100% zerada e limpa: nenhum bar é imposto e a comanda inicia vazia
         barEscolhidoPeloUsuario = false;
         quantidadesComanda.clear();
     }
@@ -3127,17 +3285,11 @@ public class MainActivity extends Activity {
 
     /**
      * Aciona a assistente Luna de forma direta, acolhedora e conversacional.
-     * Se houver um último bar salvo na sessão anterior, ela PERGUNTA ANTES ao usuário
-     * se deseja continuar nele ou escolher outro bar, sem abrir direto no último bar!
+     * O usuário sempre começa do 0, acolhido na sua localização atual.
      */
     private void acionarAjudaLunaConversacional() {
         if (!barEscolhidoPeloUsuario) {
-            if (ultimoBarSalvoSessao != null && !usuarioDecidiuSobreUltimoBar) {
-                // Bug 3 corrigido: pergunta antes e nunca abre direto no último bar!
-                perguntarSeContinuaNoUltimoBarLuna();
-                return;
-            }
-            // O usuário ainda não escolheu seu bar: Luna acolhe e lista os estabelecimentos disponíveis para escolha imediata
+            // O usuário começa sempre do 0: lista os estabelecimentos disponíveis na cidade ativa
             listarEstabelecimentosEPerguntarLuna();
             return;
         }
@@ -3149,7 +3301,7 @@ public class MainActivity extends Activity {
                 "• Consulte sua conta (ex: \"Quanto deu a comanda?\")\n" +
                 "• Alterne a taxa de 10% (ex: \"Com 10%\" ou \"Sem 10%\")\n" +
                 "• Pague com Pix (ex: \"Pagar com Pix\")\n" +
-                "• Ou troque de bar (ex: \"Listar bares\" ou \"Mudar de bar\")";
+                "• Ou troque de bar ou cidade (ex: \"Listar bares\", \"Minha localização\" ou outra cidade)";
 
         lunaFalarEChamarReconhecimentoVoz(visual, fala, REQ_VOZ_UNIVERSAL, "Luna ouvindo seu comando...");
     }
@@ -3773,8 +3925,16 @@ public class MainActivity extends Activity {
             estado = ESTADOS_BRASIL[0]; // Pernambuco padrão
         }
 
-        String cidadeTemp = detectarCidadeNoTexto(norm, estado);
+        String cidadeTemp = EngineIALocalizacao.detectarCidadeNoComando(norm);
         if (cidadeTemp == null || cidadeTemp.isEmpty()) {
+            cidadeTemp = detectarCidadeNoTexto(norm, estado);
+        }
+        if (cidadeTemp != null && !cidadeTemp.isEmpty()) {
+            EstadoInfo estEncontrado = encontrarEstadoPorCidade(cidadeTemp);
+            if (estEncontrado != null) {
+                estado = estEncontrado;
+            }
+        } else {
             cidadeTemp = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : estado.capital;
         }
         final String cidade = cidadeTemp;
@@ -4297,6 +4457,10 @@ public class MainActivity extends Activity {
 
             case ALTERAR_TETO_GASTOS:
                 alternarTetoDeGastos();
+                break;
+
+            case OBTER_LOCALIZACAO_ATUAL:
+                obterLocalizacaoAtualViaIa(true);
                 break;
 
             case FILTRAR_OU_BUSCAR_LOCAL:

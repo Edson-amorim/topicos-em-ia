@@ -90,11 +90,25 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1. FILTROS (REGIÃO, ESTADO, CIDADE) E GOOGLE MAPS:"
+            android:text="1. LOCALIZAÇÃO ATUAL (GPS / IA) E FILTROS DE CIDADE:"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="#38BDF8"
             android:layout_marginBottom="8dp" />
+
+        <!-- BOTÃO DE LOCALIZAÇÃO ATUAL POR GPS / IA -->
+        <Button
+            android:id="@+id/btnLocalizacaoAtual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="54dp"
+            android:text="📍 Minha Localização Atual (GPS / IA)"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#059669"
+            android:contentDescription="Botão Minha Localização Atual. Toque duas vezes para obter sua localização via GPS e IA, filtrando automaticamente os estabelecimentos da sua cidade."
+            android:layout_marginBottom="6dp" />
 
         <Button
             android:id="@+id/btnFiltroRegiao"

@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $sdkDir = "C:\Users\edson\AppData\Local\Android\Sdk"
 $buildToolsDir = "$sdkDir\build-tools\35.0.0"
@@ -32,7 +32,7 @@ $javaFiles = Get-ChildItem -Recurse -Include *.java "$appDir\src", "$appDir\buil
 
 # 4. Converter bytecode Java em Dalvik DEX com D8
 Write-Host "[4/6] Convertendo para DEX com d8..."
-$classFiles = Get-ChildItem -Recurse -Include *.class "$appDir\build\obj" | ForEach-Object { $_.FullName }
+$classFiles = Get-ChildItem -Recurse -Path "build\obj" -Filter *.class | Resolve-Path -Relative
 & "$buildToolsDir\d8.bat" --lib $platformJar --output build\dex $classFiles
 
 # Adicionar classes.dex ao APK base usando jar/zip

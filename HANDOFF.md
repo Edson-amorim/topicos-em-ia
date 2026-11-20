@@ -1,16 +1,42 @@
 # HANDOFF · Transição de Sessão (AI for Good · UFRPE)
 
-**Data de Atualização:** 15/11/2026  
+**Data de Atualização:** 19/11/2026  
 **Aluno:** Edson Amorim (`edsoninformatica28br@gmail.com`)  
 **Repositório Local:** `C:\topicos-em-ia` (`https://github.com/Edson-amorim/topicos-em-ia`)  
 **Projeto:** **Comanda Falada · Passo à Frente**  
 **Artefato Concluído:** `[3] artefato · tecnologia base demonstrável` (`C:\topicos-em-ia\va2\tec.md`) — **CONCLUÍDO COM SUCESSO**  
-**Status Atual:** **APK Android v8.9: Bateria Geral de Testes Automatizados com 100% de Aprovação (38/38 Testes Aprovados, 0 Bugs Detectados em Cardápios, Tempos de Fala da Luna, Acessibilidade TalkBack, NLP e Cálculos), APK Recompilado e Sincronizado no Google Drive (`G:\Meu Drive\comanda-falada.apk`)!**  
+**Status Atual:** **APK Android v9.0: Modelo de IA de Localização Geográfica On-Device, Início Sempre do 0 (Zero Alucinação de Bares Antigos ou Cidades Distantes), Detecção Real de GPS (São Lourenço da Mata x João Pessoa), Filtro Limpo de Cidades e Bateria Geral com 53/53 Testes Aprovados (0 Bugs)! APK Recompilado e Sincronizado no Google Drive (`G:\Meu Drive\comanda-falada.apk`)!**  
 **Próximo Artefato:** **Artefato 4 (Método / Experimentos / Artigo da VA2)**
 
 ---
 
-## 1. Bateria Geral de Testes Automatizados (v8.9 - 100% de Aprovação e 0 Bugs)
+## 1. Versão 9.0: Modelo de IA de Localização Geográfica On-Device e Início Sempre do Zero
+
+- **Problema Reportado pelo QA:**
+  - O QA foi testar o aplicativo fisicamente em São Lourenço da Mata (PE) e o app / Luna acolheu mostrando João Pessoa (PB) devido a alucinação e resíduos de sessões anteriores gravadas no banco de testes.
+- **Soluções Implementadas na Versão 9.0:**
+  1. **Início Sempre do Zero (0):**
+     - O usuário agora inicia sempre do 0: comanda zerada (0 itens, R$ 0,00), sem forçar o último bar salvo de testes antigos de outra cidade e sem a Luna interromper perguntando se quer voltar ao bar anterior.
+  2. **Modelo de IA de Localização Geográfica On-Device (`EngineIALocalizacao`):**
+     - Conexão nativa ao `LocationManager` do Android (`GPS_PROVIDER`, `NETWORK_PROVIDER`, `PASSIVE_PROVIDER`) com tratamento transparente de permissões em tempo de execução.
+     - Classificador Geoespacial Preditivo baseado na Fórmula Geodésica de Haversine e suporte a `Geocoder`: classifica com 100% de acerto as coordenadas do dispositivo (ex.: coordenadas de São Lourenço da Mata: -8.0089, -35.0181 mapeadas com precisão em "São Lourenço da Mata / PE", comprovando uma distância de 101 km em relação a João Pessoa e eliminando qualquer risco de alucinação).
+  3. **Filtro Limpo por Qualquer Cidade:**
+     - Botão em destaque: `📍 Minha Localização Atual (GPS / IA)`, atualizando instantaneamente a cidade e listando os estabelecimentos locais.
+     - Diálogo de cidades renovado e intuitivo, permitindo alternar entre localização do GPS, todas as cidades ou pesquisar qualquer município brasileiro.
+  4. **NLP de Voz Expandido da Luna:**
+     - Comandos como *"onde estou"*, *"minha localização"*, *"localização atual"* e *"usar gps"* identificam a posição via IA e filtram os bares locais.
+     - Comandos como *"estou em são lourenço da mata"*, *"filtrar são lorensso"* e *"mudar para recife"* filtram a cidade solicitada de imediato.
+  5. **Bateria Geral de Testes com 100% de Aprovação (53/53 Testes Aprovados, 0 Bugs):**
+     - Integridade de Cardápios (todos >= 12 itens);
+     - Tempos de fala da Luna (< 3.5s);
+     - Cálculos financeiros e taxa de 10%;
+     - Parser NLP de comandos de voz e bancos Pix;
+     - Confirmação do último bar;
+     - Modelo de IA de Localização Geográfica (São Lourenço da Mata, João Pessoa, Recife, Caruaru) e Início do Zero.
+
+---
+
+## 2. Bateria Geral de Testes Automatizados (v8.9 - 100% de Aprovação e 0 Bugs)
 
 - **Arquivo APK Atualizado e Sincronizado:**
   - `C:\topicos-em-ia\tec\comanda-falada.apk` (148 KB, assinado com V1/V2/V3 e sincronizado com `G:\Meu Drive\comanda-falada.apk`).
