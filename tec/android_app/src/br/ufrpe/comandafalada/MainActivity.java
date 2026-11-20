@@ -947,11 +947,11 @@ public class MainActivity extends Activity {
 
     private void abrirDialogoPesquisarCidadePorNome() {
         final EditText input = new EditText(this);
-        input.setHint("Ex: Caruaru, Petrolina, Gravatá, Pesqueira...");
+        input.setHint("Ex: São Lourenço da Mata, Caruaru, Sobral, Campinas...");
         input.setSingleLine(true);
 
         new AlertDialog.Builder(this)
-                .setTitle("🔎 Digite o Nome da Cidade:")
+                .setTitle("🔎 Digite Qualquer Cidade do Brasil:")
                 .setView(input)
                 .setPositiveButton("Filtrar Cidade", new DialogInterface.OnClickListener() {
                     @Override
@@ -961,10 +961,10 @@ public class MainActivity extends Activity {
                             exibirDialogoCidadesFiltradas("");
                             return;
                         }
-                        exibirDialogoCidadesFiltradas(texto);
+                        aplicarFiltroQualquerCidade(texto);
                     }
                 })
-                .setNeutralButton("Ver Todas (185 de PE)", new DialogInterface.OnClickListener() {
+                .setNeutralButton("Ver Cidades de PE (185)", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ufFiltroAtual = "PE";
@@ -976,13 +976,46 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    public void aplicarFiltroQualquerCidade(String nomeCidadeDigitada) {
+        if (nomeCidadeDigitada == null || nomeCidadeDigitada.trim().isEmpty()) return;
+        String cidadeFormatada = formatarNomeCidade(nomeCidadeDigitada.trim());
+
+        EstadoInfo stEncontrado = encontrarEstadoPorCidade(cidadeFormatada);
+        if (stEncontrado == null) {
+            stEncontrado = detectarEstadoNoTexto(normalizarTexto(nomeCidadeDigitada));
+        }
+        if (stEncontrado == null && !ufFiltroAtual.equals("TODOS")) {
+            stEncontrado = buscarEstadoPorUf(ufFiltroAtual);
+        }
+        if (stEncontrado == null) {
+            stEncontrado = ESTADOS_BRASIL[0]; // Pernambuco padrão como fallback de Estado
+        }
+
+        selecionarCidadeEEstado(stEncontrado, cidadeFormatada);
+    }
+
+    public String formatarNomeCidade(String nome) {
+        return EngineIALocalizacao.formatarNomeCidade(nome);
+    }
+
     private void selecionarCidadeEEstado(EstadoInfo stEscolhido, String cidadeEscolhida) {
         regiaoFiltroAtual = stEscolhido.regiao;
         ufFiltroAtual = stEscolhido.uf;
         cidadeFiltroAtual = cidadeEscolhida;
         termoBuscaAtual = "";
 
+        // Regra para usuário de qualquer cidade: SEMPRE começar do 0!
+        quantidadesComanda.clear();
+        ultimoSubtotalCentavos = 0;
+        ultimaTaxaServicoCentavos = 0;
+        ultimoTotalCentavos = 0;
+        barEscolhidoPeloUsuario = false;
+
         garantirBarComCardapioNaCidade(stEscolhido, cidadeEscolhida);
+
+        if (btnFiltroCidade != null) {
+            btnFiltroCidade.setText("🏙️ Cidade: " + cidadeEscolhida);
+        }
 
         atualizarRotulosFiltros();
 
@@ -993,7 +1026,7 @@ public class MainActivity extends Activity {
             renderizarListaEstabelecimentos();
         }
 
-        String msg = "Cidade selecionada: " + cidadeEscolhida + " (" + stEscolhido.uf + "). " + visiveis.size() + " locais encontrados.";
+        String msg = "Cidade selecionada: " + cidadeEscolhida + " (" + stEscolhido.uf + "). " + visiveis.size() + " locais com cardápio completo.";
         atualizarPainelEFalar(msg, msg);
     }
 
@@ -1203,7 +1236,8 @@ public class MainActivity extends Activity {
         if (!semUrls.isEmpty()) {
             return semUrls;
         }
-        return "Bar do Google Maps (" + (!cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife") + ")";
+        String cidRef = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : "Sua Região");
+        return "Bar do Google Maps (" + cidRef + ")";
     }
 
     private String extrairNomeBarDeUriDoMaps(Uri uri) {
@@ -1231,7 +1265,8 @@ public class MainActivity extends Activity {
             String resto = Uri.decode(ssp.substring(idx)).replace("+", " ").trim();
             if (!resto.isEmpty()) return resto;
         }
-        return "Bar Localizado no Google Maps (" + (!cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife") + ")";
+        String cidRef = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : "Sua Região");
+        return "Bar Localizado no Google Maps (" + cidRef + ")";
     }
 
     private void abrirFluxoBarVindoDoGoogleMaps() {
@@ -1511,7 +1546,7 @@ public class MainActivity extends Activity {
             rolarParaCardapioEAbrirJanelaCompleta();
         } else {
             // Se o estabelecimento não existe no catálogo, NUNCA inventar bar fictício nem abrir cardápio!
-            String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
+            String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : "sua cidade");
             List<Estabelecimento> listaEst = obterEstabelecimentosFiltrados();
             if (listaEst.isEmpty()) listaEst = catalogoEstabelecimentos;
             StringBuilder sbNomes = new StringBuilder();
@@ -3392,12 +3427,20 @@ public class MainActivity extends Activity {
      * numerando cada opção e abrindo o microfone para escolha direta por voz.
      */
     private void listarEstabelecimentosEPerguntarLuna() {
+        String cidNome = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : "sua cidade");
+        if (!cidadeFiltroAtual.equals("TODAS")) {
+            EstadoInfo stRef = encontrarEstadoPorCidade(cidNome);
+            if (stRef == null && !ufFiltroAtual.equals("TODOS")) {
+                stRef = buscarEstadoPorUf(ufFiltroAtual);
+            }
+            if (stRef == null) stRef = ESTADOS_BRASIL[0];
+            garantirBarComCardapioNaCidade(stRef, cidNome);
+        }
+
         final List<Estabelecimento> listaVisiveis = obterEstabelecimentosFiltrados();
         final List<Estabelecimento> listaEst = (!listaVisiveis.isEmpty())
                 ? listaVisiveis
                 : new ArrayList<Estabelecimento>(catalogoEstabelecimentos);
-
-        String cidNome = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
 
         // A Luna fala os bares disponíveis em voz alta pelo alto-falante com numeração explícita:
         StringBuilder nomesFalados = new StringBuilder();
@@ -3925,19 +3968,32 @@ public class MainActivity extends Activity {
             estado = ESTADOS_BRASIL[0]; // Pernambuco padrão
         }
 
-        String cidadeTemp = EngineIALocalizacao.detectarCidadeNoComando(norm);
+        String cidadeTemp = EngineIALocalizacao.extrairQualquerCidadeDeComando(entrada);
+        if (cidadeTemp == null || cidadeTemp.isEmpty()) {
+            cidadeTemp = EngineIALocalizacao.detectarCidadeNoComando(norm);
+        }
         if (cidadeTemp == null || cidadeTemp.isEmpty()) {
             cidadeTemp = detectarCidadeNoTexto(norm, estado);
         }
         if (cidadeTemp != null && !cidadeTemp.isEmpty()) {
+            cidadeTemp = formatarNomeCidade(cidadeTemp);
             EstadoInfo estEncontrado = encontrarEstadoPorCidade(cidadeTemp);
             if (estEncontrado != null) {
                 estado = estEncontrado;
             }
         } else {
-            cidadeTemp = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : estado.capital;
+            cidadeTemp = !cidadeFiltroAtual.equals("TODAS")
+                    ? cidadeFiltroAtual
+                    : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : estado.capital);
         }
         final String cidade = cidadeTemp;
+
+        // Regra para usuário de qualquer cidade: SEMPRE começar do 0!
+        quantidadesComanda.clear();
+        ultimoSubtotalCentavos = 0;
+        ultimaTaxaServicoCentavos = 0;
+        ultimoTotalCentavos = 0;
+        barEscolhidoPeloUsuario = false;
 
         String categoria = "Bares, Botecos e Petiscarias";
         if (norm.contains("restaurante")) {
@@ -3958,6 +4014,7 @@ public class MainActivity extends Activity {
         categoriaFiltroAtual = categoria;
         filtroAcusticoAtual = ModoFiltroAcustico.TODOS;
         termoBuscaAtual = "";
+        garantirBarComCardapioNaCidade(estado, cidade);
         atualizarRotulosFiltros();
         renderizarListaEstabelecimentos();
 
@@ -4125,7 +4182,7 @@ public class MainActivity extends Activity {
         }
 
         // O estabelecimento NÃO existe no catálogo! NUNCA deixar o usuário no vácuo
-        String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : "Recife";
+        String cid = !cidadeFiltroAtual.equals("TODAS") ? cidadeFiltroAtual : (localizacaoAtualDetectada != null ? localizacaoAtualDetectada.cidade : "sua cidade");
         StringBuilder sbNomes = new StringBuilder();
         int max = Math.min(3, listaEst.size());
         for (int i = 0; i < max; i++) {

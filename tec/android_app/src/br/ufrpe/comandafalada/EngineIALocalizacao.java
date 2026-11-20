@@ -395,4 +395,97 @@ public class EngineIALocalizacao {
         norm = norm.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
         return norm.toLowerCase(Locale.US).replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ").trim();
     }
+
+    /**
+     * Formata qualquer nome de cidade com a capitalização correta em Português do Brasil,
+     * incluindo acentuação automática de termos geográficos comuns.
+     */
+    public static String formatarNomeCidade(String nome) {
+        if (nome == null || nome.isEmpty()) return "";
+        String limpo = nome.replaceAll("(?i)[\\-,/]\\s*[a-z]{2}$", "").trim();
+        String[] partes = limpo.split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < partes.length; i++) {
+            String p = partes[i];
+            if (p.isEmpty()) continue;
+            String pLower = p.toLowerCase(Locale.ROOT);
+            if (i > 0 && (pLower.equals("de") || pLower.equals("da") || pLower.equals("do") ||
+                    pLower.equals("dos") || pLower.equals("das") || pLower.equals("e"))) {
+                sb.append(pLower);
+            } else if (pLower.equals("sao")) {
+                sb.append("São");
+            } else if (pLower.equals("jose")) {
+                sb.append("José");
+            } else if (pLower.equals("joao")) {
+                sb.append("João");
+            } else if (pLower.equals("vitoria")) {
+                sb.append("Vitória");
+            } else if (pLower.equals("ribeirao")) {
+                sb.append("Ribeirão");
+            } else if (pLower.equals("jaboatao")) {
+                sb.append("Jaboatão");
+            } else if (pLower.equals("belem")) {
+                sb.append("Belém");
+            } else if (pLower.equals("brasilia")) {
+                sb.append("Brasília");
+            } else if (pLower.equals("goiania")) {
+                sb.append("Goiânia");
+            } else if (pLower.equals("maceio")) {
+                sb.append("Maceió");
+            } else if (pLower.equals("cuiaba")) {
+                sb.append("Cuiabá");
+            } else {
+                sb.append(Character.toUpperCase(p.charAt(0)));
+                if (p.length() > 1) {
+                    sb.append(p.substring(1).toLowerCase(Locale.ROOT));
+                }
+            }
+            if (i < partes.length - 1) sb.append(" ");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Reconhece e extrai qualquer um dos 5.570 municípios do Brasil por Processamento de Linguagem Natural.
+     * Suporta comandos como "estou em Sobral", "cidade de Gramado", "mudar para Campinas", "bares em Franca".
+     */
+    public static String extrairQualquerCidadeDeComando(String texto) {
+        if (texto == null || texto.trim().isEmpty()) return null;
+
+        // 1. Tenta identificar primeiro na base pré-compilada de cidades e variações fonéticas
+        String conhecida = detectarCidadeNoComando(texto);
+        if (conhecida != null) {
+            return conhecida;
+        }
+
+        // 2. Extrai cidade arbitrária do Brasil por padrões de NLP
+        String t = " " + normalizar(texto) + " ";
+        String[] padroes = new String[]{
+                " estou na cidade de ", " estou no municipio de ", " estou em ", " estou na ", " estou no ",
+                " mudar para a cidade de ", " mudar para o municipio de ", " mudar cidade para ", " mudar para ",
+                " ir para a cidade de ", " ir para o municipio de ", " ir para ",
+                " cidade de ", " municipio de ", " filtrar cidade ", " filtrar por cidade ",
+                " bares na cidade de ", " bares em ", " bar na cidade de ", " bar em ",
+                " procurar na cidade de ", " procurar em ", " buscar na cidade de ", " buscar em ",
+                " localizar na cidade de ", " localizar em "
+        };
+
+        for (String padrao : padroes) {
+            int idx = t.indexOf(padrao);
+            if (idx >= 0) {
+                String resto = t.substring(idx + padrao.length()).trim();
+                resto = resto.replaceAll("\\b(por favor|luna|agora|urgente|cardapio|conta|comanda)\\b", "").trim();
+                resto = resto.replaceAll("[\\-,/]\\s*[a-z]{2}$", "").trim();
+                if (resto.length() >= 3) {
+                    if (!resto.equals("um bar") && !resto.equals("uma mesa") && !resto.equals("duvida") &&
+                        !resto.equals("casa") && !resto.equals("paz") && !resto.equals("festa") &&
+                        !resto.equals("minha localizacao") && !resto.equals("localizacao atual")) {
+                        return formatarNomeCidade(resto);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 }

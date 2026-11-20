@@ -307,5 +307,36 @@ public class TesteGeralCompleto {
         checar(rFiltroRecife.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "Recife".equals(rFiltroRecife.parametroTexto),
                 "NLP: 'mudar para recife' filtra para 'Recife'",
                 "Falha ao filtrar Recife");
+
+        // 6.8 Regra Universal para Usuário de Qualquer Cidade do Brasil (sem limites ou hardcodes)
+        String cidFormatada = EngineIALocalizacao.formatarNomeCidade("sao jose dos campos");
+        checar("São José dos Campos".equals(cidFormatada),
+                "NLP: Formatação correta com preposições: 'sao jose dos campos' -> 'São José dos Campos'",
+                "Falha na formatação de nome de cidade: obteve " + cidFormatada);
+
+        String cidSobral = EngineIALocalizacao.extrairQualquerCidadeDeComando("estou em sobral");
+        checar("Sobral".equals(cidSobral),
+                "NLP: Extração de qualquer cidade arbitrária: 'estou em sobral' -> 'Sobral'",
+                "Falha ao extrair Sobral: obteve " + cidSobral);
+
+        String cidGramado = EngineIALocalizacao.extrairQualquerCidadeDeComando("cidade de gramado por favor");
+        checar("Gramado".equals(cidGramado),
+                "NLP: Extração com palavras acessórias: 'cidade de gramado por favor' -> 'Gramado'",
+                "Falha ao extrair Gramado: obteve " + cidGramado);
+
+        String cidCampinas = EngineIALocalizacao.extrairQualquerCidadeDeComando("mudar para campinas");
+        checar("Campinas".equals(cidCampinas),
+                "NLP: Extração de mudança de cidade: 'mudar para campinas' -> 'Campinas'",
+                "Falha ao extrair Campinas: obteve " + cidCampinas);
+
+        ProcessadorComandosVoz.ResultadoComando rSobral = ProcessadorComandosVoz.processar("estou em sobral", estMock, 0, false);
+        checar(rSobral.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "Sobral".equals(rSobral.parametroTexto),
+                "ProcessadorComandosVoz: 'estou em sobral' gera FILTRAR_OU_BUSCAR_LOCAL para 'Sobral'",
+                "Falha ao processar comando 'estou em sobral'");
+
+        ProcessadorComandosVoz.ResultadoComando rCampinas = ProcessadorComandosVoz.processar("mudar para campinas", estMock, 0, false);
+        checar(rCampinas.acao == ProcessadorComandosVoz.TipoAcao.FILTRAR_OU_BUSCAR_LOCAL && "Campinas".equals(rCampinas.parametroTexto),
+                "ProcessadorComandosVoz: 'mudar para campinas' gera FILTRAR_OU_BUSCAR_LOCAL para 'Campinas'",
+                "Falha ao processar comando 'mudar para campinas'");
     }
 }

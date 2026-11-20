@@ -333,8 +333,11 @@ public class ProcessadorComandosVoz {
             );
         }
 
-        // 0.01 FILTRAGEM POR CIDADE INFORMADA POR VOZ (EX: "SÃO LOURENÇO DA MATA", "ESTOU EM SÃO LOURENÇO")
-        String cidadeDireta = EngineIALocalizacao.detectarCidadeNoComando(normEspaco);
+        // 0.01 FILTRAGEM POR CIDADE INFORMADA POR VOZ (EX: "SÃO LOURENÇO DA MATA", "ESTOU EM SOBRAL", "CIDADE DE GRAMADO")
+        String cidadeDireta = EngineIALocalizacao.extrairQualquerCidadeDeComando(original);
+        if (cidadeDireta == null) {
+            cidadeDireta = EngineIALocalizacao.detectarCidadeNoComando(normEspaco);
+        }
         if (cidadeDireta != null && (normEspaco.contains(" filtrar ") || normEspaco.contains(" cidade ") ||
                 normEspaco.contains(" mudar para ") || normEspaco.contains(" ir para ") ||
                 normEspaco.contains(" estou em ") || normEspaco.contains(" em ") ||
@@ -808,7 +811,10 @@ public class ProcessadorComandosVoz {
                 "procurar bar ", "procurar restaurante ", "procurar ",
                 "localizar bar ", "localizar restaurante ", "localizar ",
                 "ir para o bar ", "ir para o restaurante ", "ir para ",
-                "filtrar por ", "filtrar "
+                "estou na cidade de ", "estou em ", "estou na ", "estou no ",
+                "mudar para a cidade de ", "mudar cidade para ", "mudar para ",
+                "filtrar por cidade ", "filtrar cidade ", "filtrar por ", "filtrar ",
+                "cidade de "
         };
         for (String p : prefixes) {
             if (normalizar(t).startsWith(normalizar(p))) {
